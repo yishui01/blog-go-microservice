@@ -1,0 +1,11 @@
+.idea/
+.vscode/
+.DS_Store
+
+*.log
+*.exe
+*.tmp
+
+*.cert
+*.key
+*.pem
