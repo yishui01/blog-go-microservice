@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 	"testing"
@@ -174,21 +175,70 @@ func TestFileWriter(t *testing.T) {
 	}
 }
 
+//BenchmarkFileWriter/syscall               357264              2853 ns/op
+//BenchmarkFileWriter/frame-sync            342744              2980 ns/op
+//BenchmarkFileWriter/frame-async          1001078              1039 ns/op
+
+//go test -bench BenchmarkFileWriter  -run =^$ -cpu 1,2,4,8
 func BenchmarkFileWriter(b *testing.B) {
-	fw, err := New(logdir+"/bench/info.log",
+
+	sync, err := New(logdir+"/bench/sync.log",
 		ChanSize(10240),
 		WriteTimeout(time.Second),
 		RotateInterval(10*time.Millisecond),
-		MaxSize(1024*1024*80), /*80MB*/
+		MaxSize(1024*1024*8), /*80MB*/
 	)
 	if err != nil {
 		b.Fatal(err)
 	}
-	for i := 0; i < b.N; i++ {
-		_, err = fw.Write([]byte("Hello World!\n"))
-		if err != nil {
-			b.Error(err)
-		}
+
+	async, err := New(logdir+"/bench/async.log",
+		ChanSize(10240),
+		UserBuffer(true),
+		WriteTimeout(time.Second),
+		RotateInterval(10*time.Millisecond),
+		MaxSize(1024*1024*8), /*80MB*/
+	)
+	if err != nil {
+		b.Fatal(err)
 	}
+
+	f, err := os.OpenFile(logdir+"/bench/direct.log", os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		log.Fatal("err", err)
+	}
+
+	b.Run("syscall", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err = f.Write([]byte("Hello World!\n"))
+			if err != nil {
+				b.Error(err)
+			}
+		}
+	})
+	f.Close()
+
+	b.Run("frame-sync", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err = sync.Write([]byte("Hello World!\n"))
+			if err != nil {
+				b.Error(err)
+			}
+		}
+	})
+	sync.Close()
+
+	b.Run("frame-async", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, err = async.Write([]byte("Hello World!\n"))
+			if err != nil {
+				b.Error(err)
+			}
+		}
+	})
+	async.Close()
+
+	time.Sleep(time.Second * 2)
+	fmt.Println(os.RemoveAll(logdir))
 
 }

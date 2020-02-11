@@ -19,6 +19,7 @@ type rotateOption struct {
 	RotateInterval time.Duration //检查轮换的时间间隔，默认10s
 
 	//其他配置
+	UseBuffer     bool          //是否使用ch+buffer异步写入磁盘,默认不使用，不使用时每条log直接刷到磁盘
 	ChanSize      int           //FileWriter里面ch的个数
 	FlushInterval time.Duration //异步将缓冲区刷新到磁盘时间间隔，默认10 毫秒 刷新一次
 	FlushMaxSize  int           //缓冲区到达该容量时强制刷新到磁盘，单位字节，默认1MB
@@ -62,15 +63,24 @@ func MaxSize(n int64) Option {
 	}
 }
 
+//是否异步写入磁盘
+func UserBuffer(use bool) Option {
+	return func(opt *rotateOption) {
+		opt.UseBuffer = use
+	}
+}
+
 // ChanSize set internal chan size default 8192 use about 64k memory on x64 platfrom static,
 // because filewriter has internal object pool, change chan size bigger may cause filewriter use
 // a lot of memory, because sync.Pool can't set expire time memory won't free until program exit.
+//异步ch的大小
 func ChanSize(n int) Option {
 	return func(opt *rotateOption) {
 		opt.ChanSize = n
 	}
 }
 
+//异步轮替检查时间
 func RotateInterval(t time.Duration) Option {
 	if t <= 0 {
 		panic("rotateInterval must be positive time.Duration")
@@ -80,7 +90,7 @@ func RotateInterval(t time.Duration) Option {
 	}
 }
 
-//超时时间传0代表非阻塞IO，失败会直接return error
+//异步写入ch，超时时间传0代表非阻塞IO，失败会直接return error
 func WriteTimeout(t time.Duration) Option {
 	if t < 0 {
 		panic("WriteTimeout can't less than 0")
@@ -90,6 +100,7 @@ func WriteTimeout(t time.Duration) Option {
 	}
 }
 
+//异步定时刷新到磁盘的频率
 func FlushInterval(t time.Duration) Option {
 	if t <= 0 {
 		panic("FlushInterval must be positive time.Duration")
@@ -99,6 +110,7 @@ func FlushInterval(t time.Duration) Option {
 	}
 }
 
+//异步buffer最大size
 func FlushMaxSize(s int) Option {
 	if s < 0 {
 		panic("FlushMaxSize can't less than 0")

@@ -1,9 +1,9 @@
 package filewriter
 
 import (
-	"bytes"
 	"container/list"
 	"fmt"
+	"github.com/zuiqiangqishao/framework/pkg/log/core"
 	"io/ioutil"
 	"log"
 	"os"
@@ -18,17 +18,16 @@ import (
 
 //一个文件输出位置就是一个FileWriter，如果要输出到多个地方的file，就要在外面构建多个FileWriter
 type FileWriter struct {
-	opt    rotateOption       //轮换配置
-	dir    string             //输出目录
-	fname  string             //日志文件名称
-	ch     chan *bytes.Buffer //日志会首先写入该chan, 随后由另一个goroutine异步落盘
-	stdlog *log.Logger        //发生错误时打印一些错误输出到stderr
-	pool   *sync.Pool         //ch中的bytes.Buffer池，写日志时先取出一个buffer，将日志copy到该buffer，再将buffer入队到chan
+	opt    rotateOption      //轮换配置
+	dir    string            //输出目录
+	fname  string            //日志文件名称
+	ch     chan *core.Buffer //如果设置为异步，日志会首先写入该chan, 随后由另一个goroutine异步落盘
+	stdlog *log.Logger       //发生错误时打印一些错误输出到stderr
+	pool   core.Pool         //ch中的bytes.Buffer池，写日志时先取出一个buffer，将日志copy到该buffer，再将buffer入队到chan
 
 	lastRotateFormat string //最后发生日志轮替的日期，默认创建时会设置为当前日期如： 2018-05-06，默认每天轮替
 	lastSplitNum     int    //和lastRotateFormat配合，代表该轮替周期内第几次轮替，初始为第0次，到新的一天时会重新从0计数
 
-	writeLock sync.Mutex //日志轮替、日志写入文件是两个goroutine，避免同时进行，需要锁
 	current   *wrapFile  //os.File的包装，每次写入磁盘就是往这个current文件写
 	filesList *list.List //该目录下的日志文件链表，链表的每个元素都是一个 rotateItem 结构体
 
@@ -132,7 +131,7 @@ func newWrapFile(fpath string) (*wrapFile, error) {
 }
 
 // New FileWriter A FileWriter is safe for use by multiple goroutines simultaneously.
-//创建一个新的FileWriter结构体，说是并发安全的？真的是并发安全的吗？具体有什么用呢？
+//创建一个新的FileWriter结构体，说是并发安全的..有啥用？
 //需要传入一个完整的带文件名的日志文件路径，可选参数用于修改轮换配置
 func New(fullPathName string, fns ...Option) (*FileWriter, error) {
 	opt := defaultOption
@@ -162,7 +161,6 @@ func New(fullPathName string, fns ...Option) (*FileWriter, error) {
 	}
 
 	stdlog := log.New(os.Stderr, "flog", log.LstdFlags)
-	ch := make(chan *bytes.Buffer, opt.ChanSize)
 
 	//遍历该目录下文件，根据日志文件名筛选出存档文件构造出文件链表（并不会将log名字的那个写入文件加进来）
 	filesList, err := parseRotateItem(dir, fname, opt.RotateFormat)
@@ -188,8 +186,6 @@ func New(fullPathName string, fns ...Option) (*FileWriter, error) {
 		dir:    dir,
 		fname:  fname,
 		stdlog: stdlog,
-		ch:     ch,
-		pool:   &sync.Pool{New: func() interface{} { return new(bytes.Buffer) }},
 
 		lastSplitNum:     lastSplitNum,     //最后轮替日期内轮替到第几次了
 		lastRotateFormat: lastRotateFormat, //最后轮替日期
@@ -198,62 +194,47 @@ func New(fullPathName string, fns ...Option) (*FileWriter, error) {
 		current:   current,
 	}
 
-	fw.wg.Add(1)
-	go fw.daemon() //监听chan 写入、定时轮替日志
+	if fw.opt.UseBuffer {
+		fw.ch = make(chan *core.Buffer, opt.ChanSize)
+		fw.pool = core.NewPool(0)
+		fw.wg.Add(1)
+		go fw.batchWriteAndRotate() //监听chan 写入、定时轮替日志
+	}
 
 	return fw, nil
 }
 
 //定时轮替、将ch中数据取出并异步刷新到磁盘
-func (f *FileWriter) daemon() {
-	aggsbuf := &bytes.Buffer{}                    //创建一个写入缓冲区，将ch数据取出先放到这里，到时候一次性刷回磁盘
-	tk := time.NewTicker(f.opt.RotateInterval)    //轮替检查间隔
-	aggstk := time.NewTicker(f.opt.FlushInterval) //落盘刷新间隔
-	maxBrokerSize := f.opt.FlushMaxSize           //缓冲区到达该容量时强制写入到磁盘（默认1M）
+func (f *FileWriter) batchWriteAndRotate() {
+	diskBuffer := f.getBuf()                        //创建一个写入缓冲区，将ch数据取出先放到这里，到时候一次性刷回磁盘
+	rotateC := time.NewTicker(f.opt.RotateInterval) //日志文件轮替检查间隔
+	force := time.NewTicker(f.opt.FlushInterval)    //定时刷新间隔
+	maxBrokerSize := f.opt.FlushMaxSize             //缓冲区到达该容量时强制写入到磁盘（默认1M）
 
-	var err error
-
-	flushToFile := func() {
-		if err = f.write(aggsbuf.Bytes()); err != nil {
-			f.stdlog.Printf("write log error: %s", err)
+	//写入磁盘
+	flushToDisk := func() {
+		if _, err := f.write(diskBuffer.Bytes()); err != nil {
+			f.stdlog.Printf("async write log error: %s", err)
 		}
-		aggsbuf.Reset()
+		diskBuffer.Reset()
+		return
 	}
 
-	//这里将checkRotate单独提出，因为将其放到和写入文件逻辑一个select中的话，如果ch一直有写入的话，轮替会一直得不到进行，造成饥饿
-	//但是提出后就会有一个问题，checkRotate和flushToFile不能同时进行，因为checkRotate会关闭写入的file结构体，导致flushToFile失败，互斥锁解决
-	done := make(chan struct{}, 1)
-	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				f.stdlog.Printf("recover checkRotate panic, error: %s", err)
-			}
-		}()
-		for {
-			select {
-			case t := <-tk.C:
-				f.checkRotate(t) //内部互斥锁,和flushToFile互斥
-			case <-done:
-				return
-			}
-		}
-	}()
-
 	for {
-		//是否强制刷新
-		if aggsbuf.Len() >= maxBrokerSize {
-			flushToFile()
-		}
-
 		select {
-		case buf, ok := <-f.ch:
+		case t := <-rotateC.C: //日志轮替
+			f.checkRotate(t)
+		case buf, ok := <-f.ch: //写入到buffer
 			if ok {
-				aggsbuf.Write(buf.Bytes()) //将ch的数据写到aggsbuf中
+				diskBuffer.Write(buf.Bytes())
 				f.putBuf(buf)
+				if diskBuffer.Len() > maxBrokerSize {
+					flushToDisk()
+				}
 			}
-		case <-aggstk.C: //定时刷到磁盘
-			if aggsbuf.Len() > 0 {
-				flushToFile()
+		case <-force.C: //定时将buffer刷到磁盘
+			if diskBuffer.Len() > 0 {
+				flushToDisk()
 			}
 		}
 
@@ -263,35 +244,33 @@ func (f *FileWriter) daemon() {
 		}
 
 		// read all buf from channel and break loop
-		if err = f.write(aggsbuf.Bytes()); err != nil {
-			f.stdlog.Printf("write log error: %s", err)
+		if n, err := f.write(diskBuffer.Bytes()); err != nil {
+			f.stdlog.Printf("finally write log error: %s,write %d byte", err, n)
 		}
 		for buf := range f.ch {
-			if err = f.write(buf.Bytes()); err != nil {
-				f.stdlog.Printf("write log error: %s", err)
+			if n, err := f.write(buf.Bytes()); err != nil {
+				f.stdlog.Printf("finally write ch log error: %s,write %d byte", err, n)
 			}
 			f.putBuf(buf)
 		}
 		break
 	}
-	close(done)
+
 	if f.current.fp != nil {
 		f.current.fp.Close() //关闭current
 	}
 	f.wg.Done()
 }
 
-//向文件中写入数据，这里只是将数据写入到chan中
-//chan中的数据是异步写入磁盘的，chan里的数据有可能还未被读取，所以这里返回的是理想状态下的写入字节数
+//根据配置，同步写入文件 / 异步写入ch
 func (f *FileWriter) Write(p []byte) (int, error) {
-	// atomic is not necessary
-	//如果管道已经关了，那就写不进去了。。。
-	if atomic.LoadInt32(&f.closed) == 1 {
-		f.stdlog.Printf("%s", p)
-		return 0, fmt.Errorf("filewriter already closed")
+	//同步写入
+	if !f.opt.UseBuffer {
+		f.checkRotate(time.Now())
+		return f.current.write(p)
 	}
 
-	//由于写入文件是异步的，所以这里msg传进来后马上复制到内部的buff中，防止外部修改
+	//异步写入ch
 	buf := f.getBuf()
 	buf.Write(p)
 
@@ -320,6 +299,9 @@ func (f *FileWriter) Write(p []byte) (int, error) {
 //关闭异步写入的ch
 func (f *FileWriter) Close() error {
 	atomic.StoreInt32(&f.closed, 1)
+	if !f.opt.UseBuffer {
+		return f.current.fp.Close()
+	}
 	close(f.ch)
 	f.wg.Wait()
 	return nil
@@ -331,8 +313,6 @@ func (f *FileWriter) Close() error {
 //2、再重新创建一个新的current，和之前的current文件名一样，并赋值给fileWriter的current字段
 //3、如果是新的一天则更新lastRotateFormat为新日期并将lastSplitNum置0，如果是当天内多次轮替直接lastSplitNum++
 func (f *FileWriter) checkRotate(t time.Time) {
-	f.writeLock.Lock() //加锁，防止轮替时还在往文件里面写
-	defer f.writeLock.Unlock()
 	if f.current.fp == nil {
 		return
 	}
@@ -401,26 +381,23 @@ func (f *FileWriter) checkRotate(t time.Time) {
 }
 
 //直接同步写入磁盘，在轮替进行的时候不能调用该方法，否则会报错
-func (f *FileWriter) write(p []byte) error {
-	f.writeLock.Lock()
-	defer f.writeLock.Unlock()
+func (f *FileWriter) write(p []byte) (n int, err error) {
 	// f.current may be nil, if newWrapFile return err in checkRotate, redirect log to stderr
 	if f.current == nil || f.current.fp == nil {
 		f.stdlog.Printf("can't write log to file, please check stderr log for detail")
 		f.stdlog.Printf("%s", p)
 	}
 
-	_, err := f.current.write(p)
-	return err
+	return f.current.write(p)
 }
 
 //归还buffer到池中
-func (f *FileWriter) putBuf(buf *bytes.Buffer) {
+func (f *FileWriter) putBuf(buf *core.Buffer) {
 	buf.Reset()
 	f.pool.Put(buf)
 }
 
 //从池中取出buff
-func (f *FileWriter) getBuf() *bytes.Buffer {
-	return f.pool.Get().(*bytes.Buffer)
+func (f *FileWriter) getBuf() *core.Buffer {
+	return f.pool.Get()
 }
