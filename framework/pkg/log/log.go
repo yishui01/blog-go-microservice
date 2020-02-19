@@ -1,109 +1,84 @@
 package log
 
 import (
-	"flag"
-	"github.com/spf13/viper"
+	"github.com/zuiqiangqishao/framework/pkg/app"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"gopkg.in/natefinch/lumberjack.v2"
-	"log"
-	"os"
-	"time"
+	"sync"
 )
 
 var (
-	confPath  string
-	Config    *LoggerConfig
-	ZapLogger *zap.Logger
+	_handlers []zapcore.Core
+	mux       sync.Mutex
+
+	LogConf     *LogConfig = DefaultLogConf()
+	ZapLogger   *zap.Logger
+	SugarLogger *zap.SugaredLogger
 )
 
-func init() {
-	flag.StringVar(&confPath, "conf", "../configs", "default config dir")
-}
-
-// Config log config.
-type LoggerConfig struct {
-	Disable    bool   //disable output into file
-	Filename   string //log file name
+//通用配置
+type LogConfig struct {
+	EnableHost bool   //Add host name and other additional fields
+	Encode     string //json or console
 	Level      string //debug  info  warn  error fatal
-	Encoding   string //json or console
 	CallFull   bool   //whether full call path or short path, default is short
-	MaxSize    int    //max size of log.(MB)
-	MaxAge     int    //time to keep, (day)
-	MaxBackups int    //max file numbers
-	LocalTime  bool   //(default UTC)
-	Compress   bool   //default false
-	Stdout     bool   //output into stdout default is true
-	StdEncode  string //stdout encode
-	AppName    string
+	Stdout     bool   //default true
 }
 
-func Init() {
-	viper.AddConfigPath(confPath)
-	viper.AddConfigPath(".")
-	viper.SetConfigType("toml")
-	viper.SetConfigName("application")
-	if err := viper.ReadInConfig(); err != nil {
-		panic("load app config err" + err.Error())
+//默认输出到文件和stdout
+func Default() *zap.Logger {
+	RegistHandle(DefaultFileCore())
+	if LogConf != nil && LogConf.Stdout {
+		RegistHandle(LogConf.NewStdoutCore())
 	}
-	if err := viper.Sub("log.file").Unmarshal(&Config); err != nil {
-		log.Fatalf("unable to decode log config struct, %v", err)
-	}
-
-	viper.SetDefault("appname", "unknowAppName")
-
-	Config.AppName = viper.Sub("app").GetString("appname")
-	Config.Stdout = viper.Sub("log.stdout").GetBool("enable")
-	Config.StdEncode = viper.Sub("log.stdout").GetString("encode")
-
-	InitLogger(Config)
+	return setLogger()
 }
 
-func InitLogger(config *LoggerConfig) *zap.Logger {
-	enCfg := zap.NewProductionEncoderConfig()
-	if config.CallFull {
-		enCfg.EncodeCaller = zapcore.FullCallerEncoder
-	}
-	enCfg.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
-		enc.AppendString(t.Format("2006-01-02 15:04:05"))
-	}
-	levelEnable := zap.NewAtomicLevelAt(convertLogLevel(config.Level))
+//手动构造handler初始化log
+func New(core ...zapcore.Core) *zap.Logger {
+	mux.Lock()
+	defer mux.Unlock()
 
-	cores := []zapcore.Core{}
+	_handlers = core
+	return setLogger()
+}
 
-	//file log
-	if !config.Disable {
-		fileEncoder := zapcore.NewJSONEncoder(enCfg)
+//构造zap Logger
+func setLogger() *zap.Logger {
+	mux.Lock()
+	defer mux.Unlock()
 
-		if config.Encoding == "console" {
-			fileEncoder = zapcore.NewConsoleEncoder(enCfg)
-		}
-
-		fileWriter := zapcore.AddSync(&lumberjack.Logger{
-			Filename:   config.Filename,
-			MaxSize:    config.MaxSize,
-			MaxAge:     config.MaxAge,
-			MaxBackups: config.MaxBackups,
-			LocalTime:  config.LocalTime,
-		})
-		cores = append(cores, zapcore.NewCore(fileEncoder, zapcore.AddSync(fileWriter), levelEnable))
-	}
-
-	//console log
-	if config.Stdout {
-		consoleEncoder := zapcore.NewJSONEncoder(enCfg)
-		if config.StdEncode == "console" {
-			consoleEncoder = zapcore.NewConsoleEncoder(enCfg)
-		}
-		consoleWriter := zapcore.Lock(os.Stdout)
-		cores = append(cores, zapcore.NewCore(consoleEncoder, zapcore.AddSync(consoleWriter), levelEnable))
-	}
-
-	allCore := zapcore.NewTee(cores...)
-
-	opts := []zap.Option{zap.AddCaller(), zap.AddCallerSkip(2)}
+	allCore := zapcore.NewTee(_handlers...)
+	opts := []zap.Option{zap.AddCaller()}
 	ZapLogger = zap.New(allCore, opts...)
+	SugarLogger = ZapLogger.Sugar()
 	return ZapLogger
+}
+
+//日志输出handler
+func RegistHandle(core ...zapcore.Core) {
+	mux.Lock()
+	defer mux.Unlock()
+
+	_handlers = append(_handlers, core...)
+}
+
+func AddHostInfo(core zapcore.Core) zapcore.Core {
+	fields := []zap.Field{
+		zap.String(app.APP_NAME, app.AppConf.AppName),
+		zap.String(app.HOST_NAME, app.AppConf.HostName),
+	}
+	return core.With(fields)
+}
+
+func DefaultLogConf() *LogConfig {
+	return &LogConfig{
+		EnableHost: true,
+		Encode:     "json",
+		Level:      "info",
+		CallFull:   false,
+		Stdout:     true,
+	}
 }
 
 func convertLogLevel(levelStr string) (level zapcore.Level) {
@@ -121,15 +96,4 @@ func convertLogLevel(levelStr string) (level zapcore.Level) {
 	}
 
 	return
-}
-
-//NewDefaultLoggerConfig create a default config
-func NewDefaultLoggerConfig() *LoggerConfig {
-	return &LoggerConfig{
-		Level:      "debug",
-		Filename:   "./logs",
-		MaxSize:    1,
-		MaxAge:     1,
-		MaxBackups: 10,
-	}
 }
