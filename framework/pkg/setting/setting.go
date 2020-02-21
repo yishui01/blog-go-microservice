@@ -5,6 +5,7 @@ import (
 	"github.com/spf13/viper"
 	"github.com/zuiqiangqishao/framework/pkg/app"
 	"github.com/zuiqiangqishao/framework/pkg/log"
+	"github.com/zuiqiangqishao/framework/pkg/trace"
 	"go.uber.org/zap"
 	std "log"
 )
@@ -47,5 +48,6 @@ func Init() {
 
 func InitWithLogger() *zap.Logger {
 	Init()
-	return log.Default() //初始化日志
+	trace.InitTracer(app.AppConf.AppName) //初始化tracer
+	return log.Default()                  //初始化日志
 }

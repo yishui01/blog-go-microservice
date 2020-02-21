@@ -1,0 +1,26 @@
+syntax = "proto3";
+
+package article.service.v1;
+
+message Empty {}
+
+message ArtDetailRequest {
+    string sn = 1;
+}
+
+message ArtDetailResp {
+    int64  id      = 1;
+    string sn      = 2;
+    string title   = 3;
+    string img     = 4;
+    string content = 5;
+    int64  status  = 6;
+    string created_at = 7;
+    string updated_at = 8;
+    string deleted_at = 9;
+}
+
+service Article {
+    rpc Ping(Empty) returns (Empty);
+    rpc GetArtBySn(ArtDetailRequest) returns (ArtDetailResp);
+}

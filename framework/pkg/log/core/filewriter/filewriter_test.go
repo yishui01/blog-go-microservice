@@ -208,9 +208,10 @@ func BenchmarkFileWriter(b *testing.B) {
 		log.Fatal("err", err)
 	}
 
+	msg := "Hello World!\n"
 	b.Run("syscall", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_, err = f.Write([]byte("Hello World!\n"))
+			_, err = f.Write([]byte(fmt.Sprintf("url is %s", msg)))
 			if err != nil {
 				b.Error(err)
 			}
@@ -220,7 +221,7 @@ func BenchmarkFileWriter(b *testing.B) {
 
 	b.Run("frame-sync", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_, err = sync.Write([]byte("Hello World!\n"))
+			_, err = sync.Write([]byte(fmt.Sprintf("url is %s", msg)))
 			if err != nil {
 				b.Error(err)
 			}
@@ -230,7 +231,7 @@ func BenchmarkFileWriter(b *testing.B) {
 
 	b.Run("frame-async", func(b *testing.B) {
 		for i := 0; i < b.N; i++ {
-			_, err = async.Write([]byte("Hello World!\n"))
+			_, err = async.Write([]byte(fmt.Sprintf("url is %s", msg)))
 			if err != nil {
 				b.Error(err)
 			}

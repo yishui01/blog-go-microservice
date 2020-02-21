@@ -1,0 +1,58 @@
+[app]
+appname="article" 
+
+[log]
+    enablehost=true  #Add host name and other additional fields
+    encode="console"    #json / console
+    level="debug"    #debug  info  warn  error fatal
+    callfull=false
+    stdout=true
+
+[log.file]
+    enablehost=true
+    encode="json"
+    callfull=true
+    level="debug"
+    filename="service.log"
+    maxsize=5                #single log file size MB
+    maxage=14                 #time to keep, (day)
+    maxbackups=30            #max file numbers
+    localtime=true
+    compress=false
+
+[grpc]
+    addr = "0.0.0.0:9000"
+    timeout = "1s"
+
+[http]
+    addr = "0.0.0.0:9000"
+    timeout = "1s"
+
+[db]
+	addr = "127.0.0.1:3306"
+	dsn = "{user}:{password}@tcp(127.0.0.1:3306)/{database}?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
+	readDSN = ["{user}:{password}@tcp(127.0.0.2:3306)/{database}?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8","{user}:{password}@tcp(127.0.0.3:3306)/{database}?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8,utf8mb4"]
+	active = 20
+	idle = 10
+	idleTimeout ="4h"
+	queryTimeout = "200ms"
+	execTimeout = "300ms"
+	tranTimeout = "400ms"
+
+[redis]
+	name = "demo"
+	proto = "tcp"
+	addr = "127.0.0.1:6379"
+	idle = 10
+	active = 10
+	dialTimeout = "1s"
+	readTimeout = "1s"
+	writeTimeout = "1s"
+	idleTimeout = "10s"
+
+[elasticsearch]
+    addr = ["http://192.168.136.109:9200"]
+    username=""
+    password=""
+    sniff = false
+
