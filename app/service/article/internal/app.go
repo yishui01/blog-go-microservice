@@ -2,15 +2,16 @@ package internal
 
 import (
 	"blog-go-microservice/app/service/article/internal/dao"
-	"blog-go-microservice/app/service/article/internal/server/http"
+	"blog-go-microservice/app/service/article/internal/server/grpc"
 	"blog-go-microservice/app/service/article/internal/service"
-	fhttp "github.com/zuiqiangqishao/framework/pkg/net/http"
+	zgrpc "github.com/zuiqiangqishao/framework/pkg/net/grpc"
 	"log"
 )
 
 type App struct {
 	service *service.Service
-	http    *fhttp.HttpEngine
+	//http    *zhttp.HttpEngine
+	grpc *zgrpc.GrpcServer
 }
 
 func InitApp() (app *App, closeFunc func(), err error) {
@@ -19,8 +20,9 @@ func InitApp() (app *App, closeFunc func(), err error) {
 	if err != nil {
 		log.Fatal("service初始化失败", err)
 	}
-	httpSrv, err := http.New(s)
-	return &App{service: s, http: httpSrv}, func() {
+	//httpSrv, err := http.New(s)
+	grpcSrv, err := grpc.New(s)
+	return &App{service: s, grpc: grpcSrv}, func() {
 		cf1()
 		cf2()
 	}, err

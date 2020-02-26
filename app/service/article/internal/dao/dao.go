@@ -18,9 +18,9 @@ type Dao struct {
 
 func New() (*Dao, func()) {
 	d := &Dao{
-		db:    NewDB(),
-		redis: NewRedisPool("192.168.136.109:6379"),
-		es:    NewESClient(),
+		//db:    NewDB(),
+		//redis: NewRedisPool("192.168.136.109:6379"),
+		//es:    NewESClient(),
 	}
 	return d, func() { d.Close() }
 }
@@ -43,8 +43,14 @@ func (d *Dao) CreateArt() (*model.Article, error) {
 }
 
 func (d *Dao) Close() {
-	d.db.Close()
-	d.redis.Close()
+	if d.db != nil {
+		d.db.Close()
+
+	}
+	if d.redis != nil {
+		d.redis.Close()
+
+	}
 }
 
 func NewDB() *gorm.DB {

@@ -9,7 +9,9 @@ import (
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/net/http"
 	xhttp "net/http"
+
 )
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 var svc pb.ArticleServer
 

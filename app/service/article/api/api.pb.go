@@ -6,7 +6,10 @@ package article_service_v1
 import (
 	context "context"
 	fmt "fmt"
+	_ "github.com/gogo/protobuf/gogoproto"
 	proto "github.com/golang/protobuf/proto"
+	empty "github.com/golang/protobuf/ptypes/empty"
+	_ "google.golang.org/genproto/googleapis/api/annotations"
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
@@ -26,47 +29,9 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-type Empty struct {
-	XXX_NoUnkeyedLiteral struct{} `json:"-"`
-	XXX_unrecognized     []byte   `json:"-"`
-	XXX_sizecache        int32    `json:"-"`
-}
-
-func (m *Empty) Reset()         { *m = Empty{} }
-func (m *Empty) String() string { return proto.CompactTextString(m) }
-func (*Empty) ProtoMessage()    {}
-func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00212fb1f9d3bf1c, []int{0}
-}
-func (m *Empty) XXX_Unmarshal(b []byte) error {
-	return m.Unmarshal(b)
-}
-func (m *Empty) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	if deterministic {
-		return xxx_messageInfo_Empty.Marshal(b, m, deterministic)
-	} else {
-		b = b[:cap(b)]
-		n, err := m.MarshalToSizedBuffer(b)
-		if err != nil {
-			return nil, err
-		}
-		return b[:n], nil
-	}
-}
-func (m *Empty) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_Empty.Merge(m, src)
-}
-func (m *Empty) XXX_Size() int {
-	return m.Size()
-}
-func (m *Empty) XXX_DiscardUnknown() {
-	xxx_messageInfo_Empty.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_Empty proto.InternalMessageInfo
-
 type ArtDetailRequest struct {
-	Sn                   string   `protobuf:"bytes,1,opt,name=sn,proto3" json:"sn,omitempty"`
+	Sn                   string   `protobuf:"bytes,1,opt,name=sn,proto3" json:"sn,omitempty" form:"name" validate:"required"`
+	Status               int64    `protobuf:"varint,2,opt,name=status,proto3" json:"status,omitempty" form:"status" validate:"required"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -76,7 +41,7 @@ func (m *ArtDetailRequest) Reset()         { *m = ArtDetailRequest{} }
 func (m *ArtDetailRequest) String() string { return proto.CompactTextString(m) }
 func (*ArtDetailRequest) ProtoMessage()    {}
 func (*ArtDetailRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00212fb1f9d3bf1c, []int{1}
+	return fileDescriptor_00212fb1f9d3bf1c, []int{0}
 }
 func (m *ArtDetailRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -112,9 +77,16 @@ func (m *ArtDetailRequest) GetSn() string {
 	return ""
 }
 
+func (m *ArtDetailRequest) GetStatus() int64 {
+	if m != nil {
+		return m.Status
+	}
+	return 0
+}
+
 type ArtDetailResp struct {
 	Id                   int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Sn                   string   `protobuf:"bytes,2,opt,name=sn,proto3" json:"sn,omitempty"`
+	Sn                   string   `protobuf:"bytes,2,opt,name=sn,proto3" json:"sn,omitempty" form:"name" validate:"required"`
 	Title                string   `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	Img                  string   `protobuf:"bytes,4,opt,name=img,proto3" json:"img,omitempty"`
 	Content              string   `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
@@ -131,7 +103,7 @@ func (m *ArtDetailResp) Reset()         { *m = ArtDetailResp{} }
 func (m *ArtDetailResp) String() string { return proto.CompactTextString(m) }
 func (*ArtDetailResp) ProtoMessage()    {}
 func (*ArtDetailResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00212fb1f9d3bf1c, []int{2}
+	return fileDescriptor_00212fb1f9d3bf1c, []int{1}
 }
 func (m *ArtDetailResp) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -224,7 +196,6 @@ func (m *ArtDetailResp) GetDeletedAt() string {
 }
 
 func init() {
-	proto.RegisterType((*Empty)(nil), "article.service.v1.Empty")
 	proto.RegisterType((*ArtDetailRequest)(nil), "article.service.v1.ArtDetailRequest")
 	proto.RegisterType((*ArtDetailResp)(nil), "article.service.v1.ArtDetailResp")
 }
@@ -232,26 +203,36 @@ func init() {
 func init() { proto.RegisterFile("api.proto", fileDescriptor_00212fb1f9d3bf1c) }
 
 var fileDescriptor_00212fb1f9d3bf1c = []byte{
-	// 302 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x84, 0x91, 0xcd, 0x4a, 0xf3, 0x40,
-	0x14, 0x86, 0xbf, 0x49, 0x7f, 0xf2, 0xe5, 0x80, 0x52, 0x0e, 0x22, 0x63, 0xc1, 0xa0, 0xc1, 0x85,
-	0xab, 0x80, 0xba, 0x75, 0x93, 0xa2, 0xb8, 0x95, 0x8a, 0x6b, 0x89, 0xc9, 0xa1, 0x0c, 0xa4, 0xd3,
-	0x71, 0xe6, 0xb4, 0xd0, 0x3b, 0x71, 0xe5, 0xf5, 0xb8, 0xf4, 0x12, 0xa4, 0x82, 0xd7, 0x21, 0x9d,
-	0x4c, 0x41, 0xfc, 0xc1, 0x5d, 0xce, 0xf3, 0xbc, 0x2f, 0x81, 0x77, 0x20, 0x29, 0x8d, 0xca, 0x8d,
-	0x9d, 0xf1, 0x0c, 0xb1, 0xb4, 0xac, 0xaa, 0x86, 0x72, 0x47, 0x76, 0xa1, 0x2a, 0xca, 0x17, 0x27,
-	0x59, 0x0c, 0xbd, 0xcb, 0xa9, 0xe1, 0x65, 0x96, 0xc1, 0xa0, 0xb0, 0x7c, 0x41, 0x5c, 0xaa, 0x66,
-	0x4c, 0x0f, 0x73, 0x72, 0x8c, 0xdb, 0x10, 0x39, 0x2d, 0xc5, 0x81, 0x38, 0x4e, 0xc6, 0x91, 0xd3,
-	0xd9, 0xbb, 0x80, 0xad, 0x4f, 0x21, 0x67, 0xd6, 0x09, 0x55, 0xfb, 0x44, 0x67, 0x1c, 0xa9, 0x3a,
-	0x34, 0xa2, 0x4d, 0x03, 0x77, 0xa0, 0xc7, 0x8a, 0x1b, 0x92, 0x1d, 0x8f, 0xda, 0x03, 0x07, 0xd0,
-	0x51, 0xd3, 0x89, 0xec, 0x7a, 0xb6, 0xfe, 0x44, 0x09, 0x71, 0x35, 0xd3, 0x4c, 0x9a, 0x65, 0xcf,
-	0xd3, 0xcd, 0x89, 0xbb, 0xd0, 0x77, 0x5c, 0xf2, 0xdc, 0xc9, 0xbe, 0xff, 0x4b, 0xb8, 0x70, 0x1f,
-	0xa0, 0xb2, 0x54, 0x32, 0xd5, 0x77, 0x25, 0xcb, 0xd8, 0x97, 0x92, 0x40, 0x0a, 0x5e, 0xeb, 0xb9,
-	0xa9, 0x37, 0xfa, 0x7f, 0xab, 0x03, 0x69, 0x75, 0x4d, 0x0d, 0x05, 0x9d, 0xb4, 0x3a, 0x90, 0x82,
-	0x4f, 0x9f, 0x04, 0xc4, 0x45, 0x3b, 0x16, 0x9e, 0x43, 0xf7, 0x5a, 0xe9, 0x09, 0xee, 0xe5, 0xdf,
-	0xe7, 0xcb, 0xfd, 0x76, 0xc3, 0xdf, 0x15, 0xde, 0x02, 0x5c, 0x11, 0x17, 0x96, 0x47, 0xcb, 0x1b,
-	0x8d, 0x47, 0x3f, 0x05, 0xbf, 0xce, 0x3e, 0x3c, 0xfc, 0x23, 0xe5, 0xcc, 0x68, 0xf0, 0xbc, 0x4a,
-	0xc5, 0xcb, 0x2a, 0x15, 0xaf, 0xab, 0x54, 0x3c, 0xbe, 0xa5, 0xff, 0xee, 0xfb, 0xfe, 0x8d, 0xcf,
-	0x3e, 0x02, 0x00, 0x00, 0xff, 0xff, 0x92, 0xa8, 0x46, 0xc7, 0xf0, 0x01, 0x00, 0x00,
+	// 463 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0x4f, 0x8b, 0xd3, 0x40,
+	0x18, 0xc6, 0x4d, 0xba, 0xdb, 0xda, 0xc1, 0x3f, 0x75, 0x90, 0x35, 0x54, 0x6d, 0xbb, 0x51, 0xa1,
+	0x17, 0x27, 0xea, 0x82, 0x87, 0x05, 0x0f, 0x29, 0x8a, 0x57, 0xe9, 0x1e, 0x3d, 0xc8, 0x34, 0x79,
+	0x1b, 0x87, 0x4d, 0x66, 0xb2, 0x33, 0x6f, 0x0a, 0x8b, 0x78, 0xf1, 0xe0, 0x45, 0xf0, 0xe2, 0xc5,
+	0x8f, 0xe4, 0x51, 0xf0, 0xbe, 0x48, 0xf5, 0x13, 0xf4, 0x13, 0x48, 0x67, 0xa6, 0x2a, 0xfe, 0x41,
+	0x84, 0xbd, 0xe5, 0x79, 0x7e, 0xef, 0x93, 0x79, 0x86, 0x77, 0x48, 0x97, 0xd7, 0x82, 0xd5, 0x5a,
+	0xa1, 0xa2, 0x94, 0x6b, 0x14, 0x59, 0x09, 0xcc, 0x80, 0x5e, 0x88, 0x0c, 0xd8, 0xe2, 0x6e, 0xff,
+	0x76, 0x21, 0xf0, 0x79, 0x33, 0x63, 0x99, 0xaa, 0x92, 0x42, 0x15, 0x2a, 0xb1, 0xa3, 0xb3, 0x66,
+	0x6e, 0x95, 0x15, 0xf6, 0xcb, 0xfd, 0xa2, 0x7f, 0xb5, 0x50, 0xaa, 0x28, 0xe1, 0xc7, 0x14, 0x54,
+	0x35, 0x1e, 0x7b, 0x78, 0xcd, 0x43, 0x5e, 0x8b, 0x84, 0x4b, 0xa9, 0x90, 0xa3, 0x50, 0xd2, 0x38,
+	0x1a, 0xbf, 0x0e, 0x48, 0x2f, 0xd5, 0xf8, 0x10, 0x90, 0x8b, 0x72, 0x0a, 0x47, 0x0d, 0x18, 0xa4,
+	0x7b, 0x24, 0x34, 0x32, 0x0a, 0x46, 0xc1, 0xb8, 0x3b, 0xb9, 0xb1, 0x3a, 0x19, 0x0e, 0xe7, 0x4a,
+	0x57, 0xfb, 0xb1, 0xe4, 0x15, 0xc4, 0xa3, 0x05, 0x2f, 0x45, 0xce, 0x11, 0xf6, 0x63, 0x0d, 0x47,
+	0x8d, 0xd0, 0x90, 0xc7, 0xd3, 0xd0, 0x48, 0xfa, 0x80, 0xb4, 0x0d, 0x72, 0x6c, 0x4c, 0x14, 0x8e,
+	0x82, 0x71, 0x6b, 0x72, 0x6b, 0x75, 0x32, 0xdc, 0x75, 0x41, 0xe7, 0xff, 0x39, 0xea, 0x43, 0xf1,
+	0x9b, 0x90, 0x9c, 0xff, 0xa9, 0x88, 0xa9, 0xe9, 0x05, 0x12, 0x8a, 0xdc, 0xb6, 0x68, 0x4d, 0x43,
+	0x91, 0xfb, 0x56, 0xe1, 0xff, 0xb5, 0xba, 0x4c, 0xb6, 0x51, 0x60, 0x09, 0x51, 0x6b, 0x9d, 0x9b,
+	0x3a, 0x41, 0x7b, 0xa4, 0x25, 0xaa, 0x22, 0xda, 0xb2, 0xde, 0xfa, 0x93, 0x46, 0xa4, 0x93, 0x29,
+	0x89, 0x20, 0x31, 0xda, 0xb6, 0xee, 0x46, 0xd2, 0x9d, 0xef, 0xf7, 0x6a, 0xdb, 0x2a, 0x5e, 0xd1,
+	0xeb, 0x84, 0x64, 0x1a, 0x38, 0x42, 0xfe, 0x8c, 0x63, 0xd4, 0xb1, 0xa1, 0xae, 0x77, 0x52, 0x5c,
+	0xe3, 0xa6, 0xce, 0x37, 0xf8, 0xac, 0xc3, 0xde, 0x71, 0x38, 0x87, 0x12, 0x3c, 0xee, 0x3a, 0xec,
+	0x9d, 0x14, 0xef, 0xbd, 0x0d, 0x49, 0x27, 0x75, 0xef, 0x82, 0xde, 0x27, 0x5b, 0x4f, 0x84, 0x2c,
+	0xe8, 0x0e, 0x73, 0x9b, 0x64, 0x9b, 0x35, 0xb3, 0x47, 0xeb, 0x35, 0xf7, 0xff, 0xe2, 0x53, 0x49,
+	0xc8, 0x63, 0xc0, 0x54, 0xe3, 0xe4, 0xf8, 0x40, 0xd2, 0x9b, 0xec, 0xf7, 0x77, 0xc6, 0x7e, 0xdd,
+	0x7c, 0x7f, 0xf7, 0x1f, 0x53, 0xa6, 0x8e, 0xaf, 0xbc, 0xfa, 0xf4, 0xf5, 0x5d, 0x78, 0x89, 0x5e,
+	0x4c, 0xcc, 0x21, 0x26, 0x73, 0x7e, 0x08, 0x3a, 0x79, 0x61, 0xe4, 0x4b, 0xfa, 0x94, 0x9c, 0x73,
+	0xe7, 0x1d, 0xa0, 0x06, 0x5e, 0x9d, 0xda, 0x89, 0xe3, 0xe0, 0x4e, 0x30, 0xe9, 0x7d, 0x58, 0x0e,
+	0x82, 0x8f, 0xcb, 0x41, 0xf0, 0x79, 0x39, 0x08, 0xde, 0x7f, 0x19, 0x9c, 0x99, 0xb5, 0xed, 0x75,
+	0xf7, 0xbe, 0x05, 0x00, 0x00, 0xff, 0xff, 0xd2, 0x09, 0xf4, 0x08, 0x4b, 0x03, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -266,8 +247,9 @@ const _ = grpc.SupportPackageIsVersion4
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ArticleClient interface {
-	Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
+	Ping(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
 	GetArtBySn(ctx context.Context, in *ArtDetailRequest, opts ...grpc.CallOption) (*ArtDetailResp, error)
+	GetArtStream(ctx context.Context, opts ...grpc.CallOption) (Article_GetArtStreamClient, error)
 }
 
 type articleClient struct {
@@ -278,8 +260,8 @@ func NewArticleClient(cc *grpc.ClientConn) ArticleClient {
 	return &articleClient{cc}
 }
 
-func (c *articleClient) Ping(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error) {
-	out := new(Empty)
+func (c *articleClient) Ping(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
+	out := new(empty.Empty)
 	err := c.cc.Invoke(ctx, "/article.service.v1.Article/Ping", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -296,21 +278,56 @@ func (c *articleClient) GetArtBySn(ctx context.Context, in *ArtDetailRequest, op
 	return out, nil
 }
 
+func (c *articleClient) GetArtStream(ctx context.Context, opts ...grpc.CallOption) (Article_GetArtStreamClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_Article_serviceDesc.Streams[0], "/article.service.v1.Article/GetArtStream", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &articleGetArtStreamClient{stream}
+	return x, nil
+}
+
+type Article_GetArtStreamClient interface {
+	Send(*ArtDetailRequest) error
+	Recv() (*ArtDetailResp, error)
+	grpc.ClientStream
+}
+
+type articleGetArtStreamClient struct {
+	grpc.ClientStream
+}
+
+func (x *articleGetArtStreamClient) Send(m *ArtDetailRequest) error {
+	return x.ClientStream.SendMsg(m)
+}
+
+func (x *articleGetArtStreamClient) Recv() (*ArtDetailResp, error) {
+	m := new(ArtDetailResp)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ArticleServer is the server API for Article service.
 type ArticleServer interface {
-	Ping(context.Context, *Empty) (*Empty, error)
+	Ping(context.Context, *empty.Empty) (*empty.Empty, error)
 	GetArtBySn(context.Context, *ArtDetailRequest) (*ArtDetailResp, error)
+	GetArtStream(Article_GetArtStreamServer) error
 }
 
 // UnimplementedArticleServer can be embedded to have forward compatible implementations.
 type UnimplementedArticleServer struct {
 }
 
-func (*UnimplementedArticleServer) Ping(ctx context.Context, req *Empty) (*Empty, error) {
+func (*UnimplementedArticleServer) Ping(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
 func (*UnimplementedArticleServer) GetArtBySn(ctx context.Context, req *ArtDetailRequest) (*ArtDetailResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetArtBySn not implemented")
+}
+func (*UnimplementedArticleServer) GetArtStream(srv Article_GetArtStreamServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetArtStream not implemented")
 }
 
 func RegisterArticleServer(s *grpc.Server, srv ArticleServer) {
@@ -318,7 +335,7 @@ func RegisterArticleServer(s *grpc.Server, srv ArticleServer) {
 }
 
 func _Article_Ping_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Empty)
+	in := new(empty.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -330,7 +347,7 @@ func _Article_Ping_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/article.service.v1.Article/Ping",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ArticleServer).Ping(ctx, req.(*Empty))
+		return srv.(ArticleServer).Ping(ctx, req.(*empty.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -353,6 +370,32 @@ func _Article_GetArtBySn_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Article_GetArtStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(ArticleServer).GetArtStream(&articleGetArtStreamServer{stream})
+}
+
+type Article_GetArtStreamServer interface {
+	Send(*ArtDetailResp) error
+	Recv() (*ArtDetailRequest, error)
+	grpc.ServerStream
+}
+
+type articleGetArtStreamServer struct {
+	grpc.ServerStream
+}
+
+func (x *articleGetArtStreamServer) Send(m *ArtDetailResp) error {
+	return x.ServerStream.SendMsg(m)
+}
+
+func (x *articleGetArtStreamServer) Recv() (*ArtDetailRequest, error) {
+	m := new(ArtDetailRequest)
+	if err := x.ServerStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 var _Article_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "article.service.v1.Article",
 	HandlerType: (*ArticleServer)(nil),
@@ -366,35 +409,15 @@ var _Article_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Article_GetArtBySn_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetArtStream",
+			Handler:       _Article_GetArtStream_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
+		},
+	},
 	Metadata: "api.proto",
-}
-
-func (m *Empty) Marshal() (dAtA []byte, err error) {
-	size := m.Size()
-	dAtA = make([]byte, size)
-	n, err := m.MarshalToSizedBuffer(dAtA[:size])
-	if err != nil {
-		return nil, err
-	}
-	return dAtA[:n], nil
-}
-
-func (m *Empty) MarshalTo(dAtA []byte) (int, error) {
-	size := m.Size()
-	return m.MarshalToSizedBuffer(dAtA[:size])
-}
-
-func (m *Empty) MarshalToSizedBuffer(dAtA []byte) (int, error) {
-	i := len(dAtA)
-	_ = i
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		i -= len(m.XXX_unrecognized)
-		copy(dAtA[i:], m.XXX_unrecognized)
-	}
-	return len(dAtA) - i, nil
 }
 
 func (m *ArtDetailRequest) Marshal() (dAtA []byte, err error) {
@@ -420,6 +443,11 @@ func (m *ArtDetailRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	if m.XXX_unrecognized != nil {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Status != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.Status))
+		i--
+		dAtA[i] = 0x10
 	}
 	if len(m.Sn) > 0 {
 		i -= len(m.Sn)
@@ -528,18 +556,6 @@ func encodeVarintApi(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
-func (m *Empty) Size() (n int) {
-	if m == nil {
-		return 0
-	}
-	var l int
-	_ = l
-	if m.XXX_unrecognized != nil {
-		n += len(m.XXX_unrecognized)
-	}
-	return n
-}
-
 func (m *ArtDetailRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -549,6 +565,9 @@ func (m *ArtDetailRequest) Size() (n int) {
 	l = len(m.Sn)
 	if l > 0 {
 		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.Status != 0 {
+		n += 1 + sovApi(uint64(m.Status))
 	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
@@ -607,60 +626,6 @@ func sovApi(x uint64) (n int) {
 }
 func sozApi(x uint64) (n int) {
 	return sovApi(uint64((x << 1) ^ uint64((int64(x) >> 63))))
-}
-func (m *Empty) Unmarshal(dAtA []byte) error {
-	l := len(dAtA)
-	iNdEx := 0
-	for iNdEx < l {
-		preIndex := iNdEx
-		var wire uint64
-		for shift := uint(0); ; shift += 7 {
-			if shift >= 64 {
-				return ErrIntOverflowApi
-			}
-			if iNdEx >= l {
-				return io.ErrUnexpectedEOF
-			}
-			b := dAtA[iNdEx]
-			iNdEx++
-			wire |= uint64(b&0x7F) << shift
-			if b < 0x80 {
-				break
-			}
-		}
-		fieldNum := int32(wire >> 3)
-		wireType := int(wire & 0x7)
-		if wireType == 4 {
-			return fmt.Errorf("proto: Empty: wiretype end group for non-group")
-		}
-		if fieldNum <= 0 {
-			return fmt.Errorf("proto: Empty: illegal tag %d (wire type %d)", fieldNum, wire)
-		}
-		switch fieldNum {
-		default:
-			iNdEx = preIndex
-			skippy, err := skipApi(dAtA[iNdEx:])
-			if err != nil {
-				return err
-			}
-			if skippy < 0 {
-				return ErrInvalidLengthApi
-			}
-			if (iNdEx + skippy) < 0 {
-				return ErrInvalidLengthApi
-			}
-			if (iNdEx + skippy) > l {
-				return io.ErrUnexpectedEOF
-			}
-			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
-			iNdEx += skippy
-		}
-	}
-
-	if iNdEx > l {
-		return io.ErrUnexpectedEOF
-	}
-	return nil
 }
 func (m *ArtDetailRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -723,6 +688,25 @@ func (m *ArtDetailRequest) Unmarshal(dAtA []byte) error {
 			}
 			m.Sn = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApi(dAtA[iNdEx:])

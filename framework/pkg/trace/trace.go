@@ -8,12 +8,13 @@ import (
 	"io"
 )
 
-var Tracer opentracing.Tracer
+var Tracer, ClientTracer opentracing.Tracer
 
 func InitTracer(service string) (opentracing.Tracer, io.Closer) {
-	tracer, closer := initJaeger(service)
-	Tracer = tracer
-	return tracer, closer
+	ServiceT, closer := initJaeger(service)
+	ClientT, closer := initJaeger(service + "_client")
+	Tracer, ClientTracer = ServiceT, ClientT
+	return Tracer, closer
 }
 
 func initJaeger(service string) (opentracing.Tracer, io.Closer) {

@@ -8,8 +8,10 @@ require (
 	github.com/g4zhuj/grpc-wrapper v0.0.0-20190508092021-ced55bb6c5d6 // indirect
 	github.com/gin-gonic/gin v1.5.0 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.1 // indirect
 	github.com/opentracing/opentracing-go v1.1.0
+	github.com/pkg/errors v0.8.1
 	github.com/rcrowley/go-metrics v0.0.0-20190826022208-cac0b30c2563 // indirect
 	github.com/rifflock/lfshook v0.0.0-20180920164130-b9218ef580f5 // indirect
 	github.com/satori/go.uuid v1.2.0 // indirect
@@ -21,6 +23,7 @@ require (
 	go.uber.org/zap v1.13.0
 	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
 	golang.org/x/tools v0.0.0-20200211045251-2de505fc5306 // indirect
-	google.golang.org/grpc v1.26.0 // indirect
+	google.golang.org/genproto v0.0.0-20190819201941-24fa4b261c55
+	google.golang.org/grpc v1.26.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )

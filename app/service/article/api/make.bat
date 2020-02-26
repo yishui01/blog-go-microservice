@@ -1,1 +1,1 @@
-protoc -I=. --gofast_out=plugins=grpc:. api.proto
+protoc -I=. -I=../../../../framework/third_party/  --grpc-gateway_out=logtostderr=true:. --gofast_out=plugins=grpc:. api.proto

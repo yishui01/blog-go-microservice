@@ -49,7 +49,7 @@ func (engine *HttpEngine) Start() error {
 	conf := engine.conf
 	l, err := net.Listen(conf.Network, conf.Addr)
 	if err != nil {
-		errors.Wrapf(err, "HTTP server: listen tcp: %s", conf.Addr)
+		err = errors.Wrapf(err, "HTTP server: listen tcp: %s", conf.Addr)
 		return err
 	}
 

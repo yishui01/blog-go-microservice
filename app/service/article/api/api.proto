@@ -1,16 +1,19 @@
 syntax = "proto3";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
 
 package article.service.v1;
 
-message Empty {}
-
 message ArtDetailRequest {
-    string sn = 1;
+    string sn = 1 [(gogoproto.moretags) = 'form:"name" validate:"required"'];
+    int64 status = 2 [(gogoproto.moretags) = 'form:"status" validate:"required"'];
 }
 
 message ArtDetailResp {
     int64  id      = 1;
-    string sn      = 2;
+    string sn      = 2 [(gogoproto.moretags) = 'form:"name" validate:"required"'];
     string title   = 3;
     string img     = 4;
     string content = 5;
@@ -21,6 +24,11 @@ message ArtDetailResp {
 }
 
 service Article {
-    rpc Ping(Empty) returns (Empty);
-    rpc GetArtBySn(ArtDetailRequest) returns (ArtDetailResp);
+    rpc Ping(.google.protobuf.Empty) returns (.google.protobuf.Empty);
+    rpc GetArtBySn(ArtDetailRequest) returns (ArtDetailResp){
+        option(google.api.http) = {
+            get:"/article/sn/{sn}"
+        };
+    };
+    rpc GetArtStream(stream ArtDetailRequest) returns (stream ArtDetailResp);
 }

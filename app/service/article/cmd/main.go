@@ -15,6 +15,7 @@ func main() {
 	flag.Parse()
 	setting.InitWithLogger()
 	_, closeFunc, err := internal.InitApp()
+
 	if err != nil {
 		panic("init app err:" + err.Error())
 	}

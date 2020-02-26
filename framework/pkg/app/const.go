@@ -1,6 +1,6 @@
 package app
 
 const (
-	APP_NAME  = "appname"
+	APP_NAME  = "servicename"
 	HOST_NAME = "hostname"
 )
