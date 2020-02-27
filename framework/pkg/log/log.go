@@ -16,6 +16,10 @@ var (
 	SugarLogger *zap.SugaredLogger
 )
 
+func init() {
+	Default()
+}
+
 //通用配置
 type LogConfig struct {
 	EnableHost bool   //Add host name and other additional fields

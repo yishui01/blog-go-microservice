@@ -3,7 +3,7 @@ module github.com/zuiqiangqishao/framework
 go 1.13
 
 require (
-	github.com/coreos/etcd v3.3.18+incompatible // indirect
+	github.com/coreos/etcd v3.3.18+incompatible
 	github.com/g4zhuj/go-metrics-falcon v0.0.0-20180427054158-5159ced4eafb // indirect
 	github.com/g4zhuj/grpc-wrapper v0.0.0-20190508092021-ced55bb6c5d6 // indirect
 	github.com/gin-gonic/gin v1.5.0 // indirect
@@ -20,6 +20,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/uber/jaeger-client-go v2.22.1+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
+	go.etcd.io/etcd v3.3.18+incompatible // indirect
 	go.uber.org/zap v1.13.0
 	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a
 	golang.org/x/tools v0.0.0-20200211045251-2de505fc5306 // indirect

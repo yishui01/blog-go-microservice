@@ -7,35 +7,16 @@ import (
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
-	"github.com/zuiqiangqishao/framework/pkg/ecode/transform"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
-	"math"
 	"net"
 	"net/http"
 	"strconv"
 	"sync"
 	"time"
-)
-
-var (
-	_defaultSerConf = &ServerConfig{
-		Network:           "tcp",
-		Addr:              "0.0.0.0:9000",
-		Timeout:           time.Second,
-		IdleTimeout:       time.Second * 60,
-		MaxLifeTime:       time.Hour * 2,
-		ForceCloseWait:    time.Second * 20,
-		KeepAliveInterval: time.Second * 60,
-		KeepAliveTimeout:  time.Second * 20,
-		HttpAddr:          "0.0.0.0:9001",
-		HttpReadTimeout:   time.Second * 3,
-		HttpWriteTimeout:  time.Second * 20,
-	}
-	_abortIndex int8 = math.MaxInt8 / 2
 )
 
 type GrpcServer struct {
@@ -45,64 +26,6 @@ type GrpcServer struct {
 	mutex       sync.RWMutex
 	unaryMidle  []grpc.UnaryServerInterceptor
 	streamMidle []grpc.StreamServerInterceptor
-}
-
-// ServerConfig is rpc server conf.
-type ServerConfig struct {
-	// Network is grpc listen network,default value is tcp
-	Network string
-	// Addr is grpc listen addr,default value is 0.0.0.0:9000
-	Addr string
-	// Timeout is context timeout for per rpc call.
-	Timeout time.Duration
-	// IdleTimeout is a duration for the amount of time after which an idle connection would be closed by sending a GoAway.
-	// Idleness duration is defined since the most recent time the number of outstanding RPCs became zero or the connection establishment.
-	IdleTimeout time.Duration
-	// MaxLifeTime is a duration for the maximum amount of time a connection may exist before it will be closed by sending a GoAway.
-	// A random jitter of +/-10% will be added to MaxConnectionAge to spread out connection storms.
-	MaxLifeTime time.Duration
-	// ForceCloseWait is an additive period after MaxLifeTime after which the connection will be forcibly closed.
-	ForceCloseWait time.Duration
-	// KeepAliveInterval is after a duration of this time if the server doesn't see any activity it pings the client to see if the transport is still alive.
-	KeepAliveInterval time.Duration
-	// KeepAliveTimeout  is After having pinged for keepalive check, the server waits for a duration of Timeout and if no activity is seen even after that
-	// the connection is closed.
-	KeepAliveTimeout time.Duration
-	// LogFlag to control log behaviour
-	// Disable: 1 DisableArgs: 2 DisableInfo: 4
-	LogFlag int8
-
-	//grpc-gateway config
-	HttpAddr         string
-	HttpReadTimeout  time.Duration
-	HttpWriteTimeout time.Duration
-}
-
-//处理当前grpc配置的超时时间和上游传下来的ctx剩余时间，设置当前请求的最终超时时间
-func (s *GrpcServer) handle() grpc.UnaryServerInterceptor {
-	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
-		var (
-			cancel func()
-		)
-		s.mutex.RLock()
-		conf := s.conf
-		s.mutex.RUnlock()
-		//将当前grpc剩余的超时时间和配置的超时时间比较，取较小的那个
-		timeout := conf.Timeout
-		if de, ok := ctx.Deadline(); ok {
-			ctimeout := time.Until(de)
-			if ctimeout-time.Millisecond*20 > 0 {
-				ctimeout = ctimeout - time.Millisecond*20
-			}
-			if timeout > ctimeout {
-				timeout = ctimeout
-			}
-			ctx, cancel = context.WithTimeout(ctx, timeout)
-			defer cancel()
-		}
-		resp, err = handler(ctx, req)
-		return resp, transform.FromError(err).Err()
-	}
 }
 
 // NewServer returns a new blank Server instance with a default server interceptor.
@@ -212,25 +135,14 @@ func (s *GrpcServer) UseStream(handlers ...grpc.StreamServerInterceptor) *GrpcSe
 	return s
 }
 
-func (s *GrpcServer) HttpStart(registerFn func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error), opt ...grpc.DialOption) {
-	go func() {
-		panic("grpcgateway start http err:" + s.GetHttpServer(registerFn, opt...).ListenAndServe().Error())
-	}()
-	log.SugarLogger.Infof("start http listen on: %v", s.conf.HttpAddr)
-}
-
-func (s *GrpcServer) HttpStartTLS(registerFn func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error), certFile, keyFile string, opt ...grpc.DialOption) {
-	go func() {
-		panic("grpcgateway start http tls err:" + s.GetHttpServer(registerFn, opt...).ListenAndServeTLS(certFile, keyFile).Error())
-	}()
-	log.SugarLogger.Infof("start https listen on: %v", s.conf.HttpAddr)
-}
-
-//用grpcgateway将grpc映射到http，这里用带Dail的那个注册方法注册httpHandler，不然不会经过RPC server的中间件链路追踪、log等
+//用grpcgateway将grpc映射到httpServer
 func (s *GrpcServer) GetHttpServer(registerFn func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error), opt ...grpc.DialOption) (srv *http.Server) {
 	mux := runtime.NewServeMux()
 	t := trace.ClientTracer
 	opt = append(opt, grpc.WithUnaryInterceptor(grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(t))))
+	//这里用的是带Dail的那个注册方法，请求路径为：http=>gateway=>tcp=>grpc Server
+	//还有一个注册方法就是直接把Server注册到gateway里，gateway收到请求后直接处理请求，然后返回给前端，不走RPC客户端调用了
+	//只是这样的话就不会经过RPC server的中间件链路追踪、log等，这样就无法追踪请求了，所以目前使用的前者
 	err := registerFn(context.Background(), mux, s.conf.Addr, opt)
 	if err != nil {
 		log.ZapLogger.Fatal("注册grpc-gateway失败" + err.Error())
@@ -243,6 +155,23 @@ func (s *GrpcServer) GetHttpServer(registerFn func(ctx context.Context, mux *run
 	}
 	s.HttpServer = server
 	return server
+}
+
+//将映射后的httpServer启动
+func (s *GrpcServer) HttpStart(registerFn func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error), opt ...grpc.DialOption) *GrpcServer {
+	go func() {
+		panic("grpcgateway start http err:" + s.GetHttpServer(registerFn, opt...).ListenAndServe().Error())
+	}()
+	log.SugarLogger.Infof("start http listen on: %v", s.conf.HttpAddr)
+	return s
+}
+
+func (s *GrpcServer) HttpStartTLS(registerFn func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error), certFile, keyFile string, opt ...grpc.DialOption) *GrpcServer {
+	go func() {
+		panic("grpcgateway start http tls err:" + s.GetHttpServer(registerFn, opt...).ListenAndServeTLS(certFile, keyFile).Error())
+	}()
+	log.SugarLogger.Infof("start https listen on: %v", s.conf.HttpAddr)
+	return s
 }
 
 //设置各项配置，地址、连接协议、grpc的ctx超时时间、各项keep-alive参数
