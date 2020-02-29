@@ -1,6 +1,40 @@
 package discovery
 
-import "context"
+import (
+	"context"
+	"github.com/pkg/errors"
+	"sync"
+)
+
+var _discoveryDriver = DriverMaps{
+	drivers: make(map[string]func() (Builder, error)),
+}
+
+type DriverMaps struct {
+	mu      sync.RWMutex
+	drivers map[string]func() (Builder, error)
+}
+
+//注册服务发现驱动
+func RegisterDriver(name string, f func() (Builder, error)) error {
+	if f == nil {
+		return errors.New("can not register nil driver")
+	}
+	_discoveryDriver.mu.Lock()
+	defer _discoveryDriver.mu.Unlock()
+	_discoveryDriver.drivers[name] = f
+
+	return nil
+}
+
+func GetDriver(name string) (func() (Builder, error), error) {
+	_discoveryDriver.mu.RLock()
+	defer _discoveryDriver.mu.RUnlock()
+	if f, ok := _discoveryDriver.drivers[name]; ok {
+		return f, nil
+	}
+	return nil, errors.New("not registered driver:" + name)
+}
 
 type Instance struct {
 	//service name
@@ -28,9 +62,9 @@ type InstancesInfo struct {
 }
 
 type Builder interface {
-	Build(serviceName string) Resolver                                                  //返回一个服务resolver，用于拉取该服务名下的节点
-	Register(ctx context.Context, ins *Instance) (cancel context.CancelFunc, err error) //注册服务
-	Close() error                                                                       //反注册服务，一般直接调Register返回的cancel即可
+	Build(serviceName string) Resolver                             //返回一个服务resolver，用于拉取该服务名下的节点
+	Register(ins *Instance) (cancel context.CancelFunc, err error) //注册服务
+	Close() error                                                  //反注册服务，一般直接调Register返回的cancel即可
 }
 
 type Resolver interface {

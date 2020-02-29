@@ -7,6 +7,10 @@ import (
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
+	"github.com/spf13/viper"
+	"github.com/zuiqiangqishao/framework/pkg/app"
+	"github.com/zuiqiangqishao/framework/pkg/discovery"
+	"github.com/zuiqiangqishao/framework/pkg/discovery/etcd"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/trace"
 	"google.golang.org/grpc"
@@ -26,6 +30,12 @@ type GrpcServer struct {
 	mutex       sync.RWMutex
 	unaryMidle  []grpc.UnaryServerInterceptor
 	streamMidle []grpc.StreamServerInterceptor
+
+	//服务注册驱动
+	mux        sync.RWMutex
+	driverName string
+	cancelFunc context.CancelFunc
+	builder    discovery.Builder
 }
 
 // NewServer returns a new blank Server instance with a default server interceptor.
@@ -176,6 +186,7 @@ func (s *GrpcServer) HttpStartTLS(registerFn func(ctx context.Context, mux *runt
 
 //设置各项配置，地址、连接协议、grpc的ctx超时时间、各项keep-alive参数
 func (s *GrpcServer) SetConfig(conf *ServerConfig) error {
+	discovery.RegisterDriver(etcd.ETCD_DRIVER_NAME, etcd.GetClosure()) //注册ETCD服务发现驱动
 
 	if conf == nil {
 		conf = _defaultSerConf
@@ -212,20 +223,78 @@ func (s *GrpcServer) SetConfig(conf *ServerConfig) error {
 
 }
 
+//将服务注册到注册中心
+func (s *GrpcServer) Register(ins *discovery.Instance) (cancel context.CancelFunc, err error) {
+	if s.builder == nil {
+		//尝试自动根据配置文件查找驱动
+		driverName := viper.GetString("registry.driver")
+		f, err := discovery.GetDriver(driverName)
+		if err != nil {
+			return nil, errors.Wrap(err, "Not set Discovery Builder")
+		}
+
+		builder, err := f()
+		if err != nil {
+			return nil, errors.Wrap(err, "Can not build Discovery Builder")
+		}
+		s.SetDiscoveryBuilder(driverName, builder)
+	}
+	if ins == nil {
+		ins = &discovery.Instance{
+			Name:     app.AppConf.AppName,
+			HostName: app.AppConf.HostName,
+			Addrs:    []string{s.conf.Addr},
+		}
+	}
+	cancelFunc, err := s.builder.Register(ins)
+	s.cancelFunc = cancelFunc
+	return cancelFunc, err
+}
+
+//反注册服务
+func (s *GrpcServer) UnRegister() {
+	if s.cancelFunc != nil {
+		s.cancelFunc()
+	}
+}
+
+//设置服务注册驱动
+func (s *GrpcServer) SetDiscoveryBuilder(driverName string, build discovery.Builder) *GrpcServer {
+	s.mux.Lock()
+	defer s.mux.Unlock()
+	s.driverName = driverName
+	s.builder = build
+	return s
+}
+
+func (s *GrpcServer) GetDiscoveryDriverName() string {
+	s.mux.RLock()
+	defer s.mux.RUnlock()
+	return s.driverName
+}
+func (s *GrpcServer) GetDiscoveryBuilder() discovery.Builder {
+	s.mux.RLock()
+	defer s.mux.RUnlock()
+	return s.builder
+}
+
 // Shutdown stops the server gracefully. It stops the server from
 // accepting new connections and RPCs and blocks until all the pending RPCs are
 // finished or the context deadline is reached.
 func (s *GrpcServer) Shutdown(ctx context.Context) (err error) {
 	ch := make(chan struct{})
+	s.UnRegister()
 	go func() {
 		s.Server.GracefulStop()
 		close(ch)
 	}()
+
 	select {
 	case <-ctx.Done():
 		s.Server.Stop()
 		err = ctx.Err()
 	case <-ch:
 	}
+
 	return
 }

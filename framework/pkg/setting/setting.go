@@ -4,6 +4,7 @@ import (
 	"flag"
 	"github.com/spf13/viper"
 	"github.com/zuiqiangqishao/framework/pkg/app"
+	"github.com/zuiqiangqishao/framework/pkg/db/etcd"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/trace"
 	"go.uber.org/zap"
@@ -27,7 +28,6 @@ func Init() {
 	if err := viper.ReadInConfig(); err != nil {
 		panic("load app config err" + err.Error())
 	}
-
 	if err := viper.Sub("app").Unmarshal(&app.AppConf); err != nil {
 		std.Fatalf("unable to decode appConfig struct, %v", err)
 	}
@@ -43,6 +43,7 @@ func Init() {
 	if err := viper.Sub("log.file").Unmarshal(&log.FileConf); err != nil {
 		std.Fatalf("unable to decode logFile config struct, %v", err)
 	}
+	etcd.Init()
 
 }
 

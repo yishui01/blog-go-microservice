@@ -38,18 +38,18 @@ func TestNew(t *testing.T) {
 	}()
 	time.Sleep(time.Second)
 
-	app1Cancel, err := builder.Register(context.Background(), &discovery.Instance{
+	app1Cancel, err := builder.Register(&discovery.Instance{
 		Name:     "app1",
 		HostName: "h1",
 		Addrs:    []string{"120.77.65.70"},
 	})
-	_, err = builder.Register(context.Background(), &discovery.Instance{
+	_, err = builder.Register(&discovery.Instance{
 		Name:     "app1",
 		HostName: "h1",
 		Addrs:    []string{"666.666.666.666"},
 	})
 
-	app2Cancel, err := builder.Register(context.Background(), &discovery.Instance{
+	app2Cancel, err := builder.Register(&discovery.Instance{
 		Name:     "app2",
 		HostName: "h2",
 		Addrs:    []string{"000.666.999", "444.555.222.333"},

@@ -1,15 +1,14 @@
 package grpc
 
 import (
-	"github.com/zuiqiangqishao/framework/pkg/discovery"
-	"github.com/zuiqiangqishao/framework/pkg/discovery/etcd"
+	"github.com/zuiqiangqishao/framework/pkg/app"
 	"math"
-	"sync"
 	"time"
 )
 
 var (
 	_defaultSerConf = &ServerConfig{
+		ServiceName:       app.AppConf.AppName,
 		Network:           "tcp",
 		Addr:              "0.0.0.0:9000",
 		Timeout:           time.Second,
@@ -21,22 +20,13 @@ var (
 		HttpAddr:          "0.0.0.0:9001",
 		HttpReadTimeout:   time.Second * 3,
 		HttpWriteTimeout:  time.Second * 20,
-		registerDriver:    DefaultRegisterDriver(),
 	}
 	_abortIndex int8 = math.MaxInt8 / 2
 )
 
-func DefaultRegisterDriver() map[string]discovery.Builder {
-	maps := make(map[string]discovery.Builder)
-	build, err := etcd.New(nil)
-	if err != nil {
-		maps["etcd"] = build
-	}
-	return maps
-}
-
 // ServerConfig is rpc server conf.
 type ServerConfig struct {
+	ServiceName string
 	// Network is grpc listen network,default value is tcp
 	Network string
 	// Addr is grpc listen addr,default value is 0.0.0.0:9000
@@ -64,24 +54,4 @@ type ServerConfig struct {
 	HttpAddr         string
 	HttpReadTimeout  time.Duration
 	HttpWriteTimeout time.Duration
-
-	//服务注册驱动
-	mux            sync.RWMutex
-	registerDriver map[string]discovery.Builder
-}
-
-func (c *ServerConfig) AddRegisterDriver(driverName string, build discovery.Builder) {
-	c.mux.Lock()
-	c.registerDriver[driverName] = build
-	c.mux.Unlock()
-}
-func (c *ServerConfig) DelRegisterDriver(driverName string) {
-	c.mux.Lock()
-	delete(c.registerDriver, driverName)
-	c.mux.Unlock()
-}
-func (c *ServerConfig) SetRegisterDriver(buildMaps map[string]discovery.Builder) {
-	c.mux.Lock()
-	c.registerDriver = buildMaps
-	c.mux.Unlock()
 }

@@ -22,6 +22,7 @@ func InitApp() (app *App, closeFunc func(), err error) {
 	}
 	//httpSrv, err := http.New(s)
 	grpcSrv, err := grpc.New(s)
+
 	return &App{service: s, grpc: grpcSrv}, func() {
 		cf1()
 		cf2()

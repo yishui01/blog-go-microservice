@@ -28,14 +28,17 @@ appname="article"
     readTimeout="10"
     writeTimeout="10"
 
+[etcd] #如果使用etcd注册服务发现的话，需要配置该项
+    endpoints=["192.168.136.109:2379","192.168.136.109:3379","192.168.136.109:4379"]
+    username=""
+    passwd=""
+    leasettl="5"   #5秒续约一次
+    dialTimeout="5" #连接超时时间
+    prefix="micro_srv" #服务注册目录前缀
+
 [registry]
     driver="etcd" #暂时只支持etcd和直连(direct)
     loadbalance="round_robin" #客户端负载均衡方式
-    [registry.etcd]
-        endpoints=["192.168.136.109:2379","192.168.136.109:3379","192.168.136.109:4379"]
-        username=""
-        passwd=""
-        leasettl="5s" #5秒续约一次
     [registry.direct]
         article_service="0.0.0.0:9000" # [ 服务名=>grpc地址 ]
         #user_service="0.0.0.0:9002" # [ 服务名=>grpc地址 ]

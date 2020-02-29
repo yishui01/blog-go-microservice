@@ -3,57 +3,30 @@ package etcd
 import (
 	"context"
 	"encoding/json"
-	"flag"
 	"fmt"
 	"github.com/coreos/etcd/clientv3"
 	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/pkg/errors"
+	"github.com/zuiqiangqishao/framework/pkg/db/etcd"
 	"github.com/zuiqiangqishao/framework/pkg/discovery"
 	"github.com/zuiqiangqishao/framework/pkg/log"
-	"google.golang.org/grpc"
-	"os"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 )
 
-var (
-	endpoints  string //etcd地址
-	etcdPrefix string //服务注册目录前缀
-
-	//秒
-	registerTTL        = 90
-	defaultDialTimeout = 30
-)
+const ETCD_DRIVER_NAME = "etcd"
 
 var (
-	_once    sync.Once
 	_builder discovery.Builder
+	mu       sync.RWMutex
 	//ErrDuplication is a register duplication err
 	ErrDuplication = errors.New("etcd: instance duplicate registration")
 )
 
-func init() {
-	addFlag()
-}
-
-func addFlag() {
-	// env
-	flag.StringVar(&endpoints, "etcd.endpoints", os.Getenv("ETCD_ENDPOINTS"), "etcd.endpoints is etcd endpoints. value: 127.0.0.1:2379,127.0.0.2:2379 etc.")
-	flag.StringVar(&etcdPrefix, "etcd.prefix", defaultString("ETCD_PREFIX", "micro_etcd_"), "etcd globe key prefix or use ETCD_PREFIX env variable. value etcd_prefix etc.")
-}
-
-func defaultString(env, value string) string {
-	v := os.Getenv(env)
-	if v == "" {
-		return value
-	}
-	return v
-}
-
 //etcd服务注册发现总结构
 type EtcdBuilder struct {
+	conf       *etcd.EtcdConfig
 	cli        *clientv3.Client
 	ctx        context.Context
 	cancelFunc context.CancelFunc
@@ -78,24 +51,58 @@ type Resolve struct {
 	builder     *EtcdBuilder
 }
 
-//新建一个EtcdBuilder
-func New(c *clientv3.Config) (e *EtcdBuilder, err error) {
-	if c == nil {
-		if endpoints == "" {
-			panic(fmt.Errorf("invalid etcd config endpoints:%+v", endpoints))
-		}
-		c = &clientv3.Config{
-			Endpoints:   strings.Split(endpoints, ","),
-			DialTimeout: time.Second * time.Duration(defaultDialTimeout),
-			DialOptions: []grpc.DialOption{grpc.WithBlock()},
-		}
+//闭包用于注册自身
+func GetClosure() func() (discovery.Builder, error) {
+	return func() (discovery.Builder, error) {
+		return GetBuilder(nil)
 	}
-	cli, err := clientv3.New(*c)
+}
+
+//获取一个EtcdBuilder，全局单例模式
+func GetBuilder(c *clientv3.Config) (discovery.Builder, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	if _builder == nil {
+		b, err := New(c)
+		if err != nil {
+			return nil, errors.Wrap(err, "获取etcdBuild失败")
+		}
+		_builder = b
+	}
+
+	return _builder, nil
+}
+
+func SetBuilder(c *clientv3.Config) (discovery.Builder, error) {
+	mu.Lock()
+	defer mu.Unlock()
+	b, err := New(c)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "设置etcdBuild失败")
 	}
+	_builder = b
+	return b, nil
+}
+
+//新建一个EtcdBuilder
+func New(c *clientv3.Config) (*EtcdBuilder, error) {
+	var (
+		cli *clientv3.Client
+		err error
+	)
+	if c == nil {
+		cli, err = etcd.GetDefaultClient()
+
+	} else {
+		cli, err = clientv3.New(*c)
+	}
+
+	if err != nil {
+		return nil, errors.WithMessage(err, "create EtcdBuilder error ")
+	}
+
 	ctx, cancel := context.WithCancel(context.Background())
-	e = &EtcdBuilder{
+	e := &EtcdBuilder{
 		cli:        cli,
 		ctx:        ctx,
 		cancelFunc: cancel,
@@ -103,14 +110,6 @@ func New(c *clientv3.Config) (e *EtcdBuilder, err error) {
 		registry:   map[string]struct{}{},
 	}
 	return e, err
-}
-
-//创建一个EtcdBuilder，全局单例模式
-func Builder(c *clientv3.Config) discovery.Builder {
-	_once.Do(func() {
-		_builder, _ = New(c)
-	})
-	return _builder
 }
 
 //构建服务resolver，然后可以用它拉取对应的服务节点
@@ -184,7 +183,7 @@ func (e *EtcdBuilder) Scheme() string {
 }
 
 //注册服务到ETCD中，并开启goroutine等待反注册
-func (e *EtcdBuilder) Register(ctx context.Context, ins *discovery.Instance) (cancelFunc context.CancelFunc, err error) {
+func (e *EtcdBuilder) Register(ins *discovery.Instance) (cancelFunc context.CancelFunc, err error) {
 	e.mutex.Lock()
 	if _, ok := e.registry[ins.Name]; ok {
 		err = ErrDuplication
@@ -211,7 +210,7 @@ func (e *EtcdBuilder) Register(ctx context.Context, ins *discovery.Instance) (ca
 
 	go func() {
 
-		ticker := time.NewTicker(time.Duration(registerTTL/3) * time.Second)
+		ticker := time.NewTicker(time.Duration(etcd.GetConf().LeaseTTL) * time.Second)
 		defer ticker.Stop()
 		for {
 			select {
@@ -237,9 +236,9 @@ func (e *EtcdBuilder) register(ctx context.Context, ins *discovery.Instance) (er
 	prefix := e.keyPrefix(ins)
 	val, _ := json.Marshal(ins)
 
-	ttlResp, err := e.cli.Grant(context.TODO(), int64(registerTTL))
+	ttlResp, err := e.cli.Grant(context.TODO(), int64(etcd.GetConf().LeaseTTL))
 	if err != nil {
-		log.SugarLogger.Error("etcd: register client.Grant(%v) error(%v)", registerTTL, err)
+		log.SugarLogger.Error("etcd: register client.Grant(%v) error(%v)", etcd.GetConf().LeaseTTL, err)
 		return err
 	}
 	_, err = e.cli.Put(ctx, prefix, string(val), clientv3.WithLease(ttlResp.ID))
@@ -265,14 +264,14 @@ func (e *EtcdBuilder) unregister(ins *discovery.Instance) (err error) {
 }
 
 func (e *EtcdBuilder) keyPrefix(ins *discovery.Instance) string {
-	return fmt.Sprintf("/%s/%s/%s", etcdPrefix, ins.Name, ins.HostName)
+	return fmt.Sprintf("/%s/%s/%s", etcd.GetConf().ServicePrefix, ins.Name, ins.HostName)
 }
 
 /************************************和 appInfo 有关的*********************************************/
 //watch这个服务目录下的kv，一旦发生变化并且是更新或者是删除，自动获取最新服务列表并赋值给appInfo.ins字段，并通知appInfo内的所有Resolver
 func (a *appInfo) watch(serviceName string) {
 	_ = a.fetchStore(serviceName)
-	prefix := fmt.Sprintf("/%s/%s/", etcdPrefix, serviceName)
+	prefix := fmt.Sprintf("/%s/%s/", etcd.GetConf().ServicePrefix, serviceName)
 	rch := a.e.cli.Watch(a.e.ctx, prefix, clientv3.WithPrefix())
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
@@ -285,7 +284,7 @@ func (a *appInfo) watch(serviceName string) {
 
 //获取这个服务目录下的所有kv，存入appInfo的ins（automic.Value)中
 func (a *appInfo) fetchStore(serviceName string) error {
-	prefix := fmt.Sprintf("/%s/%s/", etcdPrefix, serviceName)
+	prefix := fmt.Sprintf("/%s/%s/", etcd.GetConf().ServicePrefix, serviceName)
 	resp, err := a.e.cli.Get(a.e.ctx, prefix, clientv3.WithPrefix())
 	if err != nil {
 		log.SugarLogger.Errorf("etcd: fetch client.Get(%s) error(%+v)", prefix, err)

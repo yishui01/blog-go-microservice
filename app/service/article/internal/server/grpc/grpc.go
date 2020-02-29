@@ -14,6 +14,10 @@ func New(svc pb.ArticleServer) (grpcServer *zgrpc.GrpcServer, err error) {
 	if err != nil {
 		panic("start grpc server err:" + err.Error())
 	}
+	_, err = grpcServer.Register(nil) //注册到注册中心
+	if err != nil {
+		panic("Register grpc server err:" + err.Error())
+	}
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
