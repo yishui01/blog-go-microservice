@@ -27,7 +27,7 @@ service Article {
     rpc Ping(.google.protobuf.Empty) returns (.google.protobuf.Empty);
     rpc GetArtBySn(ArtDetailRequest) returns (ArtDetailResp){
         option(google.api.http) = {
-            get:"/article/sn/{sn}"
+            get:"/article/sn/{sn}/status/{status}"
         };
     };
     rpc GetArtStream(stream ArtDetailRequest) returns (stream ArtDetailResp);

@@ -9,9 +9,7 @@ import (
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/net/http"
 	xhttp "net/http"
-
 )
-import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 
 var svc pb.ArticleServer
 
@@ -30,7 +28,6 @@ func initRouter(e *http.HttpEngine) {
 		g.GET("/ping", ping)
 		g.GET("/get", art)
 		g.GET("/start", helloWorld)
-		g.GET("/error", testErr)
 		g.GET("/panic", testPanic)
 	}
 }

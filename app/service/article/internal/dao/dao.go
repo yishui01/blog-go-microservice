@@ -3,24 +3,26 @@ package dao
 import (
 	"blog-go-microservice/app/service/article/internal/model"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gomodule/redigo/redis"
+	xredis "github.com/gomodule/redigo/redis"
 	"github.com/jinzhu/gorm"
 	"github.com/olivere/elastic/v7"
+	"github.com/zuiqiangqishao/framework/pkg/db/db"
+	"github.com/zuiqiangqishao/framework/pkg/db/es"
+	"github.com/zuiqiangqishao/framework/pkg/db/redis"
 	. "github.com/zuiqiangqishao/framework/pkg/utils"
-	"time"
 )
 
 type Dao struct {
 	db    *gorm.DB
-	redis *redis.Pool
+	redis *xredis.Pool
 	es    *elastic.Client
 }
 
 func New() (*Dao, func()) {
 	d := &Dao{
-		//db:    NewDB(),
-		//redis: NewRedisPool("192.168.136.109:6379"),
-		//es:    NewESClient(),
+		db:    NewDB(),
+		redis: NewRedis(),
+		es:    NewESClient(),
 	}
 	return d, func() { d.Close() }
 }
@@ -45,45 +47,20 @@ func (d *Dao) CreateArt() (*model.Article, error) {
 func (d *Dao) Close() {
 	if d.db != nil {
 		d.db.Close()
-
 	}
 	if d.redis != nil {
 		d.redis.Close()
-
 	}
+}
+
+func NewRedis() *xredis.Pool {
+	return redis.NewRedisPool(nil)
 }
 
 func NewDB() *gorm.DB {
-	gorm.DefaultTableNameHandler = func(db *gorm.DB, defaultTableName string) string {
-		return "mc_" + defaultTableName
-	}
-	db, err := gorm.Open("mysql", "root:root@/micro_blog?charset=utf8&parseTime=True&loc=Local")
-	PanicErr(err)
-	db.DB().SetMaxIdleConns(10)
-	db.DB().SetMaxOpenConns(100)
-	db.LogMode(true)
-	db.SingularTable(true)
-	return db
-}
-
-func NewRedisPool(addr string) *redis.Pool {
-	pool := &redis.Pool{
-		MaxIdle:     3,
-		IdleTimeout: 240 * time.Second,
-		Dial:        func() (redis.Conn, error) { return redis.Dial("tcp", addr) },
-	}
-	return pool
+	return db.NewDB(nil)
 }
 
 func NewESClient() *elastic.Client {
-	cf := []elastic.ClientOptionFunc{
-		elastic.SetURL("http://192.168.136.109:9200"),
-		elastic.SetBasicAuth("elastic", "changeme"),
-		elastic.SetSniff(false),
-	}
-	es, err := elastic.NewClient(cf...)
-	if err != nil {
-		PanicErr(err)
-	}
-	return es
+	return es.New(nil)
 }

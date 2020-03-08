@@ -32,7 +32,6 @@ func (s *Service) GetArtBySn(ctx context.Context, artReq *pb.ArtDetailRequest) (
 	//reply.CreatedAt = art.CreatedAt.Format("2006-01-02 15:04:05")
 	//reply.UpdatedAt = art.UpdatedAt.Format("2006-01-02 15:04:05")
 	//reply.DeletedAt = art.DeletedAt.Format("2006-01-02 15:04:05")
-	panic("666")
 	reply = new(pb.ArtDetailResp)
 	reply.Sn = "777"
 	reply.Title = "999"
@@ -44,7 +43,6 @@ func (s *Service) GetArtStream(artReq pb.Article_GetArtStreamServer) (err error)
 }
 
 func (s *Service) Close() {
-	s.dao.Close()
 }
 
 func (s *Service) Ping(ctx context.Context, e *empty.Empty) (*empty.Empty, error) {

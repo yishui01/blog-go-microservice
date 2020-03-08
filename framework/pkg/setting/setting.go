@@ -9,6 +9,10 @@ import (
 	"github.com/zuiqiangqishao/framework/pkg/trace"
 	"go.uber.org/zap"
 	std "log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 var (
@@ -21,6 +25,7 @@ func init() {
 
 //读取application.toml里面的配置，并解析到对应的结构体内
 func Init() *zap.Logger {
+	flag.Parse()
 	viper.AddConfigPath(confPath)
 	viper.AddConfigPath(".")
 	viper.SetConfigType("toml")
@@ -46,4 +51,23 @@ func Init() *zap.Logger {
 	etcd.Init()
 	trace.Init()
 	return log.Default()
+}
+
+func Wait(closeFunc func()) {
+	c := make(chan os.Signal, 1)
+	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
+	for {
+		s := <-c
+		log.ZapLogger.Info("get a signal " + s.String())
+		switch s {
+		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
+			closeFunc()
+			log.ZapLogger.Info(app.AppConf.AppName + " service exit")
+			time.Sleep(time.Second)
+			return
+		case syscall.SIGHUP:
+		default:
+			return
+		}
+	}
 }

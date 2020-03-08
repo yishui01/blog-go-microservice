@@ -1,73 +1,74 @@
 [app]
-appname="article" 
+    appName="article"
+
+[trace]
+    agentAddr="192.168.136.109:6831"
 
 [log]
-    enablehost=true  #Add host name and other additional fields
+    enableHost=true  #Add host name and other additional fields
     encode="console"    #json / console
     level="debug"    #debug  info  warn  error fatal
-    callfull=false
+    callFull=false
     stdout=true
 
 [log.file]
-    enablehost=true
+    enableHost=true
     encode="json"
-    callfull=true
+    callFull=true
     level="debug"
-    filename="service.log"
-    maxsize=5                #single log file size MB
-    maxage=14                 #time to keep, (day)
-    maxbackups=30            #max file numbers
-    localtime=true
+    fileName="service.log"
+    maxSize=5                #single log file size MB
+    maxAge=14                 #time to keep, (day)
+    maxBackups=30            #max file numbers
+    localTime=true
     compress=false
 
 [grpc]
     addr = "0.0.0.0:9000"
     timeout = "1" #grpc ctx超时秒数
-    [grpc.http]
+[grpc.http]
     addr="0.0.0.0:9001"
     readTimeout="10"
     writeTimeout="10"
 
 [etcd] #如果使用etcd注册服务发现的话，需要配置该项
-    endpoints=["192.168.136.109:2379","192.168.136.109:3379","192.168.136.109:4379"]
-    username=""
+    endpoints=["192.168.136.109:2379","192.168.136.109:2479","192.168.136.109:2579"]
+    userName=""
     passwd=""
-    leasettl="5"   #5秒续约一次
+    leaseTTL="5"   #5秒续约一次
     dialTimeout="5" #连接超时时间
     prefix="micro_srv" #服务注册目录前缀
 
 [registry]
     driver="etcd" #暂时只支持etcd和直连(direct)
-    loadbalance="round_robin" #客户端负载均衡方式
-    [registry.direct]
-        article_service="0.0.0.0:9000" # [ 服务名=>grpc地址 ]
-        #user_service="0.0.0.0:9002" # [ 服务名=>grpc地址 ]
+    loadBalance="round_robin" #客户端负载均衡方式
+[registry.direct]
+    article_service="0.0.0.0:9000" # [ 服务名=>grpc地址 ]
+    #user_service="0.0.0.0:9002" # [ 服务名=>grpc地址 ]
 
 [db]
-	addr = "127.0.0.1:3306"
-	dsn = "{user}:{password}@tcp(127.0.0.1:3306)/{database}?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
-	readDSN = ["{user}:{password}@tcp(127.0.0.2:3306)/{database}?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8","{user}:{password}@tcp(127.0.0.3:3306)/{database}?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8,utf8mb4"]
-	active = 20
+    driver = "mysql"
+	dsn = "root:123456@tcp(192.168.136.109:3306)/blog?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
+	active = 500
 	idle = 10
-	idleTimeout ="4h"
-	queryTimeout = "200ms"
-	execTimeout = "300ms"
-	tranTimeout = "400ms"
+	idleTimeout =4 #hour
+	logMode = false
+	sTable = true  #SingularTable
+	tablePrefix="mc_"
 
 [redis]
-	name = "demo"
 	proto = "tcp"
-	addr = "127.0.0.1:6379"
+	addr = "192.168.136.109:6379"
+	db = 1
+	passwd = ""
 	idle = 10
-	active = 10
-	dialTimeout = "1s"
-	readTimeout = "1s"
-	writeTimeout = "1s"
-	idleTimeout = "10s"
+	active = 500
+	idleTimeout = "30" # second
+	lifetime = 4 # hour
 
-[elasticsearch]
-    addr = ["http://192.168.136.109:9200"]
-    username=""
-    password=""
+[elastic]
+    urls = ["http://192.168.136.109:9200"]
+    userName=""
+    passWd=""
     sniff = false
 

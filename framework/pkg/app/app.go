@@ -1,6 +1,8 @@
 package app
 
-import "os"
+import (
+	"os"
+)
 
 var (
 	AppConf *AppConfig = DefaultAppConfig()

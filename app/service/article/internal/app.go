@@ -4,38 +4,36 @@ import (
 	"blog-go-microservice/app/service/article/internal/dao"
 	"blog-go-microservice/app/service/article/internal/server/grpc"
 	"blog-go-microservice/app/service/article/internal/service"
+	"context"
+	"github.com/zuiqiangqishao/framework/pkg/log"
 	zgrpc "github.com/zuiqiangqishao/framework/pkg/net/grpc"
-	"log"
+	"time"
 )
 
 type App struct {
 	service *service.Service
-	//http    *zhttp.HttpEngine
-	grpc *zgrpc.GrpcServer
+	grpc    *zgrpc.GrpcServer
 }
 
-func InitApp() (app *App, closeFunc func(), err error) {
-	d, cf1 := dao.New()
-	s, cf2, err := service.New(d)
+func InitApp() (app *App, closeFunc func()) {
+	d, closeD := dao.New()
+	s, closeS, err := service.New(d)
 	if err != nil {
-		log.Fatal("service初始化失败", err)
+		panic("service init err:" + err.Error())
 	}
-	//httpSrv, err := http.New(s)
-	grpcSrv, err := grpc.New(s)
+	grpcSrv, _ := grpc.New(s)
 
 	return &App{service: s, grpc: grpcSrv}, func() {
-		cf1()
-		cf2()
-	}, err
-}
+		ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
+		if err := grpcSrv.Shutdown(ctx); err != nil {
+			log.SugarLogger.Errorf("grpcSrv Shutdown err(%v)" + err.Error())
+		}
+		if err := grpcSrv.HttpShutDown(ctx); err != nil {
+			log.SugarLogger.Errorf("httpSrv Shutdown err(%v)" + err.Error())
+		}
+		cancel()
+		closeD()
+		closeS()
 
-//closeFunc = func() {
-//	ctx, cancel := context.WithTimeout(context.Background(), 35*time.Second)
-//	if err := g.Shutdown(ctx); err != nil {
-//		log.Error("grpcSrv.Shutdown error(%v)", err)
-//	}
-//	if err := h.Shutdown(ctx); err != nil {
-//		log.Error("httpSrv.Shutdown error(%v)", err)
-//	}
-//	cancel()
-//}
+	}
+}
