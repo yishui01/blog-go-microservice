@@ -273,9 +273,11 @@ func (a *appInfo) watch(serviceName string) {
 	_ = a.fetchStore(serviceName)
 	prefix := fmt.Sprintf("/%s/%s/", etcd.GetConf().ServicePrefix, serviceName)
 	rch := a.e.cli.Watch(a.e.ctx, prefix, clientv3.WithPrefix())
+	fmt.Println("开始监听")
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
 			if ev.Type == mvccpb.PUT || ev.Type == mvccpb.DELETE {
+				fmt.Println("监听到变化", ev.Type)
 				_ = a.fetchStore(serviceName)
 			}
 		}
@@ -298,19 +300,6 @@ func (a *appInfo) fetchStore(serviceName string) error {
 	return nil
 }
 
-//把刚刚解析好的服务节点信息InstancesInfo存入到appInfo自身的ins字段，然后通知所有的resolver，对着他的event Ch发送信息,发的进就发，发不进不管
-func (a *appInfo) store(ins *discovery.InstancesInfo) {
-	a.ins.Store(ins)
-	a.e.mutex.RLock()
-	for rs := range a.resolver {
-		select {
-		case rs.event <- struct{}{}:
-		default:
-		}
-	}
-	a.e.mutex.RUnlock()
-}
-
 //获取到某个服务（目录）下的所有节点后，通过该方法将节点解析到InstancesInfo中并返回
 func (a *appInfo) parseIns(resp *clientv3.GetResponse) (ins *discovery.InstancesInfo, err error) {
 	Ins := &discovery.InstancesInfo{
@@ -328,4 +317,17 @@ func (a *appInfo) parseIns(resp *clientv3.GetResponse) (ins *discovery.Instances
 		Ins.Instances = append(Ins.Instances, in)
 	}
 	return Ins, e
+}
+
+//把刚刚解析好的服务节点信息InstancesInfo存入到appInfo自身的ins字段，然后通知所有的resolver，对着他的event Ch发送信息,发的进就发，发不进不管
+func (a *appInfo) store(ins *discovery.InstancesInfo) {
+	a.ins.Store(ins)
+	a.e.mutex.RLock()
+	for rs := range a.resolver {
+		select {
+		case rs.event <- struct{}{}:
+		default:
+		}
+	}
+	a.e.mutex.RUnlock()
 }

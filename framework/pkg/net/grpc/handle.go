@@ -2,8 +2,15 @@ package grpc
 
 import (
 	"context"
+	"github.com/pkg/errors"
+	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/ecode/transform"
+	newmeta "github.com/zuiqiangqishao/framework/pkg/net/metadata"
+	"github.com/zuiqiangqishao/framework/pkg/utils"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/peer"
+	gstatus "google.golang.org/grpc/status"
 	"time"
 )
 
@@ -31,5 +38,59 @@ func (s *GrpcServer) handle() grpc.UnaryServerInterceptor {
 		}
 		resp, err = handler(ctx, req)
 		return resp, transform.FromError(err).Err()
+	}
+}
+
+// 客户端处理，设置超时时间，转换错误码
+func (c *Client) handle() grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
+		var (
+			gmd    metadata.MD
+			conf   *ClientConfig = c.conf
+			cancel context.CancelFunc
+			p      peer.Peer
+		)
+		var ec ecode.Codes = ecode.OK
+
+		var timeOpt *TimeoutCallOption
+		for _, opt := range opts {
+			var tok bool
+			timeOpt, tok = opt.(*TimeoutCallOption)
+			if tok {
+				break
+			}
+		}
+		if timeOpt != nil && timeOpt.Timeout > 0 { //如果客户端设置了这个选项那么强制忽略ctx的剩余超时时间，重新设置Timeout
+			ctx, cancel = context.WithTimeout(newmeta.WithContext(ctx), timeOpt.Timeout)
+		} else { //否则就设置ctx的超时时间，看剩余时间和conf.Timeout那个短，用短的那个
+			_, ctx, cancel = utils.Shrink(ctx, conf.Timeout)
+		}
+
+		defer cancel()
+
+		newmeta.Range(ctx,
+			func(key string, value interface{}) {
+				if valstr, ok := value.(string); ok {
+					gmd[key] = []string{valstr}
+				}
+			},
+			newmeta.IsOutgoingKey)
+
+		// merge with old matadata if exists
+		if oldmd, ok := metadata.FromOutgoingContext(ctx); ok {
+			gmd = metadata.Join(gmd, oldmd)
+		}
+		ctx = metadata.NewOutgoingContext(ctx, gmd)
+
+		opts = append(opts, grpc.Peer(&p))
+
+		//调用方法，将grpc错误码转换为ecode
+		if err = invoker(ctx, method, req, reply, cc, opts...); err != nil {
+			gst, _ := gstatus.FromError(err)
+			ec = transform.ToEcode(gst)
+			err = errors.WithMessage(ec, gst.Message())
+		}
+
+		return
 	}
 }

@@ -17,6 +17,7 @@ var (
 		ForceCloseWait:    time.Second * 20,
 		KeepAliveInterval: time.Second * 60,
 		KeepAliveTimeout:  time.Second * 20,
+		HttpEnable:        true,
 		HttpAddr:          "0.0.0.0:9001",
 		HttpReadTimeout:   time.Second * 3,
 		HttpWriteTimeout:  time.Second * 20,
@@ -51,6 +52,7 @@ type ServerConfig struct {
 	LogFlag int8
 
 	//grpc-gateway config
+	HttpEnable       bool
 	HttpAddr         string
 	HttpReadTimeout  time.Duration
 	HttpWriteTimeout time.Duration

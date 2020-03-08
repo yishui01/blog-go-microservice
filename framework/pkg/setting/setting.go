@@ -20,7 +20,7 @@ func init() {
 }
 
 //读取application.toml里面的配置，并解析到对应的结构体内
-func Init() {
+func Init() *zap.Logger {
 	viper.AddConfigPath(confPath)
 	viper.AddConfigPath(".")
 	viper.SetConfigType("toml")
@@ -44,11 +44,6 @@ func Init() {
 		std.Fatalf("unable to decode logFile config struct, %v", err)
 	}
 	etcd.Init()
-
-}
-
-func InitWithLogger() *zap.Logger {
-	Init()
-	trace.InitTracer(app.AppConf.AppName) //初始化tracer
-	return log.Default()                  //初始化日志
+	trace.Init()
+	return log.Default()
 }

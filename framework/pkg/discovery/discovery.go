@@ -61,12 +61,15 @@ type InstancesInfo struct {
 	LastTs    int64       `json:"latest_timestamp"`
 }
 
+//注册和发现都在这个接口内，Build是用于发现的，Register是用于注册的
 type Builder interface {
 	Build(serviceName string) Resolver                             //返回一个服务resolver，用于拉取该服务名下的节点
+	Scheme() string                                                //对应的解析协议
 	Register(ins *Instance) (cancel context.CancelFunc, err error) //注册服务
 	Close() error                                                  //反注册服务，一般直接调Register返回的cancel即可
 }
 
+//发现
 type Resolver interface {
 	Fetch(ctx context.Context) (*InstancesInfo, bool) //拉取某个服务的全部节点
 	Watch() <-chan struct{}                           //监听服务节点信息变化

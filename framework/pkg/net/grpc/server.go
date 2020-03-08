@@ -2,31 +2,30 @@ package grpc
 
 import (
 	"context"
+	"flag"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
-	"github.com/spf13/viper"
-	"github.com/zuiqiangqishao/framework/pkg/app"
 	"github.com/zuiqiangqishao/framework/pkg/discovery"
 	"github.com/zuiqiangqishao/framework/pkg/discovery/etcd"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/trace"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
 
 type GrpcServer struct {
 	conf        *ServerConfig
-	Server      *grpc.Server
-	HttpServer  *http.Server
+	grpcServer  *grpc.Server
+	httpServer  *http.Server
 	mutex       sync.RWMutex
 	unaryMidle  []grpc.UnaryServerInterceptor
 	streamMidle []grpc.StreamServerInterceptor
@@ -35,7 +34,17 @@ type GrpcServer struct {
 	mux        sync.RWMutex
 	driverName string
 	cancelFunc context.CancelFunc
-	builder    discovery.Builder
+	register   discovery.Builder
+}
+
+func init() {
+	addFlag(flag.CommandLine)
+	discovery.RegisterDriver(etcd.ETCD_DRIVER_NAME, etcd.GetClosure()) //注册ETCD服务驱动，服务注册和发现都在这个驱动中
+}
+
+func addFlag(fs *flag.FlagSet) {
+	//这个是mock测试用的，替代真实地址
+	fs.Var(&_grpcTarget, "grpc.target", "usage: -grpc.target=seq.service=127.0.0.1:9000 -grpc.target=fav.service=192.168.10.1:9000")
 }
 
 // NewServer returns a new blank Server instance with a default server interceptor.
@@ -44,14 +53,6 @@ func New(conf *ServerConfig, opt ...grpc.ServerOption) (s *GrpcServer) {
 	if err := s.SetConfig(conf); err != nil {
 		panic(errors.Errorf("grpc: set config failed!err: %s", err.Error()))
 	}
-
-	keepParam := grpc.KeepaliveParams(keepalive.ServerParameters{
-		MaxConnectionIdle:     s.conf.IdleTimeout,       //连接空闲时间，空闲时间达到这个，就关闭连接
-		MaxConnectionAge:      s.conf.ForceCloseWait,    //总生命时间，连接存在时间长于这个，关闭
-		Time:                  s.conf.KeepAliveInterval, //多少秒内连接没有动静就启动keepalive机制，发送ping包，默认两小时
-		Timeout:               s.conf.KeepAliveTimeout,  //每次发送ping包之后的等待超时时间，两次超时直接close
-		MaxConnectionAgeGrace: s.conf.MaxLifeTime,       //生命周期到达的时候，关闭连接时给你宽限的最后秒数
-	})
 
 	//加入一元方法中间件
 	//1、注册自定义log中间件
@@ -64,38 +65,24 @@ func New(conf *ServerConfig, opt ...grpc.ServerOption) (s *GrpcServer) {
 		serverLog(s.conf.LogFlag),
 		grpc_zap.UnaryServerInterceptor(log.ZapLogger),
 		s.reovery(),
-		s.handle(),
 		grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(trace.Tracer)),
+		s.handle(),
 		s.validate(),
 	)
 
-	opt = append(opt, keepParam,
+	opt = append(opt,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(s.unaryMidle...)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(s.streamMidle...)))
 
-	s.Server = grpc.NewServer(opt...)
+	s.grpcServer = grpc.NewServer(opt...)
 	return s
 
 }
 
-// Start create a new goroutine run server with configured listen addr
-// will panic if any error happend
-// return server itself
+//启动grpc服务
 func (s *GrpcServer) Start() (*GrpcServer, net.Addr, error) {
 	addr, err := s.startWithAddr()
 
-	if err != nil {
-		return nil, nil, err
-	}
-	return s, addr, nil
-}
-
-// StartWithAddr create a new goroutine run server with configured listen addr
-// will panic if any error happend
-// return server itself and the actually listened address (if configured listen
-// port is zero, the os will allocate an unused port)
-func (s *GrpcServer) StartWithAddr() (*GrpcServer, net.Addr, error) {
-	addr, err := s.startWithAddr()
 	if err != nil {
 		return nil, nil, err
 	}
@@ -110,9 +97,9 @@ func (s *GrpcServer) startWithAddr() (net.Addr, error) {
 	log.SugarLogger.Infof("start grpc listen on: %v %v", s.conf.Network, lis.Addr())
 	//注册反射服务，可以在运行的时候，通过grpcurl -plaintext localhost:1234 list来看当前端口有哪些服务，
 	// 并可直接通过grpcurl工具直接在命令行调用grpc
-	reflection.Register(s.Server)
+	reflection.Register(s.grpcServer)
 	go func() {
-		if err := s.Server.Serve(lis); err != nil {
+		if err := s.Server().Serve(lis); err != nil {
 			panic(err)
 		}
 	}()
@@ -146,13 +133,16 @@ func (s *GrpcServer) UseStream(handlers ...grpc.StreamServerInterceptor) *GrpcSe
 }
 
 //用grpcgateway将grpc映射到httpServer
-func (s *GrpcServer) GetHttpServer(registerFn func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error), opt ...grpc.DialOption) (srv *http.Server) {
-	mux := runtime.NewServeMux()
-	t := trace.ClientTracer
-	opt = append(opt, grpc.WithUnaryInterceptor(grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(t))))
-	//这里用的是带Dail的那个注册方法，请求路径为：http=>gateway=>tcp=>grpc Server
-	//还有一个注册方法就是直接把Server注册到gateway里，gateway收到请求后直接处理请求，然后返回给前端，不走RPC客户端调用了
-	//只是这样的话就不会经过RPC server的中间件链路追踪、log等，这样就无法追踪请求了，所以目前使用的前者
+func (s *GrpcServer) SetHttpServer(registerFn func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error), CustomMatcher runtime.HeaderMatcherFunc, opt ...grpc.DialOption) (srv *GrpcServer) {
+	if CustomMatcher == nil {
+		//设置grpcgateway传递http header的规则，保存到md中供服务端grpc使用（traceId、jwt_user_id等）
+		CustomMatcher = func(key string) (k string, bool2 bool) {
+			return key, strings.Contains(key, "Uber")
+		}
+	}
+	mux := runtime.NewServeMux(runtime.WithIncomingHeaderMatcher(CustomMatcher))
+
+	//这里用的是带Dail的那个注册方法，请求路径为：http=>gateway=>tcp connect=>grpc Server
 	err := registerFn(context.Background(), mux, s.conf.Addr, opt)
 	if err != nil {
 		log.ZapLogger.Fatal("注册grpc-gateway失败" + err.Error())
@@ -163,22 +153,28 @@ func (s *GrpcServer) GetHttpServer(registerFn func(ctx context.Context, mux *run
 		Handler:      mux,
 		Addr:         s.conf.HttpAddr,
 	}
-	s.HttpServer = server
-	return server
+	s.httpServer = server
+	return s
 }
 
 //将映射后的httpServer启动
-func (s *GrpcServer) HttpStart(registerFn func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error), opt ...grpc.DialOption) *GrpcServer {
+func (s *GrpcServer) HttpStart() *GrpcServer {
 	go func() {
-		panic("grpcgateway start http err:" + s.GetHttpServer(registerFn, opt...).ListenAndServe().Error())
+		if s.httpServer == nil {
+			panic("http server is not set")
+		}
+		panic("grpcgateway start http err:" + s.httpServer.ListenAndServe().Error())
 	}()
 	log.SugarLogger.Infof("start http listen on: %v", s.conf.HttpAddr)
 	return s
 }
 
-func (s *GrpcServer) HttpStartTLS(registerFn func(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error), certFile, keyFile string, opt ...grpc.DialOption) *GrpcServer {
+func (s *GrpcServer) HttpStartTLS(certFile, keyFile string) *GrpcServer {
 	go func() {
-		panic("grpcgateway start http tls err:" + s.GetHttpServer(registerFn, opt...).ListenAndServeTLS(certFile, keyFile).Error())
+		if s.httpServer == nil {
+			panic("http server is not set")
+		}
+		panic("grpcgateway start http tls err:" + s.httpServer.ListenAndServeTLS(certFile, keyFile).Error())
 	}()
 	log.SugarLogger.Infof("start https listen on: %v", s.conf.HttpAddr)
 	return s
@@ -186,7 +182,6 @@ func (s *GrpcServer) HttpStartTLS(registerFn func(ctx context.Context, mux *runt
 
 //设置各项配置，地址、连接协议、grpc的ctx超时时间、各项keep-alive参数
 func (s *GrpcServer) SetConfig(conf *ServerConfig) error {
-	discovery.RegisterDriver(etcd.ETCD_DRIVER_NAME, etcd.GetClosure()) //注册ETCD服务发现驱动
 
 	if conf == nil {
 		conf = _defaultSerConf
@@ -223,61 +218,6 @@ func (s *GrpcServer) SetConfig(conf *ServerConfig) error {
 
 }
 
-//将服务注册到注册中心
-func (s *GrpcServer) Register(ins *discovery.Instance) (cancel context.CancelFunc, err error) {
-	if s.builder == nil {
-		//尝试自动根据配置文件查找驱动
-		driverName := viper.GetString("registry.driver")
-		f, err := discovery.GetDriver(driverName)
-		if err != nil {
-			return nil, errors.Wrap(err, "Not set Discovery Builder")
-		}
-
-		builder, err := f()
-		if err != nil {
-			return nil, errors.Wrap(err, "Can not build Discovery Builder")
-		}
-		s.SetDiscoveryBuilder(driverName, builder)
-	}
-	if ins == nil {
-		ins = &discovery.Instance{
-			Name:     app.AppConf.AppName,
-			HostName: app.AppConf.HostName,
-			Addrs:    []string{s.conf.Addr},
-		}
-	}
-	cancelFunc, err := s.builder.Register(ins)
-	s.cancelFunc = cancelFunc
-	return cancelFunc, err
-}
-
-//反注册服务
-func (s *GrpcServer) UnRegister() {
-	if s.cancelFunc != nil {
-		s.cancelFunc()
-	}
-}
-
-//设置服务注册驱动
-func (s *GrpcServer) SetDiscoveryBuilder(driverName string, build discovery.Builder) *GrpcServer {
-	s.mux.Lock()
-	defer s.mux.Unlock()
-	s.driverName = driverName
-	s.builder = build
-	return s
-}
-
-func (s *GrpcServer) GetDiscoveryDriverName() string {
-	s.mux.RLock()
-	defer s.mux.RUnlock()
-	return s.driverName
-}
-func (s *GrpcServer) GetDiscoveryBuilder() discovery.Builder {
-	s.mux.RLock()
-	defer s.mux.RUnlock()
-	return s.builder
-}
-
 // Shutdown stops the server gracefully. It stops the server from
 // accepting new connections and RPCs and blocks until all the pending RPCs are
 // finished or the context deadline is reached.
@@ -285,16 +225,33 @@ func (s *GrpcServer) Shutdown(ctx context.Context) (err error) {
 	ch := make(chan struct{})
 	s.UnRegister()
 	go func() {
-		s.Server.GracefulStop()
+		s.grpcServer.GracefulStop()
 		close(ch)
 	}()
 
 	select {
 	case <-ctx.Done():
-		s.Server.Stop()
+		s.grpcServer.Stop()
 		err = ctx.Err()
 	case <-ch:
 	}
 
 	return
+}
+
+func (s *GrpcServer) HttpShutDown(ctx context.Context) (err error) {
+	if s.HttpServer == nil {
+		return errors.New("not have http server")
+	}
+	return errors.WithStack(s.httpServer.Shutdown(ctx))
+}
+
+// Server return the grpc server for registering service.
+func (s *GrpcServer) Server() *grpc.Server {
+	return s.grpcServer
+}
+
+// Server return the grpc server for registering service.
+func (s *GrpcServer) HttpServer() *http.Server {
+	return s.httpServer
 }
