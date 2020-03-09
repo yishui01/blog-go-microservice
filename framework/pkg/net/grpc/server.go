@@ -163,7 +163,9 @@ func (s *GrpcServer) HttpStart() *GrpcServer {
 		if s.httpServer == nil {
 			panic("http server is not set")
 		}
-		panic("grpcgateway start http err:" + s.httpServer.ListenAndServe().Error())
+		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.ZapLogger.Fatal("grpcgateway start HttpStart err:" + err.Error())
+		}
 	}()
 	log.SugarLogger.Infof("start http listen on: %v", s.conf.HttpAddr)
 	return s
@@ -174,7 +176,9 @@ func (s *GrpcServer) HttpStartTLS(certFile, keyFile string) *GrpcServer {
 		if s.httpServer == nil {
 			panic("http server is not set")
 		}
-		panic("grpcgateway start http tls err:" + s.httpServer.ListenAndServeTLS(certFile, keyFile).Error())
+		if err := s.httpServer.ListenAndServeTLS(certFile, keyFile); err != nil && err != http.ErrServerClosed {
+			log.ZapLogger.Fatal("grpcgateway start HttpStartTLS err:" + err.Error())
+		}
 	}()
 	log.SugarLogger.Infof("start https listen on: %v", s.conf.HttpAddr)
 	return s
