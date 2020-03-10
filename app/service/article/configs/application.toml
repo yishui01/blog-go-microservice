@@ -52,7 +52,7 @@
 	active = 500
 	idle = 10
 	idleTimeout =4 #hour
-	logMode = false
+	logMode = true
 	sTable = true  #SingularTable
 	tablePrefix="mc_"
 

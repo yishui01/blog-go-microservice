@@ -19,9 +19,11 @@ func New(c *ESearchConf) *elastic.Client {
 	}
 	cf := []elastic.ClientOptionFunc{
 		elastic.SetURL(c.Urls...),
-		elastic.SetBasicAuth(c.UserName, c.Passwd),
 		elastic.SetSniff(c.Sniff),
 		elastic.SetHealthcheck(true),
+	}
+	if c.UserName != "" || c.Passwd != "" {
+		cf = append(cf, elastic.SetBasicAuth(c.UserName, c.Passwd))
 	}
 	es, err := elastic.NewClient(cf...)
 	if err != nil {

@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
@@ -56,14 +55,12 @@ func New(conf *ServerConfig, opt ...grpc.ServerOption) (s *GrpcServer) {
 
 	//加入一元方法中间件
 	//1、注册自定义log中间件
-	//2、注册grpclog
-	//3、recovery
-	//4、超时时间、ecode转换为grpc code
-	//5、jaeger trace
-	//6、验证请求参数是否合法
+	//2、recovery
+	//3、超时时间、ecode转换为grpc code
+	//4、jaeger trace
+	//5、验证请求参数是否合法
 	s.UseUnary(
 		serverLog(s.conf.LogFlag),
-		grpc_zap.UnaryServerInterceptor(log.ZapLogger),
 		s.reovery(),
 		grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(trace.Tracer)),
 		s.handle(),

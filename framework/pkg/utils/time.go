@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+const TimeHourSecond = 3600
+const TimeDaySecond = 86400
+
 // Shrink will decrease the duration by comparing with context's timeout duration
 // and return new timeout\context\CancelFunc.
 func Shrink(c context.Context, d time.Duration) (time.Duration, context.Context, context.CancelFunc) {

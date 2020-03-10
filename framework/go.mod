@@ -11,7 +11,8 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/uuid v1.1.1 // indirect
-	github.com/jinzhu/gorm v1.9.12 // indirect
+	github.com/jinzhu/gorm v1.9.12
+	github.com/json-iterator/go v1.1.7
 	github.com/mailru/easyjson v0.7.1 // indirect
 	github.com/olivere/elastic v6.2.28+incompatible // indirect
 	github.com/olivere/elastic/v7 v7.0.12 // indirect
@@ -25,6 +26,7 @@ require (
 	github.com/stretchr/testify v1.4.0
 	github.com/uber/jaeger-client-go v2.22.1+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
+	github.com/uniplaces/carbon v0.1.6 // indirect
 	go.etcd.io/etcd v3.3.18+incompatible // indirect
 	go.uber.org/zap v1.13.0
 	golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a

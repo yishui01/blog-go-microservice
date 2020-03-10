@@ -42,9 +42,11 @@ func setDefaultConf() *RedisConf {
 		if err != nil {
 			return nil, err
 		}
-		if _, err := conn.Do("AUTH", c.Passwd); err != nil {
-			conn.Close()
-			return nil, err
+		if c.Passwd != "" {
+			if _, err := conn.Do("AUTH", c.Passwd); err != nil {
+				conn.Close()
+				return nil, err
+			}
 		}
 		if _, err := conn.Do("SELECT", c.Db); err != nil {
 			conn.Close()

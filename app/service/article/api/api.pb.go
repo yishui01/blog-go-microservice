@@ -29,8 +29,142 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type ArtListRequest struct {
+	Page                 int64    `protobuf:"varint,1,opt,name=page,proto3" json:"page,omitempty" form:"page"`
+	Size_                int64    `protobuf:"varint,2,opt,name=size,proto3" json:"size,omitempty" form:"size"`
+	Keyword              string   `protobuf:"bytes,3,opt,name=keyword,proto3" json:"keyword,omitempty" form:"keyword"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ArtListRequest) Reset()         { *m = ArtListRequest{} }
+func (m *ArtListRequest) String() string { return proto.CompactTextString(m) }
+func (*ArtListRequest) ProtoMessage()    {}
+func (*ArtListRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00212fb1f9d3bf1c, []int{0}
+}
+func (m *ArtListRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ArtListRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ArtListRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ArtListRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArtListRequest.Merge(m, src)
+}
+func (m *ArtListRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *ArtListRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ArtListRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ArtListRequest proto.InternalMessageInfo
+
+func (m *ArtListRequest) GetPage() int64 {
+	if m != nil {
+		return m.Page
+	}
+	return 0
+}
+
+func (m *ArtListRequest) GetSize_() int64 {
+	if m != nil {
+		return m.Size_
+	}
+	return 0
+}
+
+func (m *ArtListRequest) GetKeyword() string {
+	if m != nil {
+		return m.Keyword
+	}
+	return ""
+}
+
+type ArtListResp struct {
+	Total                int64            `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
+	Lists                []*ArtDetailResp `protobuf:"bytes,2,rep,name=lists,proto3" json:"lists,omitempty"`
+	Page                 int64            `protobuf:"varint,3,opt,name=page,proto3" json:"page,omitempty" form:"page"`
+	Size_                int64            `protobuf:"varint,4,opt,name=size,proto3" json:"size,omitempty" form:"size"`
+	XXX_NoUnkeyedLiteral struct{}         `json:"-"`
+	XXX_unrecognized     []byte           `json:"-"`
+	XXX_sizecache        int32            `json:"-"`
+}
+
+func (m *ArtListResp) Reset()         { *m = ArtListResp{} }
+func (m *ArtListResp) String() string { return proto.CompactTextString(m) }
+func (*ArtListResp) ProtoMessage()    {}
+func (*ArtListResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00212fb1f9d3bf1c, []int{1}
+}
+func (m *ArtListResp) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *ArtListResp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_ArtListResp.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *ArtListResp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ArtListResp.Merge(m, src)
+}
+func (m *ArtListResp) XXX_Size() int {
+	return m.Size()
+}
+func (m *ArtListResp) XXX_DiscardUnknown() {
+	xxx_messageInfo_ArtListResp.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ArtListResp proto.InternalMessageInfo
+
+func (m *ArtListResp) GetTotal() int64 {
+	if m != nil {
+		return m.Total
+	}
+	return 0
+}
+
+func (m *ArtListResp) GetLists() []*ArtDetailResp {
+	if m != nil {
+		return m.Lists
+	}
+	return nil
+}
+
+func (m *ArtListResp) GetPage() int64 {
+	if m != nil {
+		return m.Page
+	}
+	return 0
+}
+
+func (m *ArtListResp) GetSize_() int64 {
+	if m != nil {
+		return m.Size_
+	}
+	return 0
+}
+
 type ArtDetailRequest struct {
-	Sn                   string   `protobuf:"bytes,1,opt,name=sn,proto3" json:"sn,omitempty" form:"name" validate:"required"`
+	Sn                   string   `protobuf:"bytes,1,opt,name=sn,proto3" json:"sn,omitempty" form:"sn" validate:"required"`
 	Status               int64    `protobuf:"varint,2,opt,name=status,proto3" json:"status,omitempty" form:"status" validate:"required"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -41,7 +175,7 @@ func (m *ArtDetailRequest) Reset()         { *m = ArtDetailRequest{} }
 func (m *ArtDetailRequest) String() string { return proto.CompactTextString(m) }
 func (*ArtDetailRequest) ProtoMessage()    {}
 func (*ArtDetailRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00212fb1f9d3bf1c, []int{0}
+	return fileDescriptor_00212fb1f9d3bf1c, []int{2}
 }
 func (m *ArtDetailRequest) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -86,7 +220,7 @@ func (m *ArtDetailRequest) GetStatus() int64 {
 
 type ArtDetailResp struct {
 	Id                   int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
-	Sn                   string   `protobuf:"bytes,2,opt,name=sn,proto3" json:"sn,omitempty" form:"name" validate:"required"`
+	Sn                   string   `protobuf:"bytes,2,opt,name=sn,proto3" json:"sn,omitempty" form:"sn" validate:"required"`
 	Title                string   `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	Img                  string   `protobuf:"bytes,4,opt,name=img,proto3" json:"img,omitempty"`
 	Content              string   `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
@@ -94,6 +228,7 @@ type ArtDetailResp struct {
 	CreatedAt            string   `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	UpdatedAt            string   `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	DeletedAt            string   `protobuf:"bytes,9,opt,name=deleted_at,json=deletedAt,proto3" json:"deleted_at,omitempty"`
+	Tags                 string   `protobuf:"bytes,10,opt,name=tags,proto3" json:"tags,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
 	XXX_sizecache        int32    `json:"-"`
@@ -103,7 +238,7 @@ func (m *ArtDetailResp) Reset()         { *m = ArtDetailResp{} }
 func (m *ArtDetailResp) String() string { return proto.CompactTextString(m) }
 func (*ArtDetailResp) ProtoMessage()    {}
 func (*ArtDetailResp) Descriptor() ([]byte, []int) {
-	return fileDescriptor_00212fb1f9d3bf1c, []int{1}
+	return fileDescriptor_00212fb1f9d3bf1c, []int{3}
 }
 func (m *ArtDetailResp) XXX_Unmarshal(b []byte) error {
 	return m.Unmarshal(b)
@@ -195,45 +330,312 @@ func (m *ArtDetailResp) GetDeletedAt() string {
 	return ""
 }
 
+func (m *ArtDetailResp) GetTags() string {
+	if m != nil {
+		return m.Tags
+	}
+	return ""
+}
+
+type SaveArtReq struct {
+	Id                   int64    `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
+	Sn                   string   `protobuf:"bytes,2,opt,name=sn,proto3" json:"sn,omitempty" form:"name" validate:"required"`
+	Title                string   `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	Img                  string   `protobuf:"bytes,4,opt,name=img,proto3" json:"img,omitempty"`
+	Content              string   `protobuf:"bytes,5,opt,name=content,proto3" json:"content,omitempty"`
+	Status               int64    `protobuf:"varint,6,opt,name=status,proto3" json:"status,omitempty"`
+	CreatedAt            string   `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt            string   `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	DeletedAt            string   `protobuf:"bytes,9,opt,name=deleted_at,json=deletedAt,proto3" json:"deleted_at,omitempty"`
+	Tags                 string   `protobuf:"bytes,10,opt,name=tags,proto3" json:"tags,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SaveArtReq) Reset()         { *m = SaveArtReq{} }
+func (m *SaveArtReq) String() string { return proto.CompactTextString(m) }
+func (*SaveArtReq) ProtoMessage()    {}
+func (*SaveArtReq) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00212fb1f9d3bf1c, []int{4}
+}
+func (m *SaveArtReq) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SaveArtReq) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SaveArtReq.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SaveArtReq) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SaveArtReq.Merge(m, src)
+}
+func (m *SaveArtReq) XXX_Size() int {
+	return m.Size()
+}
+func (m *SaveArtReq) XXX_DiscardUnknown() {
+	xxx_messageInfo_SaveArtReq.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SaveArtReq proto.InternalMessageInfo
+
+func (m *SaveArtReq) GetId() int64 {
+	if m != nil {
+		return m.Id
+	}
+	return 0
+}
+
+func (m *SaveArtReq) GetSn() string {
+	if m != nil {
+		return m.Sn
+	}
+	return ""
+}
+
+func (m *SaveArtReq) GetTitle() string {
+	if m != nil {
+		return m.Title
+	}
+	return ""
+}
+
+func (m *SaveArtReq) GetImg() string {
+	if m != nil {
+		return m.Img
+	}
+	return ""
+}
+
+func (m *SaveArtReq) GetContent() string {
+	if m != nil {
+		return m.Content
+	}
+	return ""
+}
+
+func (m *SaveArtReq) GetStatus() int64 {
+	if m != nil {
+		return m.Status
+	}
+	return 0
+}
+
+func (m *SaveArtReq) GetCreatedAt() string {
+	if m != nil {
+		return m.CreatedAt
+	}
+	return ""
+}
+
+func (m *SaveArtReq) GetUpdatedAt() string {
+	if m != nil {
+		return m.UpdatedAt
+	}
+	return ""
+}
+
+func (m *SaveArtReq) GetDeletedAt() string {
+	if m != nil {
+		return m.DeletedAt
+	}
+	return ""
+}
+
+func (m *SaveArtReq) GetTags() string {
+	if m != nil {
+		return m.Tags
+	}
+	return ""
+}
+
+type SaveArtResp struct {
+	Status               int64    `protobuf:"varint,1,opt,name=status,proto3" json:"status,omitempty"`
+	Data                 string   `protobuf:"bytes,2,opt,name=data,proto3" json:"data,omitempty"`
+	Msg                  string   `protobuf:"bytes,3,opt,name=msg,proto3" json:"msg,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *SaveArtResp) Reset()         { *m = SaveArtResp{} }
+func (m *SaveArtResp) String() string { return proto.CompactTextString(m) }
+func (*SaveArtResp) ProtoMessage()    {}
+func (*SaveArtResp) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00212fb1f9d3bf1c, []int{5}
+}
+func (m *SaveArtResp) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *SaveArtResp) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_SaveArtResp.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *SaveArtResp) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_SaveArtResp.Merge(m, src)
+}
+func (m *SaveArtResp) XXX_Size() int {
+	return m.Size()
+}
+func (m *SaveArtResp) XXX_DiscardUnknown() {
+	xxx_messageInfo_SaveArtResp.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_SaveArtResp proto.InternalMessageInfo
+
+func (m *SaveArtResp) GetStatus() int64 {
+	if m != nil {
+		return m.Status
+	}
+	return 0
+}
+
+func (m *SaveArtResp) GetData() string {
+	if m != nil {
+		return m.Data
+	}
+	return ""
+}
+
+func (m *SaveArtResp) GetMsg() string {
+	if m != nil {
+		return m.Msg
+	}
+	return ""
+}
+
+type DelArtRequest struct {
+	Sn                   string   `protobuf:"bytes,1,opt,name=sn,proto3" json:"sn,omitempty" form:"name" validate:"required"`
+	Physical             bool     `protobuf:"varint,2,opt,name=physical,proto3" json:"physical,omitempty" form:"physical" validate:"required"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *DelArtRequest) Reset()         { *m = DelArtRequest{} }
+func (m *DelArtRequest) String() string { return proto.CompactTextString(m) }
+func (*DelArtRequest) ProtoMessage()    {}
+func (*DelArtRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_00212fb1f9d3bf1c, []int{6}
+}
+func (m *DelArtRequest) XXX_Unmarshal(b []byte) error {
+	return m.Unmarshal(b)
+}
+func (m *DelArtRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	if deterministic {
+		return xxx_messageInfo_DelArtRequest.Marshal(b, m, deterministic)
+	} else {
+		b = b[:cap(b)]
+		n, err := m.MarshalToSizedBuffer(b)
+		if err != nil {
+			return nil, err
+		}
+		return b[:n], nil
+	}
+}
+func (m *DelArtRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_DelArtRequest.Merge(m, src)
+}
+func (m *DelArtRequest) XXX_Size() int {
+	return m.Size()
+}
+func (m *DelArtRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_DelArtRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_DelArtRequest proto.InternalMessageInfo
+
+func (m *DelArtRequest) GetSn() string {
+	if m != nil {
+		return m.Sn
+	}
+	return ""
+}
+
+func (m *DelArtRequest) GetPhysical() bool {
+	if m != nil {
+		return m.Physical
+	}
+	return false
+}
+
 func init() {
+	proto.RegisterType((*ArtListRequest)(nil), "article.service.v1.ArtListRequest")
+	proto.RegisterType((*ArtListResp)(nil), "article.service.v1.ArtListResp")
 	proto.RegisterType((*ArtDetailRequest)(nil), "article.service.v1.ArtDetailRequest")
 	proto.RegisterType((*ArtDetailResp)(nil), "article.service.v1.ArtDetailResp")
+	proto.RegisterType((*SaveArtReq)(nil), "article.service.v1.SaveArtReq")
+	proto.RegisterType((*SaveArtResp)(nil), "article.service.v1.SaveArtResp")
+	proto.RegisterType((*DelArtRequest)(nil), "article.service.v1.DelArtRequest")
 }
 
 func init() { proto.RegisterFile("api.proto", fileDescriptor_00212fb1f9d3bf1c) }
 
 var fileDescriptor_00212fb1f9d3bf1c = []byte{
-	// 468 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xac, 0x92, 0xcf, 0x8b, 0x13, 0x3f,
-	0x18, 0xc6, 0xbf, 0x93, 0xee, 0xb6, 0xdf, 0x06, 0x95, 0x12, 0x64, 0x19, 0xaa, 0xb6, 0xdd, 0x51,
-	0xa1, 0x17, 0x33, 0xea, 0x82, 0x87, 0x05, 0x0f, 0x53, 0x14, 0xaf, 0xd2, 0x3d, 0x7a, 0x90, 0x74,
-	0xe6, 0xdd, 0x31, 0x30, 0x93, 0xcc, 0x26, 0xef, 0x14, 0x96, 0x65, 0x11, 0x3c, 0x78, 0xf1, 0xe8,
-	0xc5, 0x9b, 0xff, 0x8e, 0x47, 0xc1, 0xfb, 0x22, 0xd5, 0xbf, 0x60, 0xff, 0x02, 0x69, 0x92, 0xaa,
-	0xf8, 0x03, 0x11, 0x3c, 0x35, 0xcf, 0xf3, 0x79, 0x9f, 0xf2, 0x64, 0xde, 0xd0, 0xbe, 0x68, 0x24,
-	0x6f, 0x8c, 0x46, 0xcd, 0x98, 0x30, 0x28, 0xf3, 0x0a, 0xb8, 0x05, 0xb3, 0x94, 0x39, 0xf0, 0xe5,
-	0x9d, 0xe1, 0xad, 0x52, 0xe2, 0xb3, 0x76, 0xc1, 0x73, 0x5d, 0xa7, 0xa5, 0x2e, 0x75, 0xea, 0x46,
-	0x17, 0xed, 0xa1, 0x53, 0x4e, 0xb8, 0x93, 0xff, 0x8b, 0xe1, 0x95, 0x52, 0xeb, 0xb2, 0x82, 0x6f,
-	0x53, 0x50, 0x37, 0x78, 0x1c, 0xe0, 0xd5, 0x00, 0x45, 0x23, 0x53, 0xa1, 0x94, 0x46, 0x81, 0x52,
-	0x2b, 0xeb, 0x69, 0xf2, 0x32, 0xa2, 0x83, 0xcc, 0xe0, 0x03, 0x40, 0x21, 0xab, 0x39, 0x1c, 0xb5,
-	0x60, 0x91, 0xed, 0x51, 0x62, 0x55, 0x1c, 0x4d, 0xa2, 0x69, 0x7f, 0x76, 0xfd, 0xfc, 0x6c, 0x3c,
-	0x3e, 0xd4, 0xa6, 0xde, 0x4f, 0x94, 0xa8, 0x21, 0x99, 0x2c, 0x45, 0x25, 0x0b, 0x81, 0xb0, 0x9f,
-	0x18, 0x38, 0x6a, 0xa5, 0x81, 0x22, 0x99, 0x13, 0xab, 0xd8, 0x7d, 0xda, 0xb5, 0x28, 0xb0, 0xb5,
-	0x31, 0x99, 0x44, 0xd3, 0xce, 0xec, 0xe6, 0xf9, 0xd9, 0x78, 0xd7, 0x07, 0xbd, 0xff, 0xeb, 0x68,
-	0x08, 0x25, 0xaf, 0x08, 0xbd, 0xf8, 0x5d, 0x11, 0xdb, 0xb0, 0x4b, 0x94, 0xc8, 0xc2, 0xb5, 0xe8,
-	0xcc, 0x89, 0x2c, 0x42, 0x2b, 0xf2, 0x77, 0xad, 0x2e, 0xd3, 0x6d, 0x94, 0x58, 0x41, 0xdc, 0x59,
-	0xe7, 0xe6, 0x5e, 0xb0, 0x01, 0xed, 0xc8, 0xba, 0x8c, 0xb7, 0x9c, 0xb7, 0x3e, 0xb2, 0x98, 0xf6,
-	0x72, 0xad, 0x10, 0x14, 0xc6, 0xdb, 0xce, 0xdd, 0x48, 0xb6, 0xf3, 0xf5, 0x5e, 0x5d, 0x57, 0x25,
-	0x28, 0x76, 0x8d, 0xd2, 0xdc, 0x80, 0x40, 0x28, 0x9e, 0x0a, 0x8c, 0x7b, 0x2e, 0xd4, 0x0f, 0x4e,
-	0x86, 0x6b, 0xdc, 0x36, 0xc5, 0x06, 0xff, 0xef, 0x71, 0x70, 0x3c, 0x2e, 0xa0, 0x82, 0x80, 0xfb,
-	0x1e, 0x07, 0x27, 0xc3, 0xbb, 0x6f, 0x09, 0xed, 0x65, 0xfe, 0x5d, 0xb0, 0x7b, 0x74, 0xeb, 0xb1,
-	0x54, 0x25, 0xdb, 0xe1, 0x7e, 0x93, 0x7c, 0xb3, 0x66, 0xfe, 0x70, 0xbd, 0xe6, 0xe1, 0x6f, 0x7c,
-	0xf6, 0x9c, 0xd2, 0x47, 0x80, 0x99, 0xc1, 0xd9, 0xf1, 0x81, 0x62, 0x37, 0xf8, 0xcf, 0xef, 0x8c,
-	0xff, 0xb8, 0xf9, 0xe1, 0xee, 0x1f, 0xa6, 0x6c, 0x93, 0x4c, 0x5f, 0x7c, 0xf8, 0xfc, 0x9a, 0x24,
-	0x6c, 0x92, 0x86, 0xd1, 0xd4, 0xaa, 0xf4, 0xc4, 0xaa, 0xd3, 0xd4, 0x7f, 0x98, 0xf4, 0xc4, 0xff,
-	0x9e, 0xb2, 0x27, 0xf4, 0x82, 0x2f, 0x70, 0x80, 0x06, 0x44, 0xfd, 0xcf, 0x2a, 0x4c, 0xa3, 0xdb,
-	0xd1, 0x6c, 0xf0, 0x6e, 0x35, 0x8a, 0xde, 0xaf, 0x46, 0xd1, 0xc7, 0xd5, 0x28, 0x7a, 0xf3, 0x69,
-	0xf4, 0xdf, 0xa2, 0xeb, 0xee, 0xbf, 0xf7, 0x25, 0x00, 0x00, 0xff, 0xff, 0xfe, 0xff, 0x09, 0xe8,
-	0x5c, 0x03, 0x00, 0x00,
+	// 766 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe4, 0x54, 0xcd, 0x6e, 0xdb, 0x46,
+	0x10, 0x2e, 0x29, 0xd9, 0x12, 0x47, 0xb0, 0x2b, 0x2c, 0x0a, 0x83, 0x50, 0x6b, 0x51, 0x5e, 0xbb,
+	0xad, 0x50, 0xb8, 0x24, 0x6c, 0x03, 0x2d, 0x60, 0xa0, 0x07, 0xa9, 0x0e, 0x72, 0x48, 0x0e, 0x01,
+	0xfd, 0x00, 0xc9, 0x5a, 0x5c, 0xd3, 0x8b, 0x50, 0x24, 0xcd, 0x5d, 0x29, 0x50, 0x0c, 0x21, 0x40,
+	0x90, 0x43, 0x7c, 0xce, 0x25, 0x87, 0xe4, 0x9a, 0x67, 0xc9, 0x31, 0x40, 0xee, 0x42, 0xe0, 0xe4,
+	0x09, 0xf4, 0x04, 0x01, 0x77, 0x57, 0xb2, 0x1c, 0xcb, 0x3f, 0x39, 0xe7, 0xc4, 0x99, 0xf9, 0x66,
+	0xf6, 0x9b, 0xf9, 0xb8, 0x3b, 0x60, 0x91, 0x94, 0xb9, 0x69, 0x96, 0x88, 0x04, 0x21, 0x92, 0x09,
+	0xd6, 0x89, 0xa8, 0xcb, 0x69, 0xd6, 0x67, 0x1d, 0xea, 0xf6, 0xb7, 0x6a, 0x7f, 0x87, 0x4c, 0x1c,
+	0xf5, 0x0e, 0xdc, 0x4e, 0xd2, 0xf5, 0xc2, 0x24, 0x4c, 0x3c, 0x99, 0x7a, 0xd0, 0x3b, 0x94, 0x9e,
+	0x74, 0xa4, 0xa5, 0x8e, 0xa8, 0xfd, 0x1a, 0x26, 0x49, 0x18, 0xd1, 0xf3, 0x2c, 0xda, 0x4d, 0xc5,
+	0x40, 0x83, 0xbf, 0x69, 0x90, 0xa4, 0xcc, 0x23, 0x71, 0x9c, 0x08, 0x22, 0x58, 0x12, 0x73, 0x85,
+	0xe2, 0x97, 0x06, 0x2c, 0xb7, 0x32, 0x71, 0x9f, 0x71, 0xe1, 0xd3, 0xe3, 0x1e, 0xe5, 0x02, 0xad,
+	0x43, 0x31, 0x25, 0x21, 0xb5, 0x8d, 0x86, 0xd1, 0x2c, 0xb4, 0x7f, 0x1e, 0x8f, 0x9c, 0xca, 0x61,
+	0x92, 0x75, 0x77, 0x71, 0x1e, 0xc5, 0xbe, 0x04, 0xf3, 0x24, 0xce, 0x9e, 0x52, 0xdb, 0xfc, 0x36,
+	0x29, 0x8f, 0x62, 0x5f, 0x82, 0x68, 0x13, 0x4a, 0x8f, 0xe9, 0xe0, 0x49, 0x92, 0x05, 0x76, 0xa1,
+	0x61, 0x34, 0xad, 0x36, 0x1a, 0x8f, 0x9c, 0x65, 0x95, 0xa7, 0x01, 0xec, 0x4f, 0x52, 0xf0, 0x3b,
+	0x03, 0x2a, 0xd3, 0x56, 0x78, 0x8a, 0x7e, 0x81, 0x05, 0x91, 0x08, 0x12, 0xa9, 0x46, 0x7c, 0xe5,
+	0xa0, 0x7f, 0x61, 0x21, 0x62, 0x5c, 0x70, 0xdb, 0x6c, 0x14, 0x9a, 0x95, 0xed, 0x35, 0xf7, 0xb2,
+	0x7c, 0x6e, 0x2b, 0x13, 0x7b, 0x54, 0x10, 0x16, 0xe5, 0xe7, 0xf8, 0x2a, 0x7f, 0x3a, 0x56, 0xe1,
+	0x36, 0x63, 0x15, 0xaf, 0x19, 0x0b, 0xbf, 0x30, 0xa0, 0x3a, 0x43, 0xa1, 0x54, 0xdb, 0x02, 0x93,
+	0xc7, 0xb2, 0x55, 0xab, 0xbd, 0x36, 0x1e, 0x39, 0xab, 0xba, 0x2e, 0xc6, 0x8d, 0x3e, 0x89, 0x58,
+	0x40, 0x04, 0xdd, 0xc5, 0x19, 0x3d, 0xee, 0xb1, 0x8c, 0x06, 0xd8, 0x37, 0x79, 0x8c, 0xfe, 0x83,
+	0x45, 0x2e, 0x88, 0xe8, 0x71, 0xad, 0xe2, 0xef, 0xe3, 0x91, 0xb3, 0xa6, 0xcb, 0x64, 0x7c, 0x7e,
+	0xa9, 0x2e, 0xc2, 0x6f, 0x4d, 0x58, 0xba, 0x30, 0x29, 0x5a, 0x06, 0x93, 0x05, 0x5a, 0x2e, 0x93,
+	0x05, 0xba, 0x27, 0xf3, 0x7b, 0x7a, 0xca, 0x45, 0x67, 0x22, 0x52, 0x32, 0x59, 0xbe, 0x72, 0x50,
+	0x15, 0x0a, 0xac, 0x1b, 0x4a, 0x55, 0x2c, 0x3f, 0x37, 0x91, 0x0d, 0xa5, 0x4e, 0x12, 0x0b, 0x1a,
+	0x0b, 0x7b, 0x41, 0x46, 0x27, 0x2e, 0x5a, 0x99, 0x4e, 0xb5, 0x28, 0x1b, 0xd1, 0x1e, 0x5a, 0x05,
+	0xe8, 0x64, 0x94, 0x08, 0x1a, 0x3c, 0x24, 0xc2, 0x2e, 0xc9, 0x22, 0x4b, 0x47, 0x5a, 0x22, 0x87,
+	0x7b, 0x69, 0x30, 0x81, 0xcb, 0x0a, 0xd6, 0x11, 0x05, 0x07, 0x34, 0xa2, 0x1a, 0xb6, 0x14, 0xac,
+	0x23, 0x2d, 0x81, 0x10, 0x14, 0x05, 0x09, 0xb9, 0x0d, 0x12, 0x90, 0x36, 0x7e, 0x63, 0x02, 0xec,
+	0x93, 0x3e, 0x6d, 0x65, 0xf9, 0xd5, 0xbe, 0x24, 0xce, 0xce, 0x8c, 0x38, 0xeb, 0xe3, 0x91, 0xe3,
+	0x28, 0x71, 0x62, 0xd2, 0xa5, 0x3f, 0x84, 0x3c, 0xf7, 0xa0, 0x32, 0x55, 0x87, 0xa7, 0x33, 0x7d,
+	0x19, 0x17, 0xfa, 0x42, 0x50, 0x0c, 0x88, 0x20, 0x4a, 0x28, 0x5f, 0xda, 0xf9, 0xbc, 0x5d, 0x1e,
+	0x6a, 0x0d, 0x72, 0x13, 0x9f, 0x1a, 0xb0, 0xb4, 0x47, 0x23, 0x25, 0xb5, 0x7c, 0x0f, 0x3b, 0x33,
+	0xef, 0xe1, 0xd6, 0xf2, 0xfe, 0x0f, 0xe5, 0xf4, 0x68, 0xc0, 0x59, 0x87, 0x44, 0x92, 0xb0, 0xdc,
+	0xfe, 0x73, 0x3c, 0x72, 0xd6, 0xf5, 0x3b, 0xd5, 0xc8, 0xfc, 0xf2, 0x69, 0xe1, 0xf6, 0x69, 0x11,
+	0x4a, 0x2d, 0xb5, 0x14, 0xd0, 0x3f, 0x50, 0x7c, 0xc0, 0xe2, 0x10, 0xad, 0xb8, 0x6a, 0x0b, 0xba,
+	0x93, 0x15, 0xe9, 0xde, 0xc9, 0x57, 0x64, 0xed, 0x8a, 0x38, 0x7a, 0x24, 0x8f, 0xc8, 0x57, 0x11,
+	0xc2, 0x57, 0x6c, 0x98, 0x99, 0x95, 0x59, 0x73, 0xae, 0xcd, 0xe1, 0x29, 0xae, 0x3e, 0xff, 0xf8,
+	0xe5, 0x95, 0x09, 0xa8, 0xec, 0xe9, 0x44, 0xf4, 0x0c, 0xe0, 0x2e, 0x15, 0xad, 0x4c, 0xb4, 0x07,
+	0xfb, 0x31, 0xda, 0xb8, 0x61, 0x8d, 0x29, 0x9a, 0x9b, 0x97, 0x1d, 0x6e, 0x4a, 0x22, 0x8c, 0x1a,
+	0x13, 0x22, 0x8f, 0xc7, 0xde, 0x09, 0x8f, 0x87, 0x9e, 0xfa, 0x9f, 0xde, 0x89, 0xfa, 0x0e, 0x51,
+	0x00, 0x25, 0xfd, 0xff, 0x51, 0x7d, 0xde, 0xb9, 0xe7, 0x4f, 0x67, 0xfe, 0x78, 0x33, 0x97, 0x07,
+	0xdb, 0x92, 0x15, 0xe1, 0xa5, 0x73, 0x56, 0xd2, 0xa7, 0xbb, 0xc6, 0x5f, 0x68, 0x08, 0xd6, 0x9e,
+	0xbc, 0x86, 0x39, 0xcf, 0xdc, 0xfe, 0x2f, 0x5c, 0x9b, 0x9b, 0xa9, 0x36, 0x25, 0xd5, 0x1f, 0x78,
+	0xe3, 0xd2, 0x80, 0x93, 0x0b, 0xe0, 0x9d, 0x4c, 0xac, 0x61, 0xbb, 0xfa, 0xfe, 0xac, 0x6e, 0x7c,
+	0x38, 0xab, 0x1b, 0x9f, 0xce, 0xea, 0xc6, 0xeb, 0xcf, 0xf5, 0x9f, 0x0e, 0x16, 0xe5, 0x9f, 0xde,
+	0xf9, 0x1a, 0x00, 0x00, 0xff, 0xff, 0x81, 0xbe, 0x9d, 0xad, 0x82, 0x07, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -249,8 +651,10 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ArticleClient interface {
 	Ping(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
+	ArtList(ctx context.Context, in *ArtListRequest, opts ...grpc.CallOption) (*ArtListResp, error)
 	GetArtBySn(ctx context.Context, in *ArtDetailRequest, opts ...grpc.CallOption) (*ArtDetailResp, error)
-	GetArtStream(ctx context.Context, opts ...grpc.CallOption) (Article_GetArtStreamClient, error)
+	SaveArt(ctx context.Context, in *SaveArtReq, opts ...grpc.CallOption) (*SaveArtResp, error)
+	DeleteArt(ctx context.Context, in *DelArtRequest, opts ...grpc.CallOption) (*SaveArtResp, error)
 }
 
 type articleClient struct {
@@ -270,6 +674,15 @@ func (c *articleClient) Ping(ctx context.Context, in *empty.Empty, opts ...grpc.
 	return out, nil
 }
 
+func (c *articleClient) ArtList(ctx context.Context, in *ArtListRequest, opts ...grpc.CallOption) (*ArtListResp, error) {
+	out := new(ArtListResp)
+	err := c.cc.Invoke(ctx, "/article.service.v1.Article/ArtList", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *articleClient) GetArtBySn(ctx context.Context, in *ArtDetailRequest, opts ...grpc.CallOption) (*ArtDetailResp, error) {
 	out := new(ArtDetailResp)
 	err := c.cc.Invoke(ctx, "/article.service.v1.Article/GetArtBySn", in, out, opts...)
@@ -279,42 +692,31 @@ func (c *articleClient) GetArtBySn(ctx context.Context, in *ArtDetailRequest, op
 	return out, nil
 }
 
-func (c *articleClient) GetArtStream(ctx context.Context, opts ...grpc.CallOption) (Article_GetArtStreamClient, error) {
-	stream, err := c.cc.NewStream(ctx, &_Article_serviceDesc.Streams[0], "/article.service.v1.Article/GetArtStream", opts...)
+func (c *articleClient) SaveArt(ctx context.Context, in *SaveArtReq, opts ...grpc.CallOption) (*SaveArtResp, error) {
+	out := new(SaveArtResp)
+	err := c.cc.Invoke(ctx, "/article.service.v1.Article/SaveArt", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &articleGetArtStreamClient{stream}
-	return x, nil
+	return out, nil
 }
 
-type Article_GetArtStreamClient interface {
-	Send(*ArtDetailRequest) error
-	Recv() (*ArtDetailResp, error)
-	grpc.ClientStream
-}
-
-type articleGetArtStreamClient struct {
-	grpc.ClientStream
-}
-
-func (x *articleGetArtStreamClient) Send(m *ArtDetailRequest) error {
-	return x.ClientStream.SendMsg(m)
-}
-
-func (x *articleGetArtStreamClient) Recv() (*ArtDetailResp, error) {
-	m := new(ArtDetailResp)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
+func (c *articleClient) DeleteArt(ctx context.Context, in *DelArtRequest, opts ...grpc.CallOption) (*SaveArtResp, error) {
+	out := new(SaveArtResp)
+	err := c.cc.Invoke(ctx, "/article.service.v1.Article/DeleteArt", in, out, opts...)
+	if err != nil {
 		return nil, err
 	}
-	return m, nil
+	return out, nil
 }
 
 // ArticleServer is the server API for Article service.
 type ArticleServer interface {
 	Ping(context.Context, *empty.Empty) (*empty.Empty, error)
+	ArtList(context.Context, *ArtListRequest) (*ArtListResp, error)
 	GetArtBySn(context.Context, *ArtDetailRequest) (*ArtDetailResp, error)
-	GetArtStream(Article_GetArtStreamServer) error
+	SaveArt(context.Context, *SaveArtReq) (*SaveArtResp, error)
+	DeleteArt(context.Context, *DelArtRequest) (*SaveArtResp, error)
 }
 
 // UnimplementedArticleServer can be embedded to have forward compatible implementations.
@@ -324,11 +726,17 @@ type UnimplementedArticleServer struct {
 func (*UnimplementedArticleServer) Ping(ctx context.Context, req *empty.Empty) (*empty.Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Ping not implemented")
 }
+func (*UnimplementedArticleServer) ArtList(ctx context.Context, req *ArtListRequest) (*ArtListResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ArtList not implemented")
+}
 func (*UnimplementedArticleServer) GetArtBySn(ctx context.Context, req *ArtDetailRequest) (*ArtDetailResp, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetArtBySn not implemented")
 }
-func (*UnimplementedArticleServer) GetArtStream(srv Article_GetArtStreamServer) error {
-	return status.Errorf(codes.Unimplemented, "method GetArtStream not implemented")
+func (*UnimplementedArticleServer) SaveArt(ctx context.Context, req *SaveArtReq) (*SaveArtResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SaveArt not implemented")
+}
+func (*UnimplementedArticleServer) DeleteArt(ctx context.Context, req *DelArtRequest) (*SaveArtResp, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteArt not implemented")
 }
 
 func RegisterArticleServer(s *grpc.Server, srv ArticleServer) {
@@ -353,6 +761,24 @@ func _Article_Ping_Handler(srv interface{}, ctx context.Context, dec func(interf
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Article_ArtList_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ArtListRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArticleServer).ArtList(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/article.service.v1.Article/ArtList",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArticleServer).ArtList(ctx, req.(*ArtListRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Article_GetArtBySn_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(ArtDetailRequest)
 	if err := dec(in); err != nil {
@@ -371,30 +797,40 @@ func _Article_GetArtBySn_Handler(srv interface{}, ctx context.Context, dec func(
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Article_GetArtStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(ArticleServer).GetArtStream(&articleGetArtStreamServer{stream})
-}
-
-type Article_GetArtStreamServer interface {
-	Send(*ArtDetailResp) error
-	Recv() (*ArtDetailRequest, error)
-	grpc.ServerStream
-}
-
-type articleGetArtStreamServer struct {
-	grpc.ServerStream
-}
-
-func (x *articleGetArtStreamServer) Send(m *ArtDetailResp) error {
-	return x.ServerStream.SendMsg(m)
-}
-
-func (x *articleGetArtStreamServer) Recv() (*ArtDetailRequest, error) {
-	m := new(ArtDetailRequest)
-	if err := x.ServerStream.RecvMsg(m); err != nil {
+func _Article_SaveArt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SaveArtReq)
+	if err := dec(in); err != nil {
 		return nil, err
 	}
-	return m, nil
+	if interceptor == nil {
+		return srv.(ArticleServer).SaveArt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/article.service.v1.Article/SaveArt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArticleServer).SaveArt(ctx, req.(*SaveArtReq))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Article_DeleteArt_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DelArtRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ArticleServer).DeleteArt(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/article.service.v1.Article/DeleteArt",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ArticleServer).DeleteArt(ctx, req.(*DelArtRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 var _Article_serviceDesc = grpc.ServiceDesc{
@@ -406,19 +842,124 @@ var _Article_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Article_Ping_Handler,
 		},
 		{
+			MethodName: "ArtList",
+			Handler:    _Article_ArtList_Handler,
+		},
+		{
 			MethodName: "GetArtBySn",
 			Handler:    _Article_GetArtBySn_Handler,
 		},
-	},
-	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "GetArtStream",
-			Handler:       _Article_GetArtStream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
+			MethodName: "SaveArt",
+			Handler:    _Article_SaveArt_Handler,
+		},
+		{
+			MethodName: "DeleteArt",
+			Handler:    _Article_DeleteArt_Handler,
 		},
 	},
+	Streams:  []grpc.StreamDesc{},
 	Metadata: "api.proto",
+}
+
+func (m *ArtListRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ArtListRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ArtListRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Keyword) > 0 {
+		i -= len(m.Keyword)
+		copy(dAtA[i:], m.Keyword)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Keyword)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if m.Size_ != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.Size_))
+		i--
+		dAtA[i] = 0x10
+	}
+	if m.Page != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.Page))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *ArtListResp) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *ArtListResp) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *ArtListResp) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Size_ != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.Size_))
+		i--
+		dAtA[i] = 0x20
+	}
+	if m.Page != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.Page))
+		i--
+		dAtA[i] = 0x18
+	}
+	if len(m.Lists) > 0 {
+		for iNdEx := len(m.Lists) - 1; iNdEx >= 0; iNdEx-- {
+			{
+				size, err := m.Lists[iNdEx].MarshalToSizedBuffer(dAtA[:i])
+				if err != nil {
+					return 0, err
+				}
+				i -= size
+				i = encodeVarintApi(dAtA, i, uint64(size))
+			}
+			i--
+			dAtA[i] = 0x12
+		}
+	}
+	if m.Total != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.Total))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
 }
 
 func (m *ArtDetailRequest) Marshal() (dAtA []byte, err error) {
@@ -484,6 +1025,13 @@ func (m *ArtDetailResp) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 		i -= len(m.XXX_unrecognized)
 		copy(dAtA[i:], m.XXX_unrecognized)
 	}
+	if len(m.Tags) > 0 {
+		i -= len(m.Tags)
+		copy(dAtA[i:], m.Tags)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Tags)))
+		i--
+		dAtA[i] = 0x52
+	}
 	if len(m.DeletedAt) > 0 {
 		i -= len(m.DeletedAt)
 		copy(dAtA[i:], m.DeletedAt)
@@ -546,6 +1094,189 @@ func (m *ArtDetailResp) MarshalToSizedBuffer(dAtA []byte) (int, error) {
 	return len(dAtA) - i, nil
 }
 
+func (m *SaveArtReq) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SaveArtReq) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SaveArtReq) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Tags) > 0 {
+		i -= len(m.Tags)
+		copy(dAtA[i:], m.Tags)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Tags)))
+		i--
+		dAtA[i] = 0x52
+	}
+	if len(m.DeletedAt) > 0 {
+		i -= len(m.DeletedAt)
+		copy(dAtA[i:], m.DeletedAt)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.DeletedAt)))
+		i--
+		dAtA[i] = 0x4a
+	}
+	if len(m.UpdatedAt) > 0 {
+		i -= len(m.UpdatedAt)
+		copy(dAtA[i:], m.UpdatedAt)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.UpdatedAt)))
+		i--
+		dAtA[i] = 0x42
+	}
+	if len(m.CreatedAt) > 0 {
+		i -= len(m.CreatedAt)
+		copy(dAtA[i:], m.CreatedAt)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.CreatedAt)))
+		i--
+		dAtA[i] = 0x3a
+	}
+	if m.Status != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.Status))
+		i--
+		dAtA[i] = 0x30
+	}
+	if len(m.Content) > 0 {
+		i -= len(m.Content)
+		copy(dAtA[i:], m.Content)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Content)))
+		i--
+		dAtA[i] = 0x2a
+	}
+	if len(m.Img) > 0 {
+		i -= len(m.Img)
+		copy(dAtA[i:], m.Img)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Img)))
+		i--
+		dAtA[i] = 0x22
+	}
+	if len(m.Title) > 0 {
+		i -= len(m.Title)
+		copy(dAtA[i:], m.Title)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Title)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Sn) > 0 {
+		i -= len(m.Sn)
+		copy(dAtA[i:], m.Sn)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Sn)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Id != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.Id))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *SaveArtResp) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *SaveArtResp) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *SaveArtResp) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if len(m.Msg) > 0 {
+		i -= len(m.Msg)
+		copy(dAtA[i:], m.Msg)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Msg)))
+		i--
+		dAtA[i] = 0x1a
+	}
+	if len(m.Data) > 0 {
+		i -= len(m.Data)
+		copy(dAtA[i:], m.Data)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Data)))
+		i--
+		dAtA[i] = 0x12
+	}
+	if m.Status != 0 {
+		i = encodeVarintApi(dAtA, i, uint64(m.Status))
+		i--
+		dAtA[i] = 0x8
+	}
+	return len(dAtA) - i, nil
+}
+
+func (m *DelArtRequest) Marshal() (dAtA []byte, err error) {
+	size := m.Size()
+	dAtA = make([]byte, size)
+	n, err := m.MarshalToSizedBuffer(dAtA[:size])
+	if err != nil {
+		return nil, err
+	}
+	return dAtA[:n], nil
+}
+
+func (m *DelArtRequest) MarshalTo(dAtA []byte) (int, error) {
+	size := m.Size()
+	return m.MarshalToSizedBuffer(dAtA[:size])
+}
+
+func (m *DelArtRequest) MarshalToSizedBuffer(dAtA []byte) (int, error) {
+	i := len(dAtA)
+	_ = i
+	var l int
+	_ = l
+	if m.XXX_unrecognized != nil {
+		i -= len(m.XXX_unrecognized)
+		copy(dAtA[i:], m.XXX_unrecognized)
+	}
+	if m.Physical {
+		i--
+		if m.Physical {
+			dAtA[i] = 1
+		} else {
+			dAtA[i] = 0
+		}
+		i--
+		dAtA[i] = 0x10
+	}
+	if len(m.Sn) > 0 {
+		i -= len(m.Sn)
+		copy(dAtA[i:], m.Sn)
+		i = encodeVarintApi(dAtA, i, uint64(len(m.Sn)))
+		i--
+		dAtA[i] = 0xa
+	}
+	return len(dAtA) - i, nil
+}
+
 func encodeVarintApi(dAtA []byte, offset int, v uint64) int {
 	offset -= sovApi(v)
 	base := offset
@@ -557,6 +1288,55 @@ func encodeVarintApi(dAtA []byte, offset int, v uint64) int {
 	dAtA[offset] = uint8(v)
 	return base
 }
+func (m *ArtListRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Page != 0 {
+		n += 1 + sovApi(uint64(m.Page))
+	}
+	if m.Size_ != 0 {
+		n += 1 + sovApi(uint64(m.Size_))
+	}
+	l = len(m.Keyword)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *ArtListResp) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Total != 0 {
+		n += 1 + sovApi(uint64(m.Total))
+	}
+	if len(m.Lists) > 0 {
+		for _, e := range m.Lists {
+			l = e.Size()
+			n += 1 + l + sovApi(uint64(l))
+		}
+	}
+	if m.Page != 0 {
+		n += 1 + sovApi(uint64(m.Page))
+	}
+	if m.Size_ != 0 {
+		n += 1 + sovApi(uint64(m.Size_))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
 func (m *ArtDetailRequest) Size() (n int) {
 	if m == nil {
 		return 0
@@ -616,6 +1396,102 @@ func (m *ArtDetailResp) Size() (n int) {
 	if l > 0 {
 		n += 1 + l + sovApi(uint64(l))
 	}
+	l = len(m.Tags)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *SaveArtReq) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Id != 0 {
+		n += 1 + sovApi(uint64(m.Id))
+	}
+	l = len(m.Sn)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.Title)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.Img)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.Content)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.Status != 0 {
+		n += 1 + sovApi(uint64(m.Status))
+	}
+	l = len(m.CreatedAt)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.UpdatedAt)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.DeletedAt)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.Tags)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *SaveArtResp) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	if m.Status != 0 {
+		n += 1 + sovApi(uint64(m.Status))
+	}
+	l = len(m.Data)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	l = len(m.Msg)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.XXX_unrecognized != nil {
+		n += len(m.XXX_unrecognized)
+	}
+	return n
+}
+
+func (m *DelArtRequest) Size() (n int) {
+	if m == nil {
+		return 0
+	}
+	var l int
+	_ = l
+	l = len(m.Sn)
+	if l > 0 {
+		n += 1 + l + sovApi(uint64(l))
+	}
+	if m.Physical {
+		n += 2
+	}
 	if m.XXX_unrecognized != nil {
 		n += len(m.XXX_unrecognized)
 	}
@@ -627,6 +1503,275 @@ func sovApi(x uint64) (n int) {
 }
 func sozApi(x uint64) (n int) {
 	return sovApi(uint64((x << 1) ^ uint64((int64(x) >> 63))))
+}
+func (m *ArtListRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ArtListRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ArtListRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Page", wireType)
+			}
+			m.Page = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Page |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Size_", wireType)
+			}
+			m.Size_ = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Size_ |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Keyword", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Keyword = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *ArtListResp) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: ArtListResp: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: ArtListResp: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Total", wireType)
+			}
+			m.Total = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Total |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Lists", wireType)
+			}
+			var msglen int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				msglen |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			if msglen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + msglen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Lists = append(m.Lists, &ArtDetailResp{})
+			if err := m.Lists[len(m.Lists)-1].Unmarshal(dAtA[iNdEx:postIndex]); err != nil {
+				return err
+			}
+			iNdEx = postIndex
+		case 3:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Page", wireType)
+			}
+			m.Page = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Page |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 4:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Size_", wireType)
+			}
+			m.Size_ = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Size_ |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
 }
 func (m *ArtDetailRequest) Unmarshal(dAtA []byte) error {
 	l := len(dAtA)
@@ -1024,6 +2169,629 @@ func (m *ArtDetailResp) Unmarshal(dAtA []byte) error {
 			}
 			m.DeletedAt = string(dAtA[iNdEx:postIndex])
 			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tags = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SaveArtReq) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SaveArtReq: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SaveArtReq: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Id", wireType)
+			}
+			m.Id = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Id |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sn", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sn = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Title", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Title = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 4:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Img", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Img = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 5:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Content", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Content = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 6:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 7:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field CreatedAt", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.CreatedAt = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 8:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field UpdatedAt", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.UpdatedAt = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 9:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field DeletedAt", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.DeletedAt = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 10:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Tags", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Tags = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *SaveArtResp) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: SaveArtResp: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: SaveArtResp: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Status", wireType)
+			}
+			m.Status = 0
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				m.Status |= int64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+		case 2:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Data", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Data = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 3:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Msg", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Msg = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		default:
+			iNdEx = preIndex
+			skippy, err := skipApi(dAtA[iNdEx:])
+			if err != nil {
+				return err
+			}
+			if skippy < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) < 0 {
+				return ErrInvalidLengthApi
+			}
+			if (iNdEx + skippy) > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.XXX_unrecognized = append(m.XXX_unrecognized, dAtA[iNdEx:iNdEx+skippy]...)
+			iNdEx += skippy
+		}
+	}
+
+	if iNdEx > l {
+		return io.ErrUnexpectedEOF
+	}
+	return nil
+}
+func (m *DelArtRequest) Unmarshal(dAtA []byte) error {
+	l := len(dAtA)
+	iNdEx := 0
+	for iNdEx < l {
+		preIndex := iNdEx
+		var wire uint64
+		for shift := uint(0); ; shift += 7 {
+			if shift >= 64 {
+				return ErrIntOverflowApi
+			}
+			if iNdEx >= l {
+				return io.ErrUnexpectedEOF
+			}
+			b := dAtA[iNdEx]
+			iNdEx++
+			wire |= uint64(b&0x7F) << shift
+			if b < 0x80 {
+				break
+			}
+		}
+		fieldNum := int32(wire >> 3)
+		wireType := int(wire & 0x7)
+		if wireType == 4 {
+			return fmt.Errorf("proto: DelArtRequest: wiretype end group for non-group")
+		}
+		if fieldNum <= 0 {
+			return fmt.Errorf("proto: DelArtRequest: illegal tag %d (wire type %d)", fieldNum, wire)
+		}
+		switch fieldNum {
+		case 1:
+			if wireType != 2 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Sn", wireType)
+			}
+			var stringLen uint64
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				stringLen |= uint64(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			intStringLen := int(stringLen)
+			if intStringLen < 0 {
+				return ErrInvalidLengthApi
+			}
+			postIndex := iNdEx + intStringLen
+			if postIndex < 0 {
+				return ErrInvalidLengthApi
+			}
+			if postIndex > l {
+				return io.ErrUnexpectedEOF
+			}
+			m.Sn = string(dAtA[iNdEx:postIndex])
+			iNdEx = postIndex
+		case 2:
+			if wireType != 0 {
+				return fmt.Errorf("proto: wrong wireType = %d for field Physical", wireType)
+			}
+			var v int
+			for shift := uint(0); ; shift += 7 {
+				if shift >= 64 {
+					return ErrIntOverflowApi
+				}
+				if iNdEx >= l {
+					return io.ErrUnexpectedEOF
+				}
+				b := dAtA[iNdEx]
+				iNdEx++
+				v |= int(b&0x7F) << shift
+				if b < 0x80 {
+					break
+				}
+			}
+			m.Physical = bool(v != 0)
 		default:
 			iNdEx = preIndex
 			skippy, err := skipApi(dAtA[iNdEx:])
