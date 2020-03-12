@@ -1,0 +1,305 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/article": {
+      "get": {
+        "operationId": "ArtList",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ArtListResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "size",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "int64"
+          },
+          {
+            "name": "keyword",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Article"
+        ]
+      }
+    },
+    "/article/save": {
+      "post": {
+        "operationId": "SaveArt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SaveArtResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/v1SaveArtReq"
+            }
+          }
+        ],
+        "tags": [
+          "Article"
+        ]
+      }
+    },
+    "/article/sn/{sn}": {
+      "get": {
+        "operationId": "GetArtBySn",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1ArtDetailResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sn",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "tags": [
+          "Article"
+        ]
+      }
+    },
+    "/article/sn/{sn}/physical/{physical}": {
+      "post": {
+        "operationId": "DeleteArt",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/v1SaveArtResp"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "sn",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "physical",
+            "in": "path",
+            "required": true,
+            "type": "boolean",
+            "format": "boolean"
+          }
+        ],
+        "tags": [
+          "Article"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    },
+    "v1ArtDetailResp": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "sn": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "img": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "format": "int64"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        },
+        "deleted_at": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "string"
+        }
+      }
+    },
+    "v1ArtListResp": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "string",
+          "format": "int64"
+        },
+        "lists": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/v1ArtDetailResp"
+          }
+        },
+        "page": {
+          "type": "string",
+          "format": "int64"
+        },
+        "size": {
+          "type": "string",
+          "format": "int64"
+        }
+      }
+    },
+    "v1SaveArtReq": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
+        "sn": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "img": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "format": "int64"
+        },
+        "created_at": {
+          "type": "string"
+        },
+        "updated_at": {
+          "type": "string"
+        },
+        "deleted_at": {
+          "type": "string"
+        },
+        "tags": {
+          "type": "string"
+        }
+      }
+    },
+    "v1SaveArtResp": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "format": "int64"
+        },
+        "data": {
+          "type": "string"
+        },
+        "msg": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

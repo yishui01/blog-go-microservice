@@ -7,9 +7,15 @@ import "google/api/annotations.proto";
 package article.service.v1;
 
 message ArtListRequest {
-     int64 page = 1 [(gogoproto.moretags) = 'form:"page"' ];
-     int64 size = 2 [(gogoproto.moretags) = 'form:"size"'];
-     string keyword = 3 [(gogoproto.moretags) = 'form:"keyword"'];
+     int64 pageNum = 1;
+     int64 pageSize = 2;
+     string keyword = 3;
+     string tags = 4;
+     int64 status = 5;
+     string order = 6;
+     int64 createdAt = 7;
+     int64 updatedAt = 8;
+     bool unscoped = 9;
 }
 
 message ArtListResp {
@@ -21,33 +27,32 @@ message ArtListResp {
 
 message ArtDetailRequest {
     string sn = 1 [(gogoproto.moretags) = 'form:"sn" validate:"required"'];
-    int64 status = 2 [(gogoproto.moretags) = 'form:"status" validate:"required"'];
 }
 
 message ArtDetailResp {
     int64  id      = 1;
-    string sn      = 2 [(gogoproto.moretags) = 'form:"sn" validate:"required"'];
+    string sn      = 2;
     string title   = 3;
-    string img     = 4;
-    string content = 5;
-    int64  status  = 6;
-    string created_at = 7;
-    string updated_at = 8;
-    string deleted_at = 9;
+    string img     = 4 ;
+    string content = 5 ;
+    int64  status  = 6 ;
+    int64 created_at = 7;
+    int64 updated_at = 8;
+    int64 deleted_at = 9;
     string tags    = 10;
+    int64 ord      = 11;
 }
 
 message SaveArtReq {
     int64  id      = 1;
-    string sn      = 2 [(gogoproto.moretags) = 'form:"name" validate:"required"'];
-    string title   = 3;
-    string img     = 4;
-    string content = 5;
+    string sn      = 2;
+    string title   = 3 [(gogoproto.moretags) = 'form:"title" validate:"required"'];
+    string img     = 4 ;
+    string content = 5 [(gogoproto.moretags) = 'form:"content" validate:"required"'];
     int64  status  = 6;
-    string created_at = 7;
-    string updated_at = 8;
-    string deleted_at = 9;
-    string tags    = 10;
+    string tags    = 7;
+    int64 created_at = 8;
+    int64 updated_at = 9;
 }
 
 message SaveArtResp {
@@ -57,8 +62,8 @@ message SaveArtResp {
 }
 
 message DelArtRequest {
-    string sn = 1 [(gogoproto.moretags) = 'form:"name" validate:"required"'];
-    bool   physical = 2 [(gogoproto.moretags) = 'form:"physical" validate:"required"']; //是否为物理删除，false为软删除
+    int64 id = 1 [(gogoproto.moretags) = 'form:"id" validate:"required"'];
+    bool   physical = 2 [(gogoproto.moretags) = 'form:"physical"']; //是否为物理删除，false为软删除
 }
 
 
@@ -68,12 +73,12 @@ service Article {
 
     rpc ArtList(ArtListRequest)returns(ArtListResp){
         option(google.api.http) = {
-            get:"/article"
+            get:"/article/pagenum/{pageNum}/pagesize/{pageSize}/keyword/{keyword}/tags/{tags}/status/{status}/order/{order}/unscoped/{unscoped}"
         };
     }
     rpc GetArtBySn(ArtDetailRequest) returns (ArtDetailResp){
         option(google.api.http) = {
-            get:"/article/sn/{sn}/status/{status}"
+            get:"/article/sn/{sn}"
         };
     };
     rpc SaveArt(SaveArtReq) returns (SaveArtResp){
@@ -84,7 +89,7 @@ service Article {
     };
     rpc DeleteArt(DelArtRequest) returns (SaveArtResp){
         option(google.api.http) = {
-            post:"/article/sn/{sn}/physical/{physical}"
+            post:"/article/id/{id}/physical/{physical}"
         };
     };
 }

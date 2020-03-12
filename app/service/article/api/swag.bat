@@ -1,0 +1,1 @@
+protoc -I=. -I=../../../../framework/third_party/  --swagger_out=logtostderr=true:. --gofast_out=plugins=grpc:. api.proto

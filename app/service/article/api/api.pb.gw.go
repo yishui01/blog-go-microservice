@@ -32,12 +32,96 @@ var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 
 var (
-	filter_Article_ArtList_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+	filter_Article_ArtList_0 = &utilities.DoubleArray{Encoding: map[string]int{"pageNum": 0, "pageSize": 1, "keyword": 2, "tags": 3, "status": 4, "order": 5, "unscoped": 6}, Base: []int{1, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8}}
 )
 
 func request_Article_ArtList_0(ctx context.Context, marshaler runtime.Marshaler, client ArticleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ArtListRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["pageNum"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pageNum")
+	}
+
+	protoReq.PageNum, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pageNum", err)
+	}
+
+	val, ok = pathParams["pageSize"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pageSize")
+	}
+
+	protoReq.PageSize, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pageSize", err)
+	}
+
+	val, ok = pathParams["keyword"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "keyword")
+	}
+
+	protoReq.Keyword, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "keyword", err)
+	}
+
+	val, ok = pathParams["tags"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tags")
+	}
+
+	protoReq.Tags, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tags", err)
+	}
+
+	val, ok = pathParams["status"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "status")
+	}
+
+	protoReq.Status, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "status", err)
+	}
+
+	val, ok = pathParams["order"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "order")
+	}
+
+	protoReq.Order, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "order", err)
+	}
+
+	val, ok = pathParams["unscoped"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "unscoped")
+	}
+
+	protoReq.Unscoped, err = runtime.Bool(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "unscoped", err)
+	}
 
 	if err := req.ParseForm(); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -54,6 +138,90 @@ func request_Article_ArtList_0(ctx context.Context, marshaler runtime.Marshaler,
 func local_request_Article_ArtList_0(ctx context.Context, marshaler runtime.Marshaler, server ArticleServer, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq ArtListRequest
 	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["pageNum"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pageNum")
+	}
+
+	protoReq.PageNum, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pageNum", err)
+	}
+
+	val, ok = pathParams["pageSize"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pageSize")
+	}
+
+	protoReq.PageSize, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pageSize", err)
+	}
+
+	val, ok = pathParams["keyword"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "keyword")
+	}
+
+	protoReq.Keyword, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "keyword", err)
+	}
+
+	val, ok = pathParams["tags"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "tags")
+	}
+
+	protoReq.Tags, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "tags", err)
+	}
+
+	val, ok = pathParams["status"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "status")
+	}
+
+	protoReq.Status, err = runtime.Int64(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "status", err)
+	}
+
+	val, ok = pathParams["order"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "order")
+	}
+
+	protoReq.Order, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "order", err)
+	}
+
+	val, ok = pathParams["unscoped"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "unscoped")
+	}
+
+	protoReq.Unscoped, err = runtime.Bool(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "unscoped", err)
+	}
 
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Article_ArtList_0); err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
@@ -86,17 +254,6 @@ func request_Article_GetArtBySn_0(ctx context.Context, marshaler runtime.Marshal
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sn", err)
 	}
 
-	val, ok = pathParams["status"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "status")
-	}
-
-	protoReq.Status, err = runtime.Int64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "status", err)
-	}
-
 	msg, err := client.GetArtBySn(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
@@ -122,17 +279,6 @@ func local_request_Article_GetArtBySn_0(ctx context.Context, marshaler runtime.M
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sn", err)
-	}
-
-	val, ok = pathParams["status"]
-	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "status")
-	}
-
-	protoReq.Status, err = runtime.Int64(val)
-
-	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "status", err)
 	}
 
 	msg, err := server.GetArtBySn(ctx, &protoReq)
@@ -185,15 +331,15 @@ func request_Article_DeleteArt_0(ctx context.Context, marshaler runtime.Marshale
 		_   = err
 	)
 
-	val, ok = pathParams["sn"]
+	val, ok = pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sn")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
 
-	protoReq.Sn, err = runtime.String(val)
+	protoReq.Id, err = runtime.Int64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sn", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 
 	val, ok = pathParams["physical"]
@@ -223,15 +369,15 @@ func local_request_Article_DeleteArt_0(ctx context.Context, marshaler runtime.Ma
 		_   = err
 	)
 
-	val, ok = pathParams["sn"]
+	val, ok = pathParams["id"]
 	if !ok {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "sn")
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
 	}
 
-	protoReq.Sn, err = runtime.String(val)
+	protoReq.Id, err = runtime.Int64(val)
 
 	if err != nil {
-		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "sn", err)
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
 	}
 
 	val, ok = pathParams["physical"]
@@ -460,13 +606,13 @@ func RegisterArticleHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 }
 
 var (
-	pattern_Article_ArtList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0}, []string{"article"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Article_ArtList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 8, 2, 9, 1, 0, 4, 1, 5, 9}, []string{"article", "pagenum", "pageNum", "pagesize", "pageSize", "keyword", "tags", "status", "order", "unscoped"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Article_GetArtBySn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 2}, []string{"article", "sn", "status"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Article_GetArtBySn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 1}, []string{"article", "sn"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Article_SaveArt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"article", "save"}, "", runtime.AssumeColonVerbOpt(true)))
 
-	pattern_Article_DeleteArt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 2}, []string{"article", "sn", "physical"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Article_DeleteArt_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 1, 2, 2, 1, 0, 4, 1, 5, 2}, []string{"article", "id", "physical"}, "", runtime.AssumeColonVerbOpt(true)))
 )
 
 var (

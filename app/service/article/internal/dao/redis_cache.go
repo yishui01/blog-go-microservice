@@ -18,14 +18,16 @@ func (d *Dao) GetCacheArticle(c context.Context, sn string) (*model.Article, err
 
 	art := new(model.Article)
 	reply, err := redis.Bytes(conn.Do("GET", ArtCacheKey(sn)))
-	if err == nil {
-		if err = utils.JsonUnmarshal(reply, art); err != nil {
-			art = nil
+	if err != nil {
+		if err != redis.ErrNil {
+			log.ZapLogger.Error("GetCacheArticle GET from Redis err:", zap.String("err", err.Error()))
 		}
+		return nil, nil
 	}
 
-	if err != nil && err != redis.ErrNil {
-		log.ZapLogger.Error("GetCacheArticle err:", zap.String("err", err.Error()))
+	if err = utils.JsonUnmarshal(reply, art); err != nil {
+		log.ZapLogger.Error("GetCacheArticle JsonUnmarshal err:", zap.String("err", err.Error()))
+		art = nil
 	}
 
 	return art, err

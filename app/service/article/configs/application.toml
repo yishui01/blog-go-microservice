@@ -1,11 +1,10 @@
 [app]
     appName="article"
-
 [trace]
     agentAddr="192.168.136.109:6831"
-
+    stdout=false
 [log]
-    enableHost=true  #Add host name and other additional fields
+    enableHost=false  #Add host name and other additional fields
     encode="console"    #json / console
     level="debug"    #debug  info  warn  error fatal
     callFull=false
@@ -25,7 +24,7 @@
 
 [grpc]
     addr = "0.0.0.0:9000"
-    timeout = "1" #grpc ctx超时秒数
+    timeout = "10" #grpc ctx超时秒数
 [grpc.http]
     addr="0.0.0.0:9001"
     readTimeout="10"
@@ -51,9 +50,9 @@
 	dsn = "root:123456@tcp(192.168.136.109:3306)/blog?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
 	active = 500
 	idle = 10
-	idleTimeout =4 #hour
+	idleTimeout =24 #hour
 	logMode = true
-	sTable = true  #SingularTable
+	sTable = true  #SingularTable  如果设置为true,`User`的默认表名为`user`,使用`TableName`设置的表名不受影响
 	tablePrefix="mc_"
 
 [redis]

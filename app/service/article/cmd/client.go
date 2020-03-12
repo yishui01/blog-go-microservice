@@ -20,7 +20,6 @@ func main() {
 	if err != nil {
 		log.Fatal("没有连接成功", err)
 	}
-	time.Sleep(time.Second * 10)
 	resp, err := c.GetArtBySn(context.Background(), &pb.ArtDetailRequest{Sn: "666", Status: 1})
 	if err != nil {
 		log.Println("连接成功，调用失败", err.Error())

@@ -2,51 +2,68 @@ package model
 
 import (
 	"github.com/jinzhu/gorm"
+	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/utils"
 	"strings"
+	"time"
 )
 
 type Article struct {
-	Id        int64  `gorm:"primary_key";json:"_"`
-	Sn        string `json:"sn"`
-	Title     string `json:"title"`
-	Tags      string `json:"tags"`
-	Img       string `json:"img"`
-	Content   string `json:"content"`
-	Status    int64  `json:"status"`
-	CreatedAt string `json:"created_at"` //time.Time
-	UpdatedAt string `json:"updated_at"`
-	DeletedAt string `json:"deleted_at" gorm:"default:''"`
+	Id        int64     `gorm:"primary_key";json:"_"`
+	Sn        string    `json:"sn"`
+	Title     string    `json:"title"`
+	Tags      string    `json:"tags"`
+	Img       string    `json:"img"`
+	Content   string    `json:"content"`
+	Status    int64     `json:"status"`
+	CreatedAt time.Time `json:"created_at" gorm:"-"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"-"`
+	DeletedAt time.Time `json:"deleted_at" gorm:"-"`
+}
+
+//从ES查出来后解析json到结构体用的
+type EsArticle struct {
+	Id        int64     `gorm:"primary_key";json:"_"`
+	Sn        string    `json:"sn"`
+	Title     string    `json:"title"`
+	Tags      []string  `json:"tags"`
+	Img       string    `json:"img"`
+	Content   string    `json:"content"`
+	Status    int64     `json:"status"`
+	CreatedAt time.Time `json:"created_at" gorm:"-"`
+	UpdatedAt time.Time `json:"updated_at" gorm:"-"`
+	DeletedAt time.Time `json:"deleted_at" gorm:"-"`
 }
 
 type ArtQueryReq struct {
 	utils.PageRequest
-	KeyWords string
-	Tags     []string
-	Status   int64
-	Order    []string
-	Debug    bool
-	Unscoped bool //true时会查找已经软删除的记录
+	KeyWords  string
+	Tags      string
+	Status    int64
+	Order     string
+	CreatedAt int64
+	UpdatedAt int64
+	Unscoped  bool //true时会查找已经软删除的记录
 }
 
 func (user *Article) BeforeCreate(scope *gorm.Scope) error {
-	scope.SetColumn("Sn", utils.Md5ByTime("key"))
-
+	scope.SetColumn("Sn", utils.SubMd5ByTime("key34648-+-/`124bes***R*3568yr8b532.=/?3"))
 	return nil
 }
 
 func (self *Article) ToEsMap() map[string]interface{} {
 	maps := make(map[string]interface{})
-	maps["Id"] = self.Id
-	maps["Sn"] = self.Sn
-	maps["Title"] = self.Title
-	maps["Tags"] = strings.Split(self.Tags, ",")
-	maps["Img"] = self.Img
-	maps["Content"] = self.Content
-	maps["Status"] = self.Status
-	maps["CreatedAt"] = self.CreatedAt
-	maps["UpdatedAt"] = self.UpdatedAt
-	maps["DeletedAt"] = self.DeletedAt
+	maps["id"] = self.Id
+	maps["sn"] = self.Sn
+	maps["title"] = self.Title
+	maps["tags"] = strings.Split(self.Tags, ",")
+	maps["img"] = self.Img
+	maps["content"] = self.Content
+	maps["status"] = self.Status
+	maps["created_at"] = self.CreatedAt
+	maps["updated_at"] = self.UpdatedAt
+	maps["deleted_at"] = self.DeletedAt
+	log.SugarLogger.Debugf("ToEsMap:%#v\n", maps)
 	return maps
 }
 
@@ -72,7 +89,7 @@ const Mapping = `
 					"type":"text"
 				},
 				"tags":{
-					"type":"nested"
+					"type":"keyword"
 				},
 				"img":{
 					"type":"keyword"
