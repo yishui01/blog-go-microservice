@@ -31,7 +31,12 @@ func initJaeger(service, agentAddr string) (opentracing.Tracer, io.Closer) {
 		Reporter:    &config.ReporterConfig{LogSpans: true, LocalAgentHostPort: agentAddr},
 		ServiceName: service,
 	}
-	tracer, closer, err := cfg.NewTracer(config.Logger(jaeger.StdLogger)) //生产环境可以去掉jaeger.StdLogger
+
+	opt := []config.Option{}
+	if viper.GetBool("trace.stdout") {
+		opt = append(opt, config.Logger(jaeger.StdLogger))
+	}
+	tracer, closer, err := cfg.NewTracer(opt...)
 	if err != nil {
 		panic(fmt.Sprintf("ERROR:cannot init Jaeger: %v\n", err))
 	}

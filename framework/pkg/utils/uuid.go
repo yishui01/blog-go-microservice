@@ -20,6 +20,11 @@ func Md5(key string) string {
 }
 
 func Md5ByTime(key string) string {
-	timeTemplate1 := "2006-01-02 15:04:05" //常规类型
+	timeTemplate1 := "2006-01-02 15:04:05"
 	return Md5(key + time.Unix(time.Now().UnixNano(), 0).Format(timeTemplate1))
+}
+
+func SubMd5ByTime(key string) string {
+	timeTemplate1 := "2006-01-02 15:04:05"
+	return Md5(key + time.Unix(time.Now().UnixNano(), 0).Format(timeTemplate1))[:16]
 }

@@ -137,7 +137,13 @@ func (s *GrpcServer) SetHttpServer(registerFn func(ctx context.Context, mux *run
 			return key, strings.Contains(key, "Uber")
 		}
 	}
-	mux := runtime.NewServeMux(runtime.WithIncomingHeaderMatcher(CustomMatcher))
+
+	mux := runtime.NewServeMux(
+		//传递header头的匹配规则
+		runtime.WithIncomingHeaderMatcher(CustomMatcher),
+		//http response 中不要忽略空值字段
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{OrigName: true, EmitDefaults: true}),
+	)
 
 	//这里用的是带Dail的那个注册方法，请求路径为：http=>gateway=>tcp connect=>grpc Server
 	err := registerFn(context.Background(), mux, s.conf.Addr, opt)

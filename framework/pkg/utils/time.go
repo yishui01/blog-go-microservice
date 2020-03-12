@@ -20,3 +20,10 @@ func Shrink(c context.Context, d time.Duration) (time.Duration, context.Context,
 	ctx, cancel := context.WithTimeout(c, d)
 	return d, ctx, cancel
 }
+
+func TimeUnixToTime(t int64) time.Time {
+	if t == 0 {
+		return time.Time{}
+	}
+	return time.Unix(t, 0)
+}
