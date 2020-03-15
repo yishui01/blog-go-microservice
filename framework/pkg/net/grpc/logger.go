@@ -82,7 +82,9 @@ func serverLog(logFlag int8) grpc.UnaryServerInterceptor {
 
 		if logFlag&LogFlagDisableArgs == 0 {
 			// TODO: it will panic if someone remove String method from protobuf message struct that auto generate from protoc.
-			logFields = append(logFields, zap.String("args", req.(fmt.Stringer).String()))
+			//logFields = append(logFields, zap.String("args", req.(fmt.Stringer).String())) //打不出中文，V2才支持
+			logFields = append(logFields, zap.String("args", fmt.Sprintf("%#+v", req))) //只能反射了
+
 		}
 		if err != nil {
 			logFields = append(logFields, zap.String("error", err.Error()), zap.String("stack", fmt.Sprintf("%+v", err)))
@@ -168,7 +170,8 @@ func clientLogging(dialOptions ...grpc.DialOption) grpc.UnaryClientInterceptor {
 		}
 		if logFlag&LogFlagDisableArgs == 0 {
 			// TODO: it will panic if someone remove String method from protobuf message struct that auto generate from protoc.
-			logFields = append(logFields, zap.String("args", req.(fmt.Stringer).String()))
+			//logFields = append(logFields, zap.String("args", req.(fmt.Stringer).String()))
+			logFields = append(logFields, zap.String("args", fmt.Sprintf("%#+v", req)))
 		}
 		if err != nil {
 			logFields = append(logFields, zap.String("error", err.Error()), zap.String("stack", fmt.Sprintf("%+v", err)))

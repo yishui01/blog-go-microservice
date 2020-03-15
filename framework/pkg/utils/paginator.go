@@ -8,7 +8,7 @@ import (
 
 // Pagination Pagination.
 type PageRequest struct {
-	PageSize int64 `form:"page_size" json:"page_size"`
+	PageSize int32 `form:"page_size" json:"page_size"`
 	PageNum  int64 `form:"page_num" json:"page_num"`
 }
 

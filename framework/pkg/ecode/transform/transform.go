@@ -10,7 +10,7 @@ import (
 )
 
 // togRPCCode convert ecode.Codo to gRPC code
-func togRPCCode(code ecode.Codes) codes.Code {
+func TogRPCCode(code ecode.Codes) codes.Code {
 	switch code.Code() {
 	case ecode.OK.Code():
 		return codes.OK
@@ -100,10 +100,10 @@ func gRPCStatusFromEcode(code ecode.Codes) (*status.Status, error) {
 			}
 		}
 	}
-	//gst := status.New(codes.Unknown, st.Proto().Message)
-	//return gst.WithDetails(st.Proto())
-	gst := status.New(togRPCCode(code), st.Proto().Message)
-	return gst, nil
+	gst := status.New(codes.Unknown, st.Proto().Message)
+	return gst.WithDetails(st.Proto())
+	//gst := status.New(togRPCCode(code), st.Proto().Message)
+	//return gst, nil
 }
 
 // ToEcode convert grpc.status to ecode.Codes
@@ -117,3 +117,7 @@ func ToEcode(gst *status.Status) ecode.Codes {
 	}
 	return toECode(gst)
 }
+
+
+
+

@@ -94,3 +94,21 @@ func (c *Client) handle() grpc.UnaryClientInterceptor {
 		return
 	}
 }
+
+//server端实际返回的都是grpc的unknow
+func GrpcStatusToHttpStatus() grpc.UnaryClientInterceptor {
+	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
+		var (
+			p peer.Peer
+		)
+		opts = append(opts, grpc.Peer(&p))
+		var ec ecode.Codes = ecode.OK
+		//调用方法，将grpc的status（自定义的永远为unknow）转换为ecode,取出ecode码再转换为http状态码
+		if err = invoker(ctx, method, req, reply, cc, opts...); err != nil {
+			gst, _ := gstatus.FromError(err)
+			ec = transform.ToEcode(gst)
+			err = gstatus.New(transform.TogRPCCode(ec), gst.Message()).Err()
+		}
+		return
+	}
+}
