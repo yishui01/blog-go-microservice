@@ -54,12 +54,13 @@ func (d *Dao) EsSearchArt(ctx context.Context, req *model.ArtQueryReq) (*elastic
 		log.SugarLogger.Debugf("EsSearchArt Source:%#v\n Err:%#v\n", source, err)
 	}
 	search := d.es.Search(model.ART_ES_INDEX).Query(query).
-		From(int((req.PageNum - 1) * req.PageSize)).
+		From(int((req.PageNum - 1) * int64(req.PageSize))).
 		Size(int(req.PageSize))
 
 	if req.Order == "" {
 		search.Sort("id", false)
 	} else {
+
 	}
 
 	res, err := search.Do(ctx)
@@ -79,13 +80,13 @@ func (d *Dao) EsSearchArt(ctx context.Context, req *model.ArtQueryReq) (*elastic
 func (d *Dao) EsPutArt(ctx context.Context, art *model.Article) (*elastic.IndexResponse, error) {
 	exists, err := d.es.IndexExists(model.ART_ES_INDEX).Do(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "Exists Article Index Err")
+		return nil, errors.WithStack(err)
 	}
 	if !exists {
 		// Create a new index.
 		createIndex, err := d.es.CreateIndex(model.ART_ES_INDEX).BodyString(model.Mapping).Do(ctx)
 		if err != nil {
-			return nil, errors.Wrap(err, "create "+model.ART_ES_INDEX+" Index Err")
+			return nil, errors.WithStack(err)
 		}
 		if !createIndex.Acknowledged {
 			// Not acknowledged
@@ -96,20 +97,26 @@ func (d *Dao) EsPutArt(ctx context.Context, art *model.Article) (*elastic.IndexR
 	resp, err := d.es.Index().Index(model.ART_ES_INDEX).
 		Id(strconv.Itoa(int(art.Id))).BodyJson(art.ToEsMap()).Do(ctx)
 	if err != nil {
-		return resp, errors.Wrap(err, "insert into es err:")
+		return resp, errors.WithStack(err)
 	}
 	return resp, nil
 }
 
 func (d *Dao) EsDeleteArt(ctx context.Context, id int64) (*elastic.DeleteResponse, error) {
 	exists, err := d.es.IndexExists(model.ART_ES_INDEX).Do(ctx)
-	if err != nil || !exists {
-		return nil, errors.Wrap(err, "Exists "+model.ART_ES_INDEX+" Index Err On EsDeleteArt")
-	}
-	resp, err := d.es.Delete().Index(model.ART_ES_INDEX).
-		Id(strconv.Itoa(int(id))).Do(ctx)
 	if err != nil {
-		return resp, errors.Wrap(err, "EsDeleteArt es err:")
+		return nil, errors.WithStack(err)
+	}
+	if !exists {
+		return nil, nil
+	}
+
+	resp, err := d.es.Delete().Index(model.ART_ES_INDEX).Id(strconv.Itoa(int(id))).Do(ctx)
+	if err != nil {
+		if elastic.IsNotFound(err) {
+			return resp, nil
+		}
+		return nil, errors.WithStack(err)
 	}
 	return resp, nil
 }

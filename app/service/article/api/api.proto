@@ -6,12 +6,13 @@ import "google/api/annotations.proto";
 
 package article.service.v1;
 
+//文章列表
 message ArtListRequest {
      int64 pageNum = 1;
-     int64 pageSize = 2;
+     int32 pageSize = 2;
      string keyword = 3;
      string tags = 4;
-     int64 status = 5;
+     int32 status = 5;
      string order = 6;
      int64 createdAt = 7;
      int64 updatedAt = 8;
@@ -21,12 +22,14 @@ message ArtListRequest {
 message ArtListResp {
     int64 total=1;
     repeated ArtDetailResp lists = 2;
-    int64 page = 3 [(gogoproto.moretags) = 'form:"page"' ];
-    int64 size = 4 [(gogoproto.moretags) = 'form:"size"'];
+    int64 page = 3;
+    int32 size = 4;
 }
 
+
+//文章详情
 message ArtDetailRequest {
-    string sn = 1 [(gogoproto.moretags) = 'form:"sn" validate:"required"'];
+    string sn = 1 [(gogoproto.moretags) = 'validate:"required"'];
 }
 
 message ArtDetailResp {
@@ -35,24 +38,32 @@ message ArtDetailResp {
     string title   = 3;
     string img     = 4 ;
     string content = 5 ;
-    int64  status  = 6 ;
+    int32  status  = 6 ;
     int64 created_at = 7;
     int64 updated_at = 8;
     int64 deleted_at = 9;
     string tags    = 10;
-    int64 ord      = 11;
+    int32 ord      = 11;
+    int64 view_count = 12;
+    int64 cm_count = 13;
+    int64 laud_count = 14;
 }
 
+
+//添加/修改文章
 message SaveArtReq {
     int64  id      = 1;
     string sn      = 2;
-    string title   = 3 [(gogoproto.moretags) = 'form:"title" validate:"required"'];
+    string title   = 3 [(gogoproto.moretags) = 'validate:"required"'];
     string img     = 4 ;
-    string content = 5 [(gogoproto.moretags) = 'form:"content" validate:"required"'];
-    int64  status  = 6;
+    string content = 5 [(gogoproto.moretags) = 'validate:"required"'];
+    int32  status  = 6;
     string tags    = 7;
     int64 created_at = 8;
     int64 updated_at = 9;
+    int64 view_count = 12;
+    int64 cm_count = 13;
+    int64 laud_count = 14;
 }
 
 message SaveArtResp {
@@ -61,9 +72,11 @@ message SaveArtResp {
     string msg        = 3;
 }
 
+
+//删除文章
 message DelArtRequest {
-    int64 id = 1 [(gogoproto.moretags) = 'form:"id" validate:"required"'];
-    bool   physical = 2 [(gogoproto.moretags) = 'form:"physical"']; //是否为物理删除，false为软删除
+    int64 id = 1 [(gogoproto.moretags) = 'validate:"required"'];
+    bool   physical = 2; //是否为物理删除，false为软删除
 }
 
 

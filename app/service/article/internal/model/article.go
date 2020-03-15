@@ -15,7 +15,7 @@ type Article struct {
 	Tags      string    `json:"tags"`
 	Img       string    `json:"img"`
 	Content   string    `json:"content"`
-	Status    int64     `json:"status"`
+	Status    int32     `json:"status"`
 	CreatedAt time.Time `json:"created_at" gorm:"-"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"-"`
 	DeletedAt time.Time `json:"deleted_at" gorm:"-"`
@@ -29,7 +29,7 @@ type EsArticle struct {
 	Tags      []string  `json:"tags"`
 	Img       string    `json:"img"`
 	Content   string    `json:"content"`
-	Status    int64     `json:"status"`
+	Status    int32     `json:"status"`
 	CreatedAt time.Time `json:"created_at" gorm:"-"`
 	UpdatedAt time.Time `json:"updated_at" gorm:"-"`
 	DeletedAt time.Time `json:"deleted_at" gorm:"-"`
@@ -39,7 +39,7 @@ type ArtQueryReq struct {
 	utils.PageRequest
 	KeyWords  string
 	Tags      string
-	Status    int64
+	Status    int32
 	Order     string
 	CreatedAt int64
 	UpdatedAt int64

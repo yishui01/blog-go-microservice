@@ -62,7 +62,7 @@ func request_Article_ArtList_0(ctx context.Context, marshaler runtime.Marshaler,
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pageSize")
 	}
 
-	protoReq.PageSize, err = runtime.Int64(val)
+	protoReq.PageSize, err = runtime.Int32(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pageSize", err)
@@ -95,7 +95,7 @@ func request_Article_ArtList_0(ctx context.Context, marshaler runtime.Marshaler,
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "status")
 	}
 
-	protoReq.Status, err = runtime.Int64(val)
+	protoReq.Status, err = runtime.Int32(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "status", err)
@@ -162,7 +162,7 @@ func local_request_Article_ArtList_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "pageSize")
 	}
 
-	protoReq.PageSize, err = runtime.Int64(val)
+	protoReq.PageSize, err = runtime.Int32(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "pageSize", err)
@@ -195,7 +195,7 @@ func local_request_Article_ArtList_0(ctx context.Context, marshaler runtime.Mars
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "status")
 	}
 
-	protoReq.Status, err = runtime.Int64(val)
+	protoReq.Status, err = runtime.Int32(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "status", err)

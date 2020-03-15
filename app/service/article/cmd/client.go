@@ -8,19 +8,16 @@ import (
 	"github.com/zuiqiangqishao/framework/pkg/setting"
 	"google.golang.org/grpc"
 	"log"
-	"math"
-	"time"
 )
 
 func main() {
-	fmt.Println(int(math.MaxInt64 / time.Hour))
 	flag.Parse()
 	setting.Init()
 	c, err := pb.NewClient(nil, grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 		log.Fatal("没有连接成功", err)
 	}
-	resp, err := c.GetArtBySn(context.Background(), &pb.ArtDetailRequest{Sn: "666", Status: 1})
+	resp, err := c.GetArtBySn(context.Background(), &pb.ArtDetailRequest{Sn: "666"})
 	if err != nil {
 		log.Println("连接成功，调用失败", err.Error())
 	}

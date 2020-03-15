@@ -23,6 +23,7 @@ func New(svc pb.ArticleServer) (grpcServer *zgrpc.GrpcServer, err error) {
 	opts := []grpc.DialOption{
 		grpc.WithInsecure(),
 		grpc.WithBlock(),
+		grpc.WithUnaryInterceptor(zgrpc.GrpcStatusToHttpStatus()),
 	}
 	grpcServer.SetHttpServer(pb.RegisterArticleHandlerFromEndpoint, nil, opts...).HttpStart()
 
