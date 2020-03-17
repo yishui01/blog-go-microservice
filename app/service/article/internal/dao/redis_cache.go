@@ -13,6 +13,7 @@ const TAG_PREFIX = "tag_"
 
 const META_PREFIX = "meta_"
 
+//文章缓存
 func (d *Dao) GetCacheArticle(c context.Context, sn string) (*model.Article, error) {
 	conn := d.redis.Get()
 	defer conn.Close()
@@ -62,18 +63,11 @@ func (d *Dao) DeleteCacheArt(c context.Context, sn string) error {
 	return errors.Wrap(err, "DeleteCacheArt DEL err")
 }
 
-func ArtCacheKey(sn string) string {
-	return ART_PREFIX + sn
-}
-func MetasCacheKey(sn string) string {
-	return META_PREFIX + sn
-}
-
 //metas缓存
-func (d *Dao) GetMetas(c context.Context, sn string) (map[string]int64, error) {
+func (d *Dao) GetCacheMetas(c context.Context, sn string) (map[string]int64, error) {
 	conn := d.redis.Get()
 	defer conn.Close()
-	reply, err := redis.Int64Map(conn.Do("HGETALL ", MetasCacheKey(sn)))
+	reply, err := redis.Int64Map(conn.Do("HGETALL", MetasCacheKey(sn)))
 	if err == redis.ErrNil {
 		return nil, nil
 	}
@@ -81,10 +75,10 @@ func (d *Dao) GetMetas(c context.Context, sn string) (map[string]int64, error) {
 	return reply, errors.Wrap(err, "GetMetas HGETALL err")
 }
 
-func (d *Dao) SetMetas(c context.Context, metas *model.Metas) error {
+func (d *Dao) SetCacheMetas(c context.Context, metas *model.Metas) error {
 	conn := d.redis.Get()
 	defer conn.Close()
-	_, err := conn.Do("HMSET", metas.Sn,
+	_, err := conn.Do("HMSET", MetasCacheKey(metas.Sn),
 		model.ArtIdRedisKey, metas.ArticleId,
 		model.ViewRedisKey, metas.ViewCount,
 		model.CmRedisKey, metas.CmCount,
@@ -93,16 +87,23 @@ func (d *Dao) SetMetas(c context.Context, metas *model.Metas) error {
 	return errors.Wrap(err, "SetMetas HMSET err")
 }
 
-func (d *Dao) AddMetas(c context.Context, sn string, field string) error {
+func (d *Dao) AddCacheMetas(c context.Context, sn string, field string) error {
 	conn := d.redis.Get()
 	defer conn.Close()
-	_, err := redis.Int64Map(conn.Do("HINCRBY ", MetasCacheKey(sn), field, 1))
+	_, err := conn.Do("HINCRBY", MetasCacheKey(sn), field, 1)
 	return errors.Wrap(err, "AddMetas HINCRBY Err")
 }
 
-func (d *Dao) DelMetas(c context.Context, sn string) error {
+func (d *Dao) DelCacheMetas(c context.Context, sn string) error {
 	conn := d.redis.Get()
 	defer conn.Close()
-	_, err := redis.Int64Map(conn.Do("DEL ", MetasCacheKey(sn)))
+	_, err := conn.Do("DEL", MetasCacheKey(sn))
 	return errors.Wrap(err, "DelMetas DEL err")
+}
+
+func ArtCacheKey(sn string) string {
+	return ART_PREFIX + sn
+}
+func MetasCacheKey(sn string) string {
+	return META_PREFIX + sn
 }
