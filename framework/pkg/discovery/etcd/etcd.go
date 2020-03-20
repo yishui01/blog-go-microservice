@@ -144,7 +144,7 @@ func (e *EtcdBuilder) Build(serviceName string) discovery.Resolver {
 
 	app.once.Do(func() {
 		go app.watch(serviceName)
-		log.SugarLogger.Infof("etcd: AddWatch(%s) already watch(%v)", serviceName, ok)
+		log.SugarWithContext(nil).Infof("etcd: AddWatch(%s) already watch(%v)", serviceName, ok)
 	})
 	return r
 }
@@ -238,12 +238,12 @@ func (e *EtcdBuilder) register(ctx context.Context, ins *discovery.Instance) (er
 
 	ttlResp, err := e.cli.Grant(context.TODO(), int64(etcd.GetConf().LeaseTTL))
 	if err != nil {
-		log.SugarLogger.Error("etcd: register client.Grant(%v) error(%v)", etcd.GetConf().LeaseTTL, err)
+		log.SugarWithContext(ctx).Error("etcd: register client.Grant(%v) error(%v)", etcd.GetConf().LeaseTTL, err)
 		return err
 	}
 	_, err = e.cli.Put(ctx, prefix, string(val), clientv3.WithLease(ttlResp.ID))
 	if err != nil {
-		log.SugarLogger.Error("etcd: register client.Put(%v) appid(%s) hostname(%s) error(%v)",
+		log.SugarWithContext(ctx).Error("etcd: register client.Put(%v) appid(%s) hostname(%s) error(%v)",
 			prefix, ins.Name, ins.HostName, err)
 		return err
 	}
@@ -255,10 +255,10 @@ func (e *EtcdBuilder) unregister(ins *discovery.Instance) (err error) {
 	prefix := e.keyPrefix(ins)
 
 	if _, err = e.cli.Delete(context.TODO(), prefix); err != nil {
-		log.SugarLogger.Error("etcd: unregister client.Delete(%v) appid(%s) hostname(%s) error(%v)",
+		log.SugarWithContext(nil).Error("etcd: unregister client.Delete(%v) appid(%s) hostname(%s) error(%v)",
 			prefix, ins.Name, ins.HostName, err)
 	}
-	log.SugarLogger.Infof("etcd: unregister client.Delete(%v)  appid(%s) hostname(%s) success",
+	log.SugarWithContext(nil).Infof("etcd: unregister client.Delete(%v)  appid(%s) hostname(%s) success",
 		prefix, ins.Name, ins.HostName)
 	return
 }
@@ -289,7 +289,7 @@ func (a *appInfo) fetchStore(serviceName string) error {
 	prefix := fmt.Sprintf("/%s/%s/", etcd.GetConf().ServicePrefix, serviceName)
 	resp, err := a.e.cli.Get(a.e.ctx, prefix, clientv3.WithPrefix())
 	if err != nil {
-		log.SugarLogger.Errorf("etcd: fetch client.Get(%s) error(%+v)", prefix, err)
+		log.SugarWithContext(nil).Errorf("etcd: fetch client.Get(%s) error(%+v)", prefix, err)
 		return err
 	}
 	ins, err := a.parseIns(resp)
@@ -311,7 +311,7 @@ func (a *appInfo) parseIns(resp *clientv3.GetResponse) (ins *discovery.Instances
 		err := json.Unmarshal(ev.Value, in)
 		if err != nil {
 			e = err
-			log.ZapLogger.Error("ETCD Parse json instance err:" + err.Error())
+			log.ZapWithContext(nil).Error("ETCD Parse json instance err:" + err.Error())
 			continue
 		}
 		Ins.Instances = append(Ins.Instances, in)

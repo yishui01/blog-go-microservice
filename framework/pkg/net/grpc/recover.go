@@ -23,7 +23,7 @@ func (s *GrpcServer) reovery() grpc.UnaryServerInterceptor {
 					rs = size
 				}
 				buf = buf[:rs]
-				log.SugarLogger.Infof("grpc server panic: %v\n%v\n%s\n", req, rerr, buf)
+				log.SugarWithContext(ctx).Errorf("grpc server panic: %v\n%v\n%s\n", req, rerr, buf)
 				err = status.Errorf(codes.Internal, "服务器内部错误")
 			}
 		}()
@@ -46,7 +46,7 @@ func (c *Client) recovery() grpc.UnaryClientInterceptor {
 				buf = buf[:rs]
 				pl := fmt.Sprintf("grpc client panic: %v\n%v\n%v\n%s\n", req, reply, rerr, buf)
 				fmt.Fprintf(os.Stderr, pl)
-				log.ZapLogger.Error(pl)
+				log.ZapWithContext(ctx).Error(pl)
 				err = ecode.ServerErr
 			}
 		}()

@@ -94,7 +94,7 @@ func (r *Resolver) newAddress(instances []*discovery.Instance) {
 		}
 		addrs = append(addrs, addr)
 	}
-	log.SugarLogger.Infof("grpc resolver: finally get %d instances:%v", len(addrs), addrs[0].Addr)
+	log.SugarWithContext(nil).Debugf("grpc resolver: finally get %d instances:%v", len(addrs), addrs[0].Addr)
 	r.cc.UpdateState(resolver.State{Addresses: addrs}) //更新grpc内部服务列表
 }
 

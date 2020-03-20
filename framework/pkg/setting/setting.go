@@ -6,6 +6,7 @@ import (
 	"github.com/zuiqiangqishao/framework/pkg/app"
 	"github.com/zuiqiangqishao/framework/pkg/db/etcd"
 	"github.com/zuiqiangqishao/framework/pkg/log"
+	"github.com/zuiqiangqishao/framework/pkg/mq"
 	"github.com/zuiqiangqishao/framework/pkg/trace"
 	"go.uber.org/zap"
 	std "log"
@@ -33,21 +34,36 @@ func Init() *zap.Logger {
 	if err := viper.ReadInConfig(); err != nil {
 		panic("load app config err" + err.Error())
 	}
-	if err := viper.Sub("app").Unmarshal(&app.AppConf); err != nil {
+	af := app.AppConfig{}
+	if err := viper.Sub("app").Unmarshal(&af); err != nil {
 		std.Fatalf("unable to decode appConfig struct, %v", err)
 	}
+	app.SetAppConf(&af)
 
-	if err := viper.Sub("log").Unmarshal(&log.LogConf); err != nil {
+	lf := log.LogConfig{}
+	if err := viper.Sub("log").Unmarshal(&lf); err != nil {
 		std.Fatalf("unable to decode logFile config struct, %v", err)
 	}
+	log.SetLogConf(&lf)
 
-	if err := viper.Sub("log").Unmarshal(&log.FileConf); err != nil {
+	ff := log.FileConfig{}
+	if err := viper.Sub("log.file").Unmarshal(&ff); err != nil {
 		std.Fatalf("unable to decode logFile config struct, %v", err)
 	}
+	log.SetFileConf(&ff)
 
-	if err := viper.Sub("log.file").Unmarshal(&log.FileConf); err != nil {
-		std.Fatalf("unable to decode logFile config struct, %v", err)
+	kf := log.KafkaConfig{}
+	if err := viper.Sub("log.kafka").Unmarshal(&kf); err != nil {
+		std.Fatalf("unable to decode logKafka config struct, %v", err)
 	}
+	log.SetKafkaConf(&kf)
+
+	k := mq.KafConf{}
+	if err := viper.Sub("kafka").Unmarshal(&k); err != nil {
+		std.Fatalf("unable to decode kafka config struct, %v", err)
+	}
+	mq.SetKafkaConf(&k)
+
 	etcd.Init()
 	trace.Init()
 	return log.Default()
@@ -58,11 +74,11 @@ func Wait(closeFunc func()) {
 	signal.Notify(c, syscall.SIGHUP, syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT)
 	for {
 		s := <-c
-		log.ZapLogger.Info("get a signal " + s.String())
+		log.ZapWithContext(nil).Info("get a signal " + s.String())
 		switch s {
 		case syscall.SIGQUIT, syscall.SIGTERM, syscall.SIGINT:
 			closeFunc()
-			log.ZapLogger.Info(app.AppConf.AppName + " service exit")
+			log.ZapWithContext(nil).Info(app.GetAppConf().AppName + " service exit")
 			time.Sleep(time.Second)
 			return
 		case syscall.SIGHUP:

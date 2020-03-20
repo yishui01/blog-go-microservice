@@ -3,6 +3,9 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"github.com/opentracing/opentracing-go"
+	uuid "github.com/satori/go.uuid"
+	"github.com/uber/jaeger-client-go"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/net/metadata"
@@ -24,19 +27,30 @@ const (
 	LogFlagDisableInfo
 )
 
-func logFn(code int, dt time.Duration) func(msg string, f ...zap.Field) {
+func logFn(ctx context.Context, code int, dt time.Duration) func(msg string, f ...zap.Field) {
 	switch code {
 	case int(codes.OK):
-		return log.ZapLogger.Info
+		return log.ZapWithContext(ctx).Info
 	case int(codes.Internal):
-		return log.ZapLogger.Error
+		return log.ZapWithContext(ctx).Error
 	default:
-		return log.ZapLogger.Warn
+		return log.ZapWithContext(ctx).Warn
 	}
 }
 
 func serverLog(logFlag int8) grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
+		//把网关注入的traceId提取出来，作为log的requestId注回context中
+		var reqId string
+		span := opentracing.SpanFromContext(ctx)
+
+		if sc, ok := span.Context().(jaeger.SpanContext); ok {
+			reqId = sc.TraceID().String()
+		} else {
+			reqId = "uuid-" + uuid.NewV4().String()
+		}
+		ctx = log.NewContext(ctx, zap.String("requestId", reqId))
+
 		startTime := time.Now()
 		caller := metadata.String(ctx, metadata.Caller)
 		if caller == "" {
@@ -74,7 +88,7 @@ func serverLog(logFlag int8) grpc.UnaryServerInterceptor {
 			zap.String("user", caller),
 			zap.String("ip", remoteIP),
 			zap.String("path", info.FullMethod),
-			zap.Int("ret", int(code)),
+			zap.Int("ret", code),
 			zap.Float64("ts", duration.Seconds()),
 			zap.Float64("timeout_quota", quota),
 			zap.String("source", "grpc-access-log"),
@@ -89,7 +103,7 @@ func serverLog(logFlag int8) grpc.UnaryServerInterceptor {
 		if err != nil {
 			logFields = append(logFields, zap.String("error", err.Error()), zap.String("stack", fmt.Sprintf("%+v", err)))
 		}
-		logFn(int(code), duration)("grpc-server-log:", logFields...)
+		logFn(ctx, code, duration)("grpc-server-log:", logFields...)
 		return resp, err
 	}
 }
@@ -177,7 +191,7 @@ func clientLogging(dialOptions ...grpc.DialOption) grpc.UnaryClientInterceptor {
 			logFields = append(logFields, zap.String("error", err.Error()), zap.String("stack", fmt.Sprintf("%+v", err)))
 		}
 
-		logFn(code, duration)("grpc-client-log:", logFields...)
+		logFn(ctx, code, duration)("grpc-client-log:", logFields...)
 		return err
 	}
 }

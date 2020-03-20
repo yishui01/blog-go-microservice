@@ -2,10 +2,12 @@ package app
 
 import (
 	"os"
+	"sync"
 )
 
 var (
-	AppConf *AppConfig = DefaultAppConfig()
+	_defaultAppConf *AppConfig = _unknowAppConfig()
+	_mx             sync.RWMutex
 )
 
 type AppConfig struct {
@@ -13,7 +15,20 @@ type AppConfig struct {
 	HostName string
 }
 
-func DefaultAppConfig() *AppConfig {
+func GetAppConf() *AppConfig {
+	_mx.RLock()
+	defer _mx.RUnlock()
+	t := *_defaultAppConf
+	return &t
+}
+
+func SetAppConf(c *AppConfig) {
+	_mx.RLock()
+	defer _mx.RUnlock()
+	_defaultAppConf = c
+}
+
+func _unknowAppConfig() *AppConfig {
 	h, _ := os.Hostname()
 	return &AppConfig{
 		AppName:  "unknowApp",

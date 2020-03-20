@@ -8,7 +8,7 @@ import (
 
 var (
 	_defaultSerConf = &ServerConfig{
-		ServiceName:       app.AppConf.AppName,
+		ServiceName:       app.GetAppConf().AppName,
 		Network:           "tcp",
 		Addr:              "0.0.0.0:9000",
 		Timeout:           time.Second,

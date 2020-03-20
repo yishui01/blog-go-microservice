@@ -28,14 +28,14 @@ func Logger() gin.HandlerFunc {
 		err := c.Errors
 		dt := time.Since(now)
 
-		lf := log.ZapLogger.Info
+		lf := log.ZapWithContext(ctx).Info
 		errmsg := ""
 		isSlow := dt >= (time.Millisecond * 500)
 		if isSlow {
-			lf = log.ZapLogger.Warn
+			lf = log.ZapWithContext(ctx).Warn
 		}
 		if len(err) > 0 {
-			lf = log.ZapLogger.Error
+			lf = log.ZapWithContext(ctx).Error
 		}
 		errMsg := ""
 		for _, v := range c.Errors {

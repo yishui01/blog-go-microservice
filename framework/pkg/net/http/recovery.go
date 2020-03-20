@@ -21,7 +21,7 @@ func Recovery() gin.HandlerFunc {
 					rawReq, _ = httputil.DumpRequest(c.Request, false)
 					pl := fmt.Sprintf("http call panic: %s\n%v\n%s\n", string(rawReq), err, buf)
 					fmt.Fprintf(os.Stderr, pl)
-					log.ZapLogger.Error(pl)
+					log.ZapWithContext(ctx).Error(pl)
 					c.AbortWithStatus(500)
 				}
 			}

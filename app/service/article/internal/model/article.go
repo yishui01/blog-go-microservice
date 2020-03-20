@@ -1,6 +1,7 @@
 package model
 
 import (
+	"context"
 	"github.com/jinzhu/gorm"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/utils"
@@ -51,7 +52,7 @@ func (user *Article) BeforeCreate(scope *gorm.Scope) error {
 	return nil
 }
 
-func (self *Article) ToEsMap() map[string]interface{} {
+func (self *Article) ToEsMap(ctx context.Context) map[string]interface{} {
 	maps := make(map[string]interface{})
 	maps["id"] = self.Id
 	maps["sn"] = self.Sn
@@ -63,7 +64,7 @@ func (self *Article) ToEsMap() map[string]interface{} {
 	maps["created_at"] = self.CreatedAt
 	maps["updated_at"] = self.UpdatedAt
 	maps["deleted_at"] = self.DeletedAt
-	log.SugarLogger.Debugf("ToEsMap:%#v\n", maps)
+	log.SugarWithContext(ctx).Debugf("ToEsMap:%#v\n", maps)
 	return maps
 }
 

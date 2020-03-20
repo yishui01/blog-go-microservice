@@ -53,7 +53,7 @@ func (engine *HttpEngine) Start() error {
 		return err
 	}
 
-	log.SugarLogger.Infof("HTTP server: start http listen addr: %s", conf.Addr)
+	log.SugarWithContext(ctx).Infof("HTTP server: start http listen addr: %s", conf.Addr)
 	server := &http.Server{
 		ReadTimeout:  conf.ReadTimeout,
 		WriteTimeout: conf.WriteTimeout,
@@ -61,7 +61,7 @@ func (engine *HttpEngine) Start() error {
 	go func() {
 		if err := engine.RunServer(server, l); err != nil {
 			if errors.Cause(err) == http.ErrServerClosed {
-				log.ZapLogger.Info("HTTP server: server closed")
+				log.ZapWithContext(ctx).Info("HTTP server: server closed")
 				return
 			}
 			panic(errors.Wrapf(err, "HTTP server: engine.ListenServer(%+v, %+v)", server, l))

@@ -49,9 +49,9 @@ func (d *Dao) EsSearchArt(ctx context.Context, req *model.ArtQueryReq) (*elastic
 		q := elastic.NewTermQuery("deleted_at", time.Time{})
 		query = query.Filter(q)
 	}
-	if log.LogConf.Level == zap.DebugLevel.String() {
+	if log.GetLogConf().Level == zap.DebugLevel.String() {
 		source, err := query.Source()
-		log.SugarLogger.Debugf("EsSearchArt Source:%#v\n Err:%#v\n", source, err)
+		log.SugarWithContext(ctx).Debugf("EsSearchArt Source:%#v\n Err:%#v\n", source, err)
 	}
 	search := d.es.Search(model.ART_ES_INDEX).Query(query).
 		From(int((req.PageNum - 1) * int64(req.PageSize))).
@@ -66,12 +66,12 @@ func (d *Dao) EsSearchArt(ctx context.Context, req *model.ArtQueryReq) (*elastic
 	res, err := search.Do(ctx)
 	if err != nil {
 		source, err := query.Source()
-		log.SugarLogger.Errorf("EsSearchArt Search Err: Source:%#v\n Err:%#v\n", source, err)
+		log.SugarWithContext(ctx).Errorf("EsSearchArt Search Err: Source:%#v\n Err:%#v\n", source, err)
 	}
-	log.SugarLogger.Debugf("EsSearchArt Res:%#v\n", res)
+	log.SugarWithContext(ctx).Debugf("EsSearchArt Res:%#v\n", res)
 	if res != nil {
-		log.SugarLogger.Debugf("EsSearchArt Res.TotalHits:%#v\n", res.TotalHits())
-		log.SugarLogger.Debugf("EsSearchArt Res.Hits.Hits:%#v\n", res.Hits.Hits)
+		log.SugarWithContext(ctx).Debugf("EsSearchArt Res.TotalHits:%#v\n", res.TotalHits())
+		log.SugarWithContext(ctx).Debugf("EsSearchArt Res.Hits.Hits:%#v\n", res.Hits.Hits)
 	}
 
 	return res, errors.Wrap(err, "Elastic search art Err")
@@ -95,7 +95,7 @@ func (d *Dao) EsPutArt(ctx context.Context, art *model.Article) (*elastic.IndexR
 	}
 
 	resp, err := d.es.Index().Index(model.ART_ES_INDEX).
-		Id(strconv.Itoa(int(art.Id))).BodyJson(art.ToEsMap()).Do(ctx)
+		Id(strconv.Itoa(int(art.Id))).BodyJson(art.ToEsMap(ctx)).Do(ctx)
 	if err != nil {
 		return resp, errors.WithStack(err)
 	}

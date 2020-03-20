@@ -26,8 +26,8 @@ func (s *GrpcServer) Register(ins *discovery.Instance) (cancel context.CancelFun
 	}
 	if ins == nil {
 		ins = &discovery.Instance{
-			Name:     app.AppConf.AppName,
-			HostName: app.AppConf.HostName,
+			Name:     app.GetAppConf().AppName,
+			HostName: app.GetAppConf().HostName,
 			Addrs:    []string{"grpc://" + s.conf.Addr},
 		}
 	}

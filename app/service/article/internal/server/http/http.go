@@ -49,7 +49,7 @@ func helloWorld(c *gin.Context) {
 
 func ping(ctx *gin.Context) {
 	if _, err := svc.Ping(context.TODO(), nil); err != nil {
-		log.ZapLogger.Info("ping error" + err.Error())
+		log.ZapWithContext(ctx).Info("ping error" + err.Error())
 		ctx.AbortWithStatus(xhttp.StatusServiceUnavailable)
 	}
 }

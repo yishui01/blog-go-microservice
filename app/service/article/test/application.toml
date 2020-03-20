@@ -15,12 +15,24 @@
     encode="json"
     callFull=true
     level="debug"
-    fileName=""
+    fileName="service.log"   #为空时不启用file log
     maxSize=5                #single log file size MB
-    maxAge=14                 #time to keep, (day)
+    maxAge=14                #time to keep, (day)
     maxBackups=30            #max file numbers
-    localTime=true
-    compress=false
+    localTime=true           #日志归档文件名是当地时间命名
+    compress=false           #是否压缩
+
+[log.kafka]      #需要配置好kafka brokers 地址
+     enable=true #是否开启输出到kafka
+     enableHost=true
+     encode="json"
+     callFull=true
+     level="debug"
+     topic="service-log"
+
+[kafka]
+    brokers = ["192.168.136.109:9092"]
+
 
 [grpc]
     addr = "0.0.0.0:9000"
@@ -47,7 +59,7 @@
 
 [db]
     driver = "mysql"
-	dsn = "root:123456@tcp(192.168.136.109:3306)/blog?timeout=2s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
+	dsn = "root:123456@tcp(192.168.136.109:3306)/blog?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
 	active = 500
 	idle = 10
 	idleTimeout =24 #hour
@@ -70,4 +82,5 @@
     userName=""
     passWd=""
     sniff = false
+
 

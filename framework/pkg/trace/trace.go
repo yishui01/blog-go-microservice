@@ -12,17 +12,17 @@ import (
 )
 
 var (
-	Tracer opentracing.Tracer
-	Closer io.Closer
-	once   sync.Once
+	_tracer opentracing.Tracer
+	_closer io.Closer
+	_mu     sync.RWMutex
+	_once   sync.Once
 )
 
 func Init() (opentracing.Tracer, io.Closer) {
-	once.Do(func() {
-		Tracer, Closer = initJaeger(app.AppConf.AppName, viper.GetString("trace.agentAddr"))
+	_once.Do(func() {
+		_tracer, _closer = initJaeger(app.GetAppConf().AppName, viper.GetString("trace.agentAddr"))
 	})
-
-	return Tracer, Closer
+	return _tracer, _closer
 }
 
 func initJaeger(service, agentAddr string) (opentracing.Tracer, io.Closer) {
@@ -43,6 +43,14 @@ func initJaeger(service, agentAddr string) (opentracing.Tracer, io.Closer) {
 	return tracer, closer
 }
 
-func GetTracer(serviceName string) {
+func Tracer() opentracing.Tracer {
+	_mu.RLock()
+	defer _mu.RUnlock()
+	return _tracer
+}
 
+func SetTracer(t opentracing.Tracer) {
+	_mu.Lock()
+	defer _mu.Unlock()
+	_tracer = t
 }

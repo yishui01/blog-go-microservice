@@ -30,5 +30,5 @@ func (f *LogConfig) NewStdoutCore() zapcore.Core {
 }
 
 func DefaultStdCore() zapcore.Core {
-	return LogConf.NewStdoutCore()
+	return _logConf.NewStdoutCore()
 }

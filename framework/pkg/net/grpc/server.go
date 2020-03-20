@@ -54,15 +54,15 @@ func New(conf *ServerConfig, opt ...grpc.ServerOption) (s *GrpcServer) {
 	}
 
 	//加入一元方法中间件
-	//1、注册自定义log中间件
-	//2、recovery
+	//1、recovery
+	//2、注册自定义log中间件
 	//3、超时时间、ecode转换为grpc code
 	//4、jaeger trace
 	//5、验证请求参数是否合法
 	s.UseUnary(
-		serverLog(s.conf.LogFlag),
 		s.reovery(),
-		grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(trace.Tracer)),
+		grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(trace.Tracer())),
+		serverLog(s.conf.LogFlag),
 		s.handle(),
 		s.validate(),
 	)
@@ -91,7 +91,7 @@ func (s *GrpcServer) startWithAddr() (net.Addr, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.SugarLogger.Infof("start grpc listen on: %v %v", s.conf.Network, lis.Addr())
+	log.SugarWithContext(nil).Infof("start grpc listen on: %v %v", s.conf.Network, lis.Addr())
 	//注册反射服务，可以在运行的时候，通过grpcurl -plaintext localhost:1234 list来看当前端口有哪些服务，
 	// 并可直接通过grpcurl工具直接在命令行调用grpc
 	reflection.Register(s.grpcServer)
@@ -148,7 +148,7 @@ func (s *GrpcServer) SetHttpServer(registerFn func(ctx context.Context, mux *run
 	//这里用的是带Dail的那个注册方法，请求路径为：http=>gateway=>tcp connect=>grpc Server
 	err := registerFn(context.Background(), mux, s.conf.Addr, opt)
 	if err != nil {
-		log.ZapLogger.Fatal("注册grpc-gateway失败" + err.Error())
+		log.ZapWithContext(nil).Fatal("注册grpc-gateway失败" + err.Error())
 	}
 	server := &http.Server{
 		ReadTimeout:  s.conf.HttpReadTimeout,
@@ -167,10 +167,10 @@ func (s *GrpcServer) HttpStart() *GrpcServer {
 			panic("http server is not set")
 		}
 		if err := s.httpServer.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			log.ZapLogger.Fatal("grpcgateway start HttpStart err:" + err.Error())
+			log.ZapWithContext(nil).Fatal("grpcgateway start HttpStart err:" + err.Error())
 		}
 	}()
-	log.SugarLogger.Infof("start http listen on: %v", s.conf.HttpAddr)
+	log.SugarWithContext(nil).Infof("start http listen on: %v", s.conf.HttpAddr)
 	return s
 }
 
@@ -180,10 +180,10 @@ func (s *GrpcServer) HttpStartTLS(certFile, keyFile string) *GrpcServer {
 			panic("http server is not set")
 		}
 		if err := s.httpServer.ListenAndServeTLS(certFile, keyFile); err != nil && err != http.ErrServerClosed {
-			log.ZapLogger.Fatal("grpcgateway start HttpStartTLS err:" + err.Error())
+			log.ZapWithContext(nil).Fatal("grpcgateway start HttpStartTLS err:" + err.Error())
 		}
 	}()
-	log.SugarLogger.Infof("start https listen on: %v", s.conf.HttpAddr)
+	log.SugarWithContext(nil).Infof("start https listen on: %v", s.conf.HttpAddr)
 	return s
 }
 

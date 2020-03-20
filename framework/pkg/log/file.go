@@ -4,11 +4,13 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
+	"sync"
 	"time"
 )
 
 var (
-	FileConf *FileConfig = DefaultFileConfig()
+	_fileConf *FileConfig = DefaultFileConfig()
+	_mx       sync.RWMutex
 )
 
 //日志文件配置
@@ -26,7 +28,7 @@ type FileConfig struct {
 }
 
 func DefaultFileCore() zapcore.Core {
-	return FileConf.NewFileCore()
+	return _fileConf.NewFileCore()
 }
 
 func (f *FileConfig) NewFileCore() zapcore.Core {
@@ -78,4 +80,17 @@ func DefaultFileConfig() *FileConfig {
 		Compress:   false, //default false
 		EnableHost: true,  //Add host name and other additional fields
 	}
+}
+
+func GetFileConf() *FileConfig {
+	_mx.RLock()
+	defer _mx.RUnlock()
+	t := *_fileConf
+	return &t
+}
+
+func SetFileConf(f *FileConfig) {
+	_mx.Lock()
+	defer _mx.Unlock()
+	_fileConf = f
 }

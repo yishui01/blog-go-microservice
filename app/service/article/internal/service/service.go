@@ -40,7 +40,7 @@ func (s *Service) ArtList(ctx context.Context, listReq *pb.ArtListRequest) (*pb.
 	esArtList, err := s.dao.ArtList(ctx, query)
 	reply := new(pb.ArtListResp)
 	if err != nil {
-		log.SugarLogger.Errorf("s.dao.ArtList Query(%#+v),  Err:(%#+v)", query, err)
+		log.SugarWithContext(ctx).Errorf("s.dao.ArtList Query(%#+v),  Err:(%#+v)", query, err)
 		return reply, ecode.ServerErr
 	}
 
@@ -75,7 +75,7 @@ func (s *Service) GetArtBySn(ctx context.Context, artReq *pb.ArtDetailRequest) (
 		if ecode.EqualError(ecode.NothingFound, err) {
 			return nil, ecode.NothingFound
 		}
-		log.SugarLogger.Errorf("s.dao.GetArtBySn  artReq：(%#+v),Err:(%#+v)", artReq, err)
+		log.SugarWithContext(ctx).Errorf("s.dao.GetArtBySn  artReq：(%#+v),Err:(%#+v)", artReq, err)
 		return nil, ecode.ServerErr
 	}
 
@@ -114,13 +114,13 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveArtR
 	metas.LaudCount = req.LaudCount
 	art, err := s.dao.SaveArt(ctx, art, metas)
 	if err != nil {
-		log.SugarLogger.Errorf("s.dao.SaveArt art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
+		log.SugarWithContext(ctx).Errorf("s.dao.SaveArt art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
 		return nil, ecode.Error(ecode.ServerErr, "save err")
 	}
 	reply := new(pb.SaveArtResp)
 	err = s.dao.SetArtCache(ctx, art.Id)
 	if err != nil {
-		log.SugarLogger.Errorf("s.dao.SetArtCache art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
+		log.SugarWithContext(ctx).Errorf("s.dao.SetArtCache art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
 		return nil, ecode.Error(ecode.ServerErr, "cache err")
 	}
 
@@ -129,7 +129,7 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveArtR
 		"id": strconv.Itoa(int(art.Id)),
 		"sn": art.Sn,
 	}); err != nil {
-		log.SugarLogger.Errorf("SaveArt JsonEncode art(%#+v)  Err:(%#+v)", art, err)
+		log.SugarWithContext(ctx).Errorf("SaveArt JsonEncode art(%#+v)  Err:(%#+v)", art, err)
 		return nil, err
 	}
 
@@ -141,7 +141,7 @@ func (s *Service) DeleteArt(ctx context.Context, req *pb.DelArtRequest) (*pb.Sav
 	res := new(pb.SaveArtResp)
 	var err error
 	if err := s.dao.DelArt(ctx, req.Id, req.Physical); err != nil {
-		log.SugarLogger.Errorf("Service s.dao.DelArt req:(%#+v), Err:(%+v)", req, err)
+		log.SugarWithContext(ctx).Errorf("Service s.dao.DelArt req:(%#+v), Err:(%+v)", req, err)
 	}
 	return res, err
 }

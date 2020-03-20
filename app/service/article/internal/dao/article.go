@@ -3,7 +3,6 @@ package dao
 import (
 	"blog-go-microservice/app/service/article/internal/model"
 	"context"
-	"encoding/json"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
@@ -31,9 +30,9 @@ func (d *Dao) ArtList(c context.Context, req *model.ArtQueryReq) ([]*model.EsArt
 	if esResp.TotalHits() > 0 {
 		for _, hit := range esResp.Hits.Hits {
 			var t model.EsArticle
-			err := json.Unmarshal(hit.Source, &t)
+			err := utils.JsonUnmarshal(hit.Source, &t)
 			if err != nil {
-				log.ZapLogger.Error("ES Select Art json.Unmarshal resp Err On ArtList :"+err.Error(), zap.String("hit", utils.Vf(hit)))
+				log.ZapWithContext(c).Error("ES Select Art json.Unmarshal resp Err On ArtList :"+err.Error(), zap.String("hit", utils.Vf(hit)))
 				continue
 			}
 			res = append(res, &t)
@@ -48,7 +47,7 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 	res, err = d.GetCacheArticle(c, sn)
 	addCache := true
 	if err != nil {
-		log.SugarLogger.Errorf("d.GetCacheArticle ERR:(%#+v),sn:(%#v),req(%#v)", err, sn, res)
+		log.SugarWithContext(c).Errorf("d.GetCacheArticle ERR:(%#+v),sn:(%#v),req(%#v)", err, sn, res)
 		err = nil
 		addCache = false //cache挂了就不要往里加缓存了
 	}
@@ -109,7 +108,7 @@ func (d *Dao) SaveArt(c context.Context, art *model.Article, metas *model.Metas)
 	metas.Sn = art.Sn
 	if err = db.Save(metas).Error; err != nil {
 		tx.Rollback()
-		return nil, errors.WithStack(err)
+		return art, errors.WithStack(err)
 	}
 	tx.Commit()
 	return art, nil

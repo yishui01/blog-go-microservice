@@ -116,7 +116,7 @@ func wrapFunc(f func(c context.Context)) (res func(context.Context)) {
 			if r := recover(); r != nil {
 				buf := make([]byte, 64*1024)
 				buf = buf[:runtime.Stack(buf, false)]
-				log.SugarLogger.Errorf("panic in fanout proc, err: %s, stack: %s", r, buf)
+				log.SugarWithContext(ctx).Errorf("panic in fanout proc, err: %s, stack: %s", r, buf)
 			}
 		}()
 		f(ctx)
