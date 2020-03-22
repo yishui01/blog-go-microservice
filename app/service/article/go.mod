@@ -2,7 +2,7 @@ module blog-go-microservice/app/service/article
 
 go 1.13
 
-replace github.com/zuiqiangqishao/framework => ../../../../blog-go-microservice\framework
+replace github.com/zuiqiangqishao/framework => ../../../framework
 
 require (
 	bou.ke/monkey v1.0.2 // indirect
