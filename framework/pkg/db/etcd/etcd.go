@@ -2,14 +2,13 @@ package etcd
 
 import (
 	"flag"
-	"github.com/coreos/etcd/clientv3"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
+	"go.etcd.io/etcd/clientv3"
 	"google.golang.org/grpc"
 	"log"
 	"os"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -23,8 +22,6 @@ var (
 )
 
 var _conf EtcdConfig
-var _defaultClient *clientv3.Client
-var mu sync.Mutex
 
 type EtcdConfig struct {
 	Endpoints     []string
@@ -69,8 +66,6 @@ func GetConf() EtcdConfig {
 }
 
 func GetDefaultClient() (*clientv3.Client, error) {
-	mu.Lock() //这里要加写锁，因为获取不到时会尝试写入
-	defer mu.Unlock()
 	c := clientv3.Config{
 		Endpoints:   _conf.Endpoints,
 		Username:    _conf.Username,
@@ -83,6 +78,5 @@ func GetDefaultClient() (*clientv3.Client, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "GetDefaultClient err")
 	}
-	_defaultClient = cli
-	return _defaultClient, nil
+	return cli, nil
 }

@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/coreos/etcd/clientv3"
-	"github.com/coreos/etcd/mvcc/mvccpb"
 	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/db/etcd"
 	"github.com/zuiqiangqishao/framework/pkg/discovery"
 	"github.com/zuiqiangqishao/framework/pkg/log"
+	"go.etcd.io/etcd/clientv3"
+	"go.etcd.io/etcd/mvcc/mvccpb"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -238,12 +238,12 @@ func (e *EtcdBuilder) register(ctx context.Context, ins *discovery.Instance) (er
 
 	ttlResp, err := e.cli.Grant(context.TODO(), int64(etcd.GetConf().LeaseTTL))
 	if err != nil {
-		log.SugarWithContext(ctx).Error("etcd: register client.Grant(%v) error(%v)", etcd.GetConf().LeaseTTL, err)
+		log.SugarWithContext(ctx).Errorf("etcd: register client.Grant(%v) error(%v)", etcd.GetConf().LeaseTTL, err)
 		return err
 	}
 	_, err = e.cli.Put(ctx, prefix, string(val), clientv3.WithLease(ttlResp.ID))
 	if err != nil {
-		log.SugarWithContext(ctx).Error("etcd: register client.Put(%v) appid(%s) hostname(%s) error(%v)",
+		log.SugarWithContext(ctx).Errorf("etcd: register client.Put(%v) appid(%s) hostname(%s) error(%v)",
 			prefix, ins.Name, ins.HostName, err)
 		return err
 	}
