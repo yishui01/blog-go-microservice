@@ -12,7 +12,8 @@ import (
 	"time"
 )
 
-func (d *Dao) EsSearchArt(ctx context.Context, req *model.ArtQueryReq) (*elastic.SearchResult, error) {
+//查询ES中的文章数据
+func (d *Dao) EsSearchArtMetas(ctx context.Context, req *model.ArtQueryReq) (*elastic.SearchResult, error) {
 	query := elastic.NewBoolQuery()
 
 	if req.KeyWords != "" {
@@ -77,7 +78,8 @@ func (d *Dao) EsSearchArt(ctx context.Context, req *model.ArtQueryReq) (*elastic
 	return res, errors.Wrap(err, "Elastic search art Err")
 }
 
-func (d *Dao) EsPutArt(ctx context.Context, art *model.Article) (*elastic.IndexResponse, error) {
+//更新整个文档
+func (d *Dao) EsPutArtMetas(ctx context.Context, art *model.Article, metas *model.Metas) (*elastic.IndexResponse, error) {
 	exists, err := d.es.IndexExists(model.ART_ES_INDEX).Do(ctx)
 	if err != nil {
 		return nil, errors.WithStack(err)
@@ -95,14 +97,35 @@ func (d *Dao) EsPutArt(ctx context.Context, art *model.Article) (*elastic.IndexR
 	}
 
 	resp, err := d.es.Index().Index(model.ART_ES_INDEX).
-		Id(strconv.Itoa(int(art.Id))).BodyJson(art.ToEsMap(ctx)).Do(ctx)
+		Id(strconv.Itoa(int(art.Id))).BodyJson(model.ArtToEsMap(ctx, art, metas)).Do(ctx)
+
 	if err != nil {
 		return resp, errors.WithStack(err)
 	}
 	return resp, nil
 }
 
-func (d *Dao) EsDeleteArt(ctx context.Context, id int64) (*elastic.DeleteResponse, error) {
+//更新文档部分字段
+func (d *Dao) EsUpdateArtMetas(ctx context.Context, art *model.Article, metas *model.Metas) (*elastic.UpdateResponse, error) {
+	var id int64
+	if art != nil {
+		id = art.Id
+	}
+	if id == 0 && metas != nil {
+		id = metas.ArticleId
+	}
+	if id == 0 {
+		return nil, errors.New("not set invalid ID")
+	}
+	resp, err := d.es.Update().Index(model.ART_ES_INDEX).Id(strconv.FormatInt(id, 10)).
+		Upsert(model.ArtToEsMap(ctx, art, metas)).Do(ctx)
+	if err != nil {
+		return resp, errors.WithStack(err)
+	}
+	return resp, nil
+}
+
+func (d *Dao) EsDeleteArtMetas(ctx context.Context, id int64) (*elastic.DeleteResponse, error) {
 	exists, err := d.es.IndexExists(model.ART_ES_INDEX).Do(ctx)
 	if err != nil {
 		return nil, errors.WithStack(err)

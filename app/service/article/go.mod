@@ -9,6 +9,7 @@ require (
 	github.com/bilibili/kratos v0.3.3 // indirect
 	github.com/codahale/hdrhistogram v0.0.0-20161010025455-3a0bb77429bd // indirect
 	github.com/g4zhuj/grpc-wrapper v0.0.0-20190508092021-ced55bb6c5d6 // indirect
+	github.com/garyburd/redigo v1.6.0
 	github.com/gin-gonic/gin v1.5.0
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gogo/protobuf v1.3.1

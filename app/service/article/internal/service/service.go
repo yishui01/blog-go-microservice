@@ -38,7 +38,7 @@ func (s *Service) ArtList(ctx context.Context, listReq *pb.ArtListRequest) (*pb.
 	query.CreatedAt = listReq.CreatedAt
 	query.UpdatedAt = listReq.UpdatedAt
 	query.Unscoped = listReq.Unscoped
-	esArtList, err := s.dao.ArtList(ctx, query)
+	esArtList, err := s.dao.ArtMetasList(ctx, query)
 	reply := new(pb.ArtListResp)
 	if err != nil {
 		log.SugarWithContext(ctx).Errorf("s.dao.ArtList Query(%#+v),  Err:(%#+v)", query, err)
@@ -56,6 +56,9 @@ func (s *Service) ArtList(ctx context.Context, listReq *pb.ArtListRequest) (*pb.
 			Status:    v.Status,
 			Img:       v.Img,
 			Content:   v.Content,
+			CmCount:   v.CmCount,
+			LaudCount: v.LaudCount,
+			ViewCount: v.ViewCount,
 			CreatedAt: v.CreatedAt.Unix(),
 			UpdatedAt: v.UpdatedAt.Unix(),
 			DeletedAt: v.DeletedAt.Unix(),
@@ -69,7 +72,7 @@ func (s *Service) ArtList(ctx context.Context, listReq *pb.ArtListRequest) (*pb.
 	return reply, nil
 }
 
-//文章详情
+//文章详情（包含metas)
 func (s *Service) GetArtBySn(ctx context.Context, artReq *pb.ArtDetailRequest) (*pb.ArtDetailResp, error) {
 	var (
 		art      *model.Article
@@ -100,7 +103,7 @@ func (s *Service) GetArtBySn(ctx context.Context, artReq *pb.ArtDetailRequest) (
 		}
 		return nil
 	})
-
+	s.dao.AddMetasCount(ctx, artReq.Sn, model.ViewRedisKey)
 	if err := g.Wait(); err != nil {
 		log.SugarWithContext(ctx).Errorf("s.dao.GetMetasBySn wait Err artReq：(%#+v),Err:(%s)", artReq, err.Error())
 		return nil, ecode.ServerErr
@@ -158,6 +161,7 @@ func (s *Service) CreateArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveAr
 	return s.SaveArt(ctx, req, false)
 }
 
+//修改文章
 func (s *Service) UpdateArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveArtResp, error) {
 	return s.SaveArt(ctx, req, true)
 }
@@ -171,9 +175,9 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool
 
 	art, metas := AssignSave(req)
 	if isUpdate {
-		artId, err = s.dao.UpdateArt(ctx, art, metas)
+		artId, err = s.dao.UpdateArtMetas(ctx, art, metas)
 	} else {
-		artId, err = s.dao.CreateArt(ctx, art, metas)
+		artId, err = s.dao.CreateArtMetas(ctx, art, metas)
 	}
 	if err != nil {
 		if ecode.EqualError(ecode.NothingFound, err) {
@@ -184,7 +188,7 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool
 	}
 	reply.Data = strconv.FormatInt(artId, 10)
 
-	err = s.dao.SetArtCache(ctx, art.Id)
+	err = s.dao.SetArtMetasCacheAndEs(ctx, art.Id)
 	reply.Data = strconv.FormatInt(artId, 10)
 	if err != nil {
 		log.SugarWithContext(ctx).Errorf("s.dao.SetArtCache art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
@@ -193,10 +197,12 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool
 
 	return reply, nil
 }
+
+//删除文章
 func (s *Service) DeleteArt(ctx context.Context, req *pb.DelArtRequest) (*pb.SaveArtResp, error) {
 	res := new(pb.SaveArtResp)
 	var err error
-	if err := s.dao.DelArt(ctx, req.Id, req.Physical); err != nil {
+	if err := s.dao.DelArtMetas(ctx, req.Id, req.Physical); err != nil {
 		log.SugarWithContext(ctx).Errorf("Service s.dao.DelArt req:(%#+v), Err:(%+v)", req, err)
 	}
 	return res, err

@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"context"
 	xredis "github.com/gomodule/redigo/redis"
 	"github.com/jinzhu/gorm"
 	"github.com/olivere/elastic/v7"
@@ -15,6 +16,8 @@ type Dao struct {
 	redis      *xredis.Pool
 	es         *elastic.Client
 	cacheQueue *fanout.Fanout
+	jobQueue   *fanout.Fanout
+	cronClose  func()
 }
 
 func New() (*Dao, func()) {
@@ -22,12 +25,25 @@ func New() (*Dao, func()) {
 		db:         NewDB(),
 		redis:      NewRedis(),
 		es:         NewESClient(),
-		cacheQueue: fanout.New("cache"),
+		cacheQueue: fanout.New("cache", fanout.Worker(5)),
+		jobQueue:   fanout.New("job", fanout.Worker(5)),
 	}
+	go func() {
+		d.cronClose = d.CronStart(context.TODO())
+	}()
 	return d, func() { d.Close() }
 }
 
 func (d *Dao) Close() {
+	if d.cacheQueue != nil {
+		d.cacheQueue.Close()
+	}
+	if d.jobQueue != nil {
+		d.jobQueue.Close()
+	}
+	if d.cronClose != nil {
+		d.cronClose()
+	}
 	if d.db != nil {
 		d.db.Close()
 	}

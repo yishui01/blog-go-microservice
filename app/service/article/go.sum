@@ -110,6 +110,7 @@ github.com/g4zhuj/go-metrics-falcon v0.0.0-20180427054158-5159ced4eafb h1:G3zO0a
 github.com/g4zhuj/go-metrics-falcon v0.0.0-20180427054158-5159ced4eafb/go.mod h1:ihoLNVkz6FoLFrFMwCBjNAO3Ku5vMnAt2qocaBLPKNE=
 github.com/g4zhuj/grpc-wrapper v0.0.0-20190508092021-ced55bb6c5d6 h1:L3VyZgMhqHWFZUyirSuFEIRLnVzKma+JDzs3+6KAn1U=
 github.com/g4zhuj/grpc-wrapper v0.0.0-20190508092021-ced55bb6c5d6/go.mod h1:VCVCdoNH04zuPNZWRculHtKsvicLOsdPK1WEx+KBsqk=
+github.com/garyburd/redigo v1.6.0 h1:0VruCpn7yAIIu7pWVClQC8wxCJEcG3nyzpMSHKi1PQc=
 github.com/garyburd/redigo v1.6.0/go.mod h1:NR3MbYisc3/PwhQ00EMzDiPmrwpPxAn5GI05/YaO1SY=
 github.com/ghodss/yaml v1.0.0 h1:wQHKEahhL6wmXdzwWG11gIVCkOv05bNOh+Rxn0yngAk=
 github.com/ghodss/yaml v1.0.0/go.mod h1:4dBDuWmgqj2HViK6kFavaiC9ZROes6MMH2rRYeMEF04=

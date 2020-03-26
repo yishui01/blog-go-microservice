@@ -23,9 +23,9 @@ type ListResp struct {
 }
 
 //只从ES中查找文章列表
-func (d *Dao) ArtList(c context.Context, req *model.ArtQueryReq) ([]*model.EsArticle, error) {
+func (d *Dao) ArtMetasList(c context.Context, req *model.ArtQueryReq) ([]*model.EsArticle, error) {
 	res := make([]*model.EsArticle, 0)
-	esResp, err := d.EsSearchArt(c, req)
+	esResp, err := d.EsSearchArtMetas(c, req)
 	if err != nil {
 		return res, err
 	}
@@ -44,7 +44,16 @@ func (d *Dao) ArtList(c context.Context, req *model.ArtQueryReq) ([]*model.EsArt
 	return res, nil
 }
 
-//获取文章详情
+//异步累加metas
+func (d *Dao) AddMetasCount(c context.Context, sn string, field string) {
+	d.cacheQueue.Do(c, func(ctx context.Context) {
+		if err := d.IncCacheMetas(c, sn, field); err != nil {
+			log.SugarWithContext(c).Warnf("AddMetasCount.IncCacheMetas Err(%#v)", err)
+		}
+	})
+}
+
+//获取文章详情,不包含metas
 func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err error) {
 	res, err = d.GetCacheArticle(c, sn)
 	addCache := true
@@ -96,27 +105,19 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 			}
 		}
 	}
-
 	//到这里来有以下几种情况
 	//1、lock success，
 	//2、已到获取锁最大次数，不再尝试获取
 	//3、cache 挂了
 	//4、etcd server 挂了
-	if err = d.db.Where("sn= ? ", sn).First(&res).Error; err != nil {
+	res, err = d.GetArtFromDB(c, sn)
+	if err != nil {
 		cacheData = &model.Article{Id: -1, Sn: sn}
 		cacheTime = utils.TimeHourSecond
-
-		//todo... db err add metrics
-		if err == gorm.ErrRecordNotFound {
-			err = ecode.NothingFound
-		} else {
-			err = fmt.Errorf("DB Select Art Err On GetArtBySn  sn=(%s),err=(%v)", sn, err)
-		}
 	}
-
 	if addCache {
 		d.cacheQueue.Do(c, func(ctx context.Context) {
-			d.AddCacheArt(c, cacheData, cacheTime)
+			d.SetCacheArt(c, cacheData, cacheTime)
 		})
 	}
 
@@ -124,7 +125,7 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 }
 
 //DB创建文章+metas
-func (d *Dao) CreateArt(c context.Context, art *model.Article, metas *model.Metas) (id int64, err error) {
+func (d *Dao) CreateArtMetas(c context.Context, art *model.Article, metas *model.Metas) (id int64, err error) {
 	db := d.db
 	art.Id = 0 //Omit ID Column
 	tx := db.Begin()
@@ -143,6 +144,7 @@ func (d *Dao) CreateArt(c context.Context, art *model.Article, metas *model.Meta
 	return art.Id, nil
 }
 
+//更新时查找更新的文章是否存在
 func (d *Dao) CheckArtExist(art *model.Article) (bool, error) {
 	res := new(model.Article)
 	if err := d.db.Table("mc_article").Where("id=?", art.Id).First(&res).Error; err != nil {
@@ -156,7 +158,7 @@ func (d *Dao) CheckArtExist(art *model.Article) (bool, error) {
 }
 
 //DB修改文章+metas
-func (d *Dao) UpdateArt(c context.Context, art *model.Article, metas *model.Metas) (id int64, err error) {
+func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model.Metas) (id int64, err error) {
 	b, err := d.CheckArtExist(art)
 	if err != nil {
 		return art.Id, err
@@ -195,24 +197,8 @@ func (d *Dao) UpdateArt(c context.Context, art *model.Article, metas *model.Meta
 	return art.Id, nil
 }
 
-//刷新文章缓存，ES数据
-func (d *Dao) SetArtCache(c context.Context, artId int64) error {
-	art := new(model.Article)
-	db := d.db
-	if err := db.Where("id = ?", artId).First(art).Error; err != nil {
-		return errors.WithStack(err)
-	}
-	if err := d.AddCacheArt(c, art, 0); err != nil {
-		return err
-	}
-	if _, err := d.EsPutArt(c, art); err != nil {
-		return err
-	}
-	return nil
-}
-
 //删除文章
-func (d *Dao) DelArt(c context.Context, id int64, physical bool) error {
+func (d *Dao) DelArtMetas(c context.Context, id int64, physical bool) error {
 	db := d.db
 	if physical {
 		db = d.db.Unscoped()
@@ -237,15 +223,64 @@ func (d *Dao) DelArt(c context.Context, id int64, physical bool) error {
 	if err = d.DeleteCacheArt(c, art.Sn); err != nil {
 		return err
 	}
+
+	if err = d.DelCacheMetas(c, art.Sn); err != nil {
+		return err
+	}
+
 	if physical {
-		if _, err = d.EsDeleteArt(c, art.Id); err != nil {
+		if _, err = d.EsDeleteArtMetas(c, art.Id); err != nil {
 			return err
 		}
 	} else {
 		art.DeletedAt = time.Now()
-		if _, err = d.EsPutArt(c, art); err != nil {
+		if _, err = d.EsUpdateArtMetas(c, art, nil); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+//刷新文章缓存，metas缓存、ES数据
+func (d *Dao) SetArtMetasCacheAndEs(c context.Context, artId int64) error {
+	art := new(model.Article)
+	db := d.db
+	if err := db.Where("id = ?", artId).First(art).Error; err != nil {
+		return errors.WithStack(err)
+	}
+	if err := d.SetCacheArt(c, art, 0); err != nil {
+		return err
+	}
+	metas, _ := d.GetMetasFromDB(c, art.Sn)
+	if _, err := d.EsPutArtMetas(c, art, metas); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *Dao) GetArtFromDB(c context.Context, sn string) (res *model.Article, err error) {
+	if err = d.db.Where("sn= ? ", sn).First(&res).Error; err != nil {
+		//todo... db err add metrics
+		if err == gorm.ErrRecordNotFound {
+			err = ecode.NothingFound
+		} else {
+			err = fmt.Errorf("DB Select Art Err On GetArtFromDB  sn=(%s),err=(%v)", sn, err)
+		}
+	}
+	err = errors.WithStack(err)
+	return
+}
+
+func (d *Dao) GetMetasFromDB(c context.Context, sn string) (res *model.Metas, err error) {
+	res = new(model.Metas)
+	if err = d.db.Where("sn= ? ", sn).First(&res).Error; err != nil {
+		//todo... db err add metrics
+		if err == gorm.ErrRecordNotFound {
+			err = ecode.NothingFound
+		} else {
+			err = fmt.Errorf("DB Select Metas Err On GetMetasFromDB  sn=(%s),err=(%v)", sn, err)
+		}
+	}
+	err = errors.WithStack(err)
+	return
 }

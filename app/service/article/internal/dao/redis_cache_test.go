@@ -16,9 +16,9 @@ func TestDaoCacheArticle(t *testing.T) {
 		timeS = 0
 	)
 
-	Convey("AddCacheArt", t, func() {
+	Convey("SetCacheArt", t, func() {
 		Convey("When everything goes positive", func() {
-			err := d.AddCacheArt(c, val, timeS)
+			err := d.SetCacheArt(c, val, timeS)
 			Convey("Then err should be nil.", func() {
 				So(err, ShouldBeNil)
 			})
@@ -75,7 +75,7 @@ func TestDaoCacheMetas(t *testing.T) {
 	Convey("When ViewRedisKey goes positive", t, func() {
 		Convey("When ViewRedisKey goes positive", func() {
 			field := model.ViewRedisKey
-			err := d.AddCacheMetas(c, sn, field)
+			err := d.IncCacheMetas(c, sn, field)
 			Convey("Then err should be nil.", func() {
 				So(err, ShouldBeNil)
 				p1, _ := d.GetCacheMetas(c, sn)
@@ -95,7 +95,7 @@ func TestDaoCacheMetas(t *testing.T) {
 
 		Convey("When CmRedisKey goes positive", func() {
 			field := model.CmRedisKey
-			err := d.AddCacheMetas(c, sn, field)
+			err := d.IncCacheMetas(c, sn, field)
 			Convey("Then err should be nil.", func() {
 				So(err, ShouldBeNil)
 				p1, _ := d.GetCacheMetas(c, sn)
@@ -104,7 +104,7 @@ func TestDaoCacheMetas(t *testing.T) {
 		})
 		Convey("When LaudRedisKey goes positive", func() {
 			field := model.LaudRedisKey
-			err := d.AddCacheMetas(c, sn, field)
+			err := d.IncCacheMetas(c, sn, field)
 			Convey("Then err should be nil.", func() {
 				So(err, ShouldBeNil)
 				p1, _ := d.GetCacheMetas(c, sn)

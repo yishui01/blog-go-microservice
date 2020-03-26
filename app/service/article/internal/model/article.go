@@ -31,6 +31,9 @@ type EsArticle struct {
 	Img       string    `json:"img"`
 	Content   string    `json:"content"`
 	Status    int32     `json:"status"`
+	ViewCount int64     `json:"view_count"`
+	CmCount   int64     `json:"cm_count"`
+	LaudCount int64     `json:"laud_count"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	DeletedAt time.Time `json:"deleted_at" gorm:"-"` //gorm ignore
@@ -52,21 +55,26 @@ func (user *Article) BeforeCreate(scope *gorm.Scope) error {
 	return nil
 }
 
-func (self *Article) ToEsMap(ctx context.Context) map[string]interface{} {
+func ArtToEsMap(ctx context.Context, art *Article, metas *Metas) map[string]interface{} {
 	maps := make(map[string]interface{})
-	maps["id"] = self.Id
-	maps["sn"] = self.Sn
-	maps["title"] = self.Title
-	maps["tags"] = strings.Split(self.Tags, ",")
-	maps["img"] = self.Img
-	maps["content"] = self.Content
-	maps["status"] = self.Status
-	maps["created_at"] = self.CreatedAt
-	maps["updated_at"] = self.UpdatedAt
-	maps["deleted_at"] = self.DeletedAt
-	//metas
-
-	log.SugarWithContext(ctx).Debugf("ToEsMap:%#v\n", maps)
+	if art != nil {
+		maps["id"] = art.Id
+		maps["sn"] = art.Sn
+		maps["title"] = art.Title
+		maps["tags"] = strings.Split(art.Tags, ",")
+		maps["img"] = art.Img
+		maps["content"] = art.Content
+		maps["status"] = art.Status
+		maps["created_at"] = art.CreatedAt
+		maps["updated_at"] = art.UpdatedAt
+		maps["deleted_at"] = art.DeletedAt
+	}
+	if metas != nil {
+		maps["view_count"] = metas.ViewCount
+		maps["laud_count"] = metas.LaudCount
+		maps["cm_count"] = metas.CmCount
+	}
+	log.SugarWithContext(ctx).Debugf("Article ToEsMap:%#v\n", maps)
 	return maps
 }
 
@@ -109,6 +117,15 @@ const Mapping = `
 				},
 				"image":{
 					"type":"keyword"
+				},
+				"view_count":{
+					"type":"integer"
+				},
+				"laud_count":{
+					"type":"integer"
+				},
+				"cm_count":{
+					"type":"integer"
 				},
 				"created_at":{
 					"type":"date"
