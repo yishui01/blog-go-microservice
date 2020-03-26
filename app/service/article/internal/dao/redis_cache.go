@@ -64,18 +64,28 @@ func (d *Dao) DeleteCacheArt(c context.Context, sn string) error {
 }
 
 //metas缓存
-func (d *Dao) GetCacheMetas(c context.Context, sn string) (map[string]int64, error) {
+func (d *Dao) GetCacheMetas(c context.Context, sn string) (*model.Metas, error) {
 	conn := d.redis.Get()
 	defer conn.Close()
 	reply, err := redis.Int64Map(conn.Do("HGETALL", MetasCacheKey(sn)))
-	if err == redis.ErrNil {
+	if err == redis.ErrNil || len(reply) == 0 {
 		return nil, nil
 	}
+	res := &model.Metas{
+		ArticleId: reply[model.ArtIdRedisKey],
+		Sn:        sn,
+		ViewCount: reply[model.ViewRedisKey],
+		CmCount:   reply[model.CmRedisKey],
+		LaudCount: reply[model.LaudRedisKey],
+	}
 
-	return reply, errors.Wrap(err, "GetMetas HGETALL err")
+	return res, errors.Wrap(err, "GetMetas HGETALL err")
 }
 
-func (d *Dao) SetCacheMetas(c context.Context, metas *model.Metas) error {
+func (d *Dao) SetCacheMetas(c context.Context, metas *model.Metas, timeS int) error {
+	if metas == nil {
+		return nil
+	}
 	conn := d.redis.Get()
 	defer conn.Close()
 	_, err := conn.Do("HMSET", MetasCacheKey(metas.Sn),
@@ -84,7 +94,14 @@ func (d *Dao) SetCacheMetas(c context.Context, metas *model.Metas) error {
 		model.CmRedisKey, metas.CmCount,
 		model.LaudRedisKey, metas.LaudCount,
 	)
-	return errors.Wrap(err, "SetMetas HMSET err")
+	if err != nil {
+		return errors.Wrap(err, "SetMetas HMSET err")
+	}
+	if timeS != 0 {
+		_, err = conn.Do("expire", MetasCacheKey(metas.Sn), timeS)
+	}
+
+	return errors.Wrap(err, "SetMetas Expire HMSET Key err")
 }
 
 func (d *Dao) AddCacheMetas(c context.Context, sn string, field string) error {

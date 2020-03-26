@@ -20,12 +20,13 @@ CREATE TABLE IF NOT EXISTS `mc_article` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文章表';
 
 CREATE TABLE IF NOT EXISTS `mc_metas` (
-  `article_id` int(10) NOT NULL DEFAULT 0 COMMENT '文章ID',
+  `article_id` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '文章ID',
   `sn`  varchar(32) NOT NULL DEFAULT '' COMMENT '冗余字段',
   `view_count` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '浏览数',
   `cm_count` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '评论数',
   `laud_count` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '赞数',
   `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  PRIMARY KEY (`article_id`)
-  KEY `sn` (`sn`)
+  CONSTRAINT article_id FOREIGN KEY (article_id) references mc_article(id) on DELETE CASCADE on update CASCADE,
+  PRIMARY KEY (`article_id`),
+  UNIQUE KEY `sn` (`sn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文章扩展表';

@@ -3,12 +3,14 @@ package dao
 import (
 	"blog-go-microservice/app/service/article/internal/model"
 	"context"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/utils"
+	etcdlock "github.com/zuiqiangqishao/framework/pkg/utils/lock/etcd"
 	"go.uber.org/zap"
 	"time"
 )
@@ -56,23 +58,59 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 			res = nil //注意这里只能修改命名返回值
 		}
 	}()
-	//todo... add metrics
-	if res != nil {
+	if res != nil { //todo... add cache hit metrics
 		return res, nil
 	}
 
+	//todo... add cache lose metrics
 	res = new(model.Article)
 	cacheData := res
 	cacheTime := 0 //forever
+
+	if addCache {
+		//没有缓存，并且redis没挂，etcd分布式锁 防止缓存击穿/穿透
+		key := model.ArtLockKey(sn)
+		lockTTL := 5
+		retry := 3
+		failLockSleepMill := 500
+		for i := 0; i < retry && addCache; i++ {
+			cacheRes, err := d.GetCacheArticle(c, sn)
+			if cacheRes != nil {
+				return cacheRes, nil
+			}
+			if err != nil { //cache挂了
+				log.SugarWithContext(c).Errorf("d.GetCacheArticle ERR on DistLock:(%#+v),sn:(%#v),req(%#v)", err, sn, res)
+				addCache = false
+				break
+			}
+			//try lock is nonblock
+			m, err := etcdlock.DistributeTryLock(c, key, lockTTL, failLockSleepMill)
+			if err != nil { //etcd server 挂了
+				log.SugarWithContext(c).Errorf("etcdlock.DistributeTryLock ERR:(%#+v),sn:(%#v),req(%#v)", err, sn, res)
+				break
+			}
+
+			if m != nil { //lock success
+				defer m.Release(c)
+				break
+			}
+		}
+	}
+
+	//到这里来有以下几种情况
+	//1、lock success，
+	//2、已到获取锁最大次数，不再尝试获取
+	//3、cache 挂了
+	//4、etcd server 挂了
 	if err = d.db.Where("sn= ? ", sn).First(&res).Error; err != nil {
-		cacheData = &model.Article{Id: -1, Sn: sn} //防止缓存击穿
+		cacheData = &model.Article{Id: -1, Sn: sn}
 		cacheTime = utils.TimeHourSecond
 
 		//todo... db err add metrics
 		if err == gorm.ErrRecordNotFound {
 			err = ecode.NothingFound
 		} else {
-			err = errors.Wrap(err, "DB Select Art Err On GetArtBySn  sn="+sn)
+			err = fmt.Errorf("DB Select Art Err On GetArtBySn  sn=(%s),err=(%v)", sn, err)
 		}
 	}
 
@@ -82,36 +120,79 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 		})
 	}
 
-	return res, err
+	return res, errors.WithStack(err)
 }
 
-//保存文章到DB,未设置缓存
-func (d *Dao) SaveArt(c context.Context, art *model.Article, metas *model.Metas) (*model.Article, error) {
-	var err error
+//DB创建文章+metas
+func (d *Dao) CreateArt(c context.Context, art *model.Article, metas *model.Metas) (id int64, err error) {
 	db := d.db
-	if art.Id > 0 {
-		db = db.Omit("sn")
-	}
-	if art.CreatedAt.IsZero() {
-		db = db.Omit("created_at")
-	}
-	if art.UpdatedAt.IsZero() {
-		db = db.Omit("updated_at")
-	}
-
+	art.Id = 0 //Omit ID Column
 	tx := db.Begin()
-	if err = db.Save(art).Error; err != nil {
+	if err = tx.Create(&art).Error; err != nil {
 		tx.Rollback()
-		return nil, errors.WithStack(err)
+		return art.Id, errors.WithStack(err)
 	}
 	metas.ArticleId = art.Id
 	metas.Sn = art.Sn
-	if err = db.Save(metas).Error; err != nil {
+	if err = tx.Create(metas).Error; err != nil {
 		tx.Rollback()
-		return art, errors.WithStack(err)
+		return art.Id, errors.WithStack(err)
 	}
 	tx.Commit()
-	return art, nil
+
+	return art.Id, nil
+}
+
+func (d *Dao) CheckArtExist(art *model.Article) (bool, error) {
+	res := new(model.Article)
+	if err := d.db.Table("mc_article").Where("id=?", art.Id).First(&res).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return false, nil
+		}
+		return false, errors.WithStack(err)
+	}
+
+	return true, nil
+}
+
+//DB修改文章+metas
+func (d *Dao) UpdateArt(c context.Context, art *model.Article, metas *model.Metas) (id int64, err error) {
+	b, err := d.CheckArtExist(art)
+	if err != nil {
+		return art.Id, err
+	}
+	if !b {
+		return art.Id, ecode.NothingFound
+	}
+	tx := d.db.Begin()
+	if err = tx.Table("mc_metas").Where("article_id=?", metas.ArticleId).Update(map[string]interface{}{
+		"view_count": metas.ViewCount,
+		"cm_count":   metas.CmCount,
+		"laud_count": metas.LaudCount,
+	}).Error; err != nil {
+		tx.Rollback()
+		return art.Id, errors.WithStack(err)
+	}
+	ArtMaps := map[string]interface{}{
+		"title":   art.Title,
+		"tags":    art.Tags,
+		"img":     art.Img,
+		"content": art.Content,
+		"status":  art.Status,
+	}
+	if art.CreatedAt.Second() > 0 {
+		ArtMaps["created_at"] = art.CreatedAt
+	}
+	if art.UpdatedAt.Second() > 0 {
+		ArtMaps["updated_at"] = art.UpdatedAt
+	}
+
+	if err = tx.Table("mc_article").Where("id=?", art.Id).Update(ArtMaps).Error; err != nil {
+		tx.Rollback()
+		return art.Id, errors.WithStack(err)
+	}
+	tx.Commit()
+	return art.Id, nil
 }
 
 //刷新文章缓存，ES数据
@@ -146,10 +227,10 @@ func (d *Dao) DelArt(c context.Context, id int64, physical bool) error {
 		}
 	}()
 	art := new(model.Article)
-	if err = db.Where("id = ?", id).First(art).Error; err != nil && err != gorm.ErrRecordNotFound {
+	if err = tx.Where("id = ?", id).First(art).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return errors.WithStack(err)
 	}
-	if err = db.Where("id = ?", id).Delete(&model.Article{}).Error; err != nil && err != gorm.ErrRecordNotFound {
+	if err = tx.Where("id = ?", id).Delete(&model.Article{}).Error; err != nil && err != gorm.ErrRecordNotFound {
 		return errors.WithStack(err)
 	}
 

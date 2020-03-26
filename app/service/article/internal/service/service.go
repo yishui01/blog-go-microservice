@@ -8,6 +8,7 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
+	"github.com/zuiqiangqishao/framework/pkg/sync/errgroup"
 	"github.com/zuiqiangqishao/framework/pkg/utils"
 	"strconv"
 	"strings"
@@ -70,19 +71,54 @@ func (s *Service) ArtList(ctx context.Context, listReq *pb.ArtListRequest) (*pb.
 
 //文章详情
 func (s *Service) GetArtBySn(ctx context.Context, artReq *pb.ArtDetailRequest) (*pb.ArtDetailResp, error) {
-	art, err := s.dao.GetArtBySn(ctx, artReq.Sn)
-	if err != nil {
-		if ecode.EqualError(ecode.NothingFound, err) {
-			return nil, ecode.NothingFound
+	var (
+		art      *model.Article
+		metas    *model.Metas
+		artErr   error
+		metasErr error
+	)
+	g := errgroup.WithContext(ctx)
+	g.Go(func(ctx context.Context) error {
+		art, artErr = s.dao.GetArtBySn(ctx, artReq.Sn)
+		if artErr != nil {
+			if ecode.EqualError(ecode.NothingFound, artErr) {
+				artErr = ecode.NothingFound
+			}
+			log.SugarWithContext(ctx).Errorf("s.dao.GetArtBySn  artReq：(%#+v),Err:(%#+v)", artReq, artErr)
+			artErr = ecode.ServerErr
 		}
-		log.SugarWithContext(ctx).Errorf("s.dao.GetArtBySn  artReq：(%#+v),Err:(%#+v)", artReq, err)
+		return nil
+	})
+
+	g.Go(func(ctx context.Context) error {
+		metas, metasErr = s.dao.GetMetasBySn(ctx, artReq.Sn)
+		if metasErr != nil {
+			log.SugarWithContext(ctx).Errorf("s.dao.GetMetasBySn  artReq：(%#+v),Err:(%#+v)", artReq, metasErr)
+		}
+		if metas == nil {
+			metas = new(model.Metas)
+		}
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		log.SugarWithContext(ctx).Errorf("s.dao.GetMetasBySn wait Err artReq：(%#+v),Err:(%s)", artReq, err.Error())
 		return nil, ecode.ServerErr
 	}
 
+	if artErr != nil {
+		return nil, artErr
+	}
 	if art == nil {
 		return nil, ecode.NothingFound
 	}
 
+	reply := AssignDetail(art, metas)
+
+	return reply, nil
+}
+
+func AssignDetail(art *model.Article, metas *model.Metas) *pb.ArtDetailResp {
 	reply := new(pb.ArtDetailResp)
 	reply.Id = art.Id
 	reply.Sn = art.Sn
@@ -92,11 +128,13 @@ func (s *Service) GetArtBySn(ctx context.Context, artReq *pb.ArtDetailRequest) (
 	reply.Content = art.Content
 	reply.CreatedAt = art.CreatedAt.Unix()
 	reply.UpdatedAt = art.UpdatedAt.Unix()
-	return reply, nil
+	reply.LaudCount = metas.LaudCount
+	reply.CmCount = metas.CmCount
+	reply.ViewCount = metas.ViewCount
+	return reply
 }
 
-//保存文章
-func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveArtResp, error) {
+func AssignSave(req *pb.SaveArtReq) (*model.Article, *model.Metas) {
 	art := new(model.Article)
 	art.Id = req.Id
 	art.Tags = req.Tags
@@ -105,38 +143,56 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveArtR
 	art.Content = req.Content
 	art.Status = req.Status
 	art.CreatedAt = utils.TimeUnixToTime(req.CreatedAt)
-	art.CreatedAt = utils.TimeUnixToTime(req.CreatedAt)
+	art.UpdatedAt = utils.TimeUnixToTime(req.UpdatedAt)
 	metas := new(model.Metas)
 	metas.Sn = req.Sn
 	metas.ArticleId = req.Id
 	metas.CmCount = req.CmCount
 	metas.ViewCount = req.ViewCount
 	metas.LaudCount = req.LaudCount
-	art, err := s.dao.SaveArt(ctx, art, metas)
+	return art, metas
+}
+
+//创建文章
+func (s *Service) CreateArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveArtResp, error) {
+	return s.SaveArt(ctx, req, false)
+}
+
+func (s *Service) UpdateArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveArtResp, error) {
+	return s.SaveArt(ctx, req, true)
+}
+
+func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool) (*pb.SaveArtResp, error) {
+	var (
+		err   error
+		artId int64
+	)
+	var reply = new(pb.SaveArtResp)
+
+	art, metas := AssignSave(req)
+	if isUpdate {
+		artId, err = s.dao.UpdateArt(ctx, art, metas)
+	} else {
+		artId, err = s.dao.CreateArt(ctx, art, metas)
+	}
 	if err != nil {
+		if ecode.EqualError(ecode.NothingFound, err) {
+			return reply, ecode.NothingFound
+		}
 		log.SugarWithContext(ctx).Errorf("s.dao.SaveArt art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
 		return nil, ecode.Error(ecode.ServerErr, "save err")
 	}
-	reply := new(pb.SaveArtResp)
+	reply.Data = strconv.FormatInt(artId, 10)
+
 	err = s.dao.SetArtCache(ctx, art.Id)
+	reply.Data = strconv.FormatInt(artId, 10)
 	if err != nil {
 		log.SugarWithContext(ctx).Errorf("s.dao.SetArtCache art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
-		return nil, ecode.Error(ecode.ServerErr, "cache err")
+		reply.Status = 1 //flag cache err
 	}
 
-	var bs []byte
-	if bs, err = utils.JsonMarshal(map[string]string{
-		"id": strconv.Itoa(int(art.Id)),
-		"sn": art.Sn,
-	}); err != nil {
-		log.SugarWithContext(ctx).Errorf("SaveArt JsonEncode art(%#+v)  Err:(%#+v)", art, err)
-		return nil, err
-	}
-
-	reply.Data = string(bs)
-	return reply, err
+	return reply, nil
 }
-
 func (s *Service) DeleteArt(ctx context.Context, req *pb.DelArtRequest) (*pb.SaveArtResp, error) {
 	res := new(pb.SaveArtResp)
 	var err error

@@ -17,9 +17,9 @@ type Article struct {
 	Img       string    `json:"img"`
 	Content   string    `json:"content"`
 	Status    int32     `json:"status"`
-	CreatedAt time.Time `json:"created_at" gorm:"-"`
-	UpdatedAt time.Time `json:"updated_at" gorm:"-"`
-	DeletedAt time.Time `json:"deleted_at" gorm:"-"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	DeletedAt time.Time `json:"deleted_at" gorm:"-"` //gorm ignore
 }
 
 //从ES查出来后解析json到结构体用的
@@ -31,9 +31,9 @@ type EsArticle struct {
 	Img       string    `json:"img"`
 	Content   string    `json:"content"`
 	Status    int32     `json:"status"`
-	CreatedAt time.Time `json:"created_at" gorm:"-"`
-	UpdatedAt time.Time `json:"updated_at" gorm:"-"`
-	DeletedAt time.Time `json:"deleted_at" gorm:"-"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	DeletedAt time.Time `json:"deleted_at" gorm:"-"` //gorm ignore
 }
 
 type ArtQueryReq struct {
@@ -64,8 +64,14 @@ func (self *Article) ToEsMap(ctx context.Context) map[string]interface{} {
 	maps["created_at"] = self.CreatedAt
 	maps["updated_at"] = self.UpdatedAt
 	maps["deleted_at"] = self.DeletedAt
+	//metas
+
 	log.SugarWithContext(ctx).Debugf("ToEsMap:%#v\n", maps)
 	return maps
+}
+
+func ArtLockKey(sn string) string {
+	return "art_lock_" + sn
 }
 
 const ART_ES_INDEX = "article"

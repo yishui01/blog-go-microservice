@@ -52,51 +52,44 @@ func TestDaoCacheArticle(t *testing.T) {
 
 func TestDaoCacheMetas(t *testing.T) {
 	var (
-		sn    = "testmeta"
-		c     = context.Background()
-		metas = &model.Metas{Sn: sn, ArticleId: 1, ViewCount: 1, CmCount: 2, LaudCount: 3}
+		sn       = "testmeta"
+		notSetSn = "not set sn"
+		c        = context.Background()
+		metas    = &model.Metas{Sn: sn, ArticleId: 1, ViewCount: 1, CmCount: 2, LaudCount: 3}
 	)
 
-	Convey("SetMetas", t, func() {
+	Convey("SetCacheMetas", t, func() {
 		Convey("When everything goes positive", func() {
-			err := d.SetCacheMetas(c, metas)
+			err := d.SetCacheMetas(c, metas, 0)
 			Convey("Then err should be nil.", func() {
 				So(err, ShouldBeNil)
 			})
-		})
-	})
-
-	equal := func(actual interface{}, expected ...interface{}) string {
-		a := actual.(map[string]int64)
-		e := expected[0].(*model.Metas)
-		if e.LaudCount == a[model.LaudRedisKey] &&
-			e.ViewCount == a[model.ViewRedisKey] &&
-			e.CmCount == a[model.CmRedisKey] &&
-			e.ArticleId == a[model.ArtIdRedisKey] {
-			return ""
-		}
-
-		t.Logf("actual(%#v),expected(%#v)", a, e)
-		return "get metas is not equal source metas"
-	}
-	Convey("GetMetas", t, func() {
-		Convey("When everything goes positive", func() {
 			p1, err := d.GetCacheMetas(c, sn)
 			Convey("Then err should be nil.p1 should not be nil.", func() {
 				So(err, ShouldBeNil)
-				So(p1, equal, metas)
+				So(p1, ShouldResemble, metas)
 			})
 		})
 	})
 
-	Convey("AddMetas", t, func() {
+	Convey("When ViewRedisKey goes positive", t, func() {
 		Convey("When ViewRedisKey goes positive", func() {
 			field := model.ViewRedisKey
 			err := d.AddCacheMetas(c, sn, field)
 			Convey("Then err should be nil.", func() {
 				So(err, ShouldBeNil)
 				p1, _ := d.GetCacheMetas(c, sn)
-				So(metas.ViewCount+1, ShouldEqual, p1[field])
+				So(p1.ViewCount, ShouldEqual, metas.ViewCount+1)
+			})
+
+			Convey("Then err should be nil.", func() {
+				So(err, ShouldBeNil)
+				p1, _ := d.GetCacheMetas(c, notSetSn)
+				So(p1.ArticleId, ShouldEqual, -1)
+				So(p1.Sn, ShouldEqual, notSetSn)
+				So(p1.ViewCount, ShouldEqual, 0)
+				So(p1.LaudCount, ShouldEqual, 0)
+				So(p1.CmCount, ShouldEqual, 0)
 			})
 		})
 
@@ -106,7 +99,7 @@ func TestDaoCacheMetas(t *testing.T) {
 			Convey("Then err should be nil.", func() {
 				So(err, ShouldBeNil)
 				p1, _ := d.GetCacheMetas(c, sn)
-				So(metas.CmCount+1, ShouldEqual, p1[field])
+				So(p1.CmCount, ShouldEqual, metas.CmCount+1)
 			})
 		})
 		Convey("When LaudRedisKey goes positive", func() {
@@ -115,7 +108,7 @@ func TestDaoCacheMetas(t *testing.T) {
 			Convey("Then err should be nil.", func() {
 				So(err, ShouldBeNil)
 				p1, _ := d.GetCacheMetas(c, sn)
-				So(metas.LaudCount+1, ShouldEqual, p1[field])
+				So(p1.LaudCount, ShouldEqual, metas.LaudCount+1)
 			})
 		})
 	})
@@ -129,7 +122,7 @@ func TestDaoCacheMetas(t *testing.T) {
 			p1, err := d.GetCacheMetas(c, sn)
 			Convey("Then err should be nil.p1 should  be nil.", func() {
 				So(err, ShouldBeNil)
-				So(p1, ShouldBeEmpty)
+				So(p1, ShouldBeNil)
 			})
 		})
 	})
