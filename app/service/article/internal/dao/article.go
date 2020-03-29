@@ -128,12 +128,11 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 }
 
 //DB创建文章+metas+tags中间表维护
-func (d *Dao) CreateArtMetas(c context.Context, art *model.Article, metas *model.Metas) (int64, error) {
+func (d *Dao) CreateArtMetas(c context.Context, art *model.Article, metas *model.Metas) (artId int64, err error) {
 	var (
 		db         = d.db
 		tagNameStr = ""
 		tags       = []*model.Tag{}
-		err        error
 	)
 	art.Id = 0 //Omit ID Column
 
@@ -147,7 +146,7 @@ func (d *Dao) CreateArtMetas(c context.Context, art *model.Article, metas *model
 				tx.Rollback()
 				panic(perr) //这里panic应该往上层抛出
 			}
-			tx.Commit()
+			err = errors.WithStack(tx.Commit().Error)
 		}
 	}()
 
@@ -210,18 +209,7 @@ func (d *Dao) updateRelationArtTag(artId int64, tags []*model.Tag, tx *gorm.DB) 
 		return errors.New("tx can not be nil")
 	}
 	var err error
-	//带tx参数的函数不要再开事务了，因为这个是被调用者，强行开会 can't start transaction
-	//defer func() {
-	//	if err != nil {
-	//		tx.Rollback()
-	//	} else {
-	//		if perr := recover(); perr != nil {
-	//			tx.Rollback()
-	//			panic(perr)
-	//		}
-	//		tx.Commit()
-	//	}
-	//}()
+	//带tx参数的函数不要再tx.Begin()开事务了，因为这个是被调用者，强行开会 can't start transaction
 
 	//更新中间表，先delete再insert，由于是更新关联，接Exec硬删除即可
 	if err = tx.Exec("DELETE FROM mc_article_tag Where article_id=?", artId).Error; err != nil {
@@ -256,7 +244,7 @@ func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model
 				tx.Rollback()
 				panic(perr)
 			}
-			tx.Commit()
+			err = errors.WithStack(tx.Commit().Error)
 		}
 	}()
 
@@ -301,12 +289,11 @@ func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model
 }
 
 //删除文章
-func (d *Dao) DelArtMetas(c context.Context, id int64, physical bool) error {
+func (d *Dao) DelArtMetas(c context.Context, id int64, physical bool) (err error) {
 	db := d.db
 	if physical {
 		db = d.db.Unscoped()
 	}
-	var err error
 	tx := db.Begin()
 
 	defer func() {
@@ -317,7 +304,7 @@ func (d *Dao) DelArtMetas(c context.Context, id int64, physical bool) error {
 				tx.Rollback()
 				panic(perr) //这里panic应该往上层抛出
 			}
-			tx.Commit()
+			err = errors.WithStack(tx.Commit().Error)
 		}
 	}()
 	art := new(model.Article)

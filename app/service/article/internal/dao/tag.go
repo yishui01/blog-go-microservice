@@ -66,7 +66,7 @@ func (d *Dao) CreateTag(c context.Context, tag *model.Tag) (int64, error) {
 }
 
 //更新Tag
-func (d *Dao) UpdateTag(c context.Context, tag *model.Tag) (int64, error) {
+func (d *Dao) UpdateTag(c context.Context, tag *model.Tag) (tagId int64, err error) {
 	//先DB再缓存,缓存数据都是不可靠的（可能和数据库的数据不一致），如果需要较为严格的一致性，只以DB的数据为准
 	if tag == nil || tag.Id <= 0 || tag.Name == "" {
 		return -1, errors.Errorf("d.UpdateTag tag is invalid,tag(%#v)", tag)
@@ -80,7 +80,6 @@ func (d *Dao) UpdateTag(c context.Context, tag *model.Tag) (int64, error) {
 
 	var (
 		existTag bool
-		err      error
 	)
 	//看下Tag名是否重复
 	existTag, err = d.CheckExist("mc_tag", "name = ? AND id != ?", tag.Name, tag.Id)
@@ -100,7 +99,7 @@ func (d *Dao) UpdateTag(c context.Context, tag *model.Tag) (int64, error) {
 				tx.Rollback()
 				panic(perr)
 			}
-			tx.Commit()
+			err = errors.WithStack(tx.Commit().Error)
 		}
 	}()
 
@@ -140,7 +139,7 @@ func (d *Dao) UpdateTag(c context.Context, tag *model.Tag) (int64, error) {
 }
 
 //删除Tag
-func (d *Dao) DeleteTag(c context.Context, tagId int64, physical bool) error {
+func (d *Dao) DeleteTag(c context.Context, tagId int64, physical bool) (err error) {
 	if tagId <= 0 {
 		return nil
 	}
@@ -148,7 +147,6 @@ func (d *Dao) DeleteTag(c context.Context, tagId int64, physical bool) error {
 	if physical {
 		db = d.db.Unscoped()
 	}
-	var err error
 	tx := db.Begin()
 
 	defer func() {
@@ -159,7 +157,7 @@ func (d *Dao) DeleteTag(c context.Context, tagId int64, physical bool) error {
 				tx.Rollback()
 				panic(perr)
 			}
-			tx.Commit()
+			err = errors.WithStack(tx.Commit().Error)
 		}
 	}()
 
