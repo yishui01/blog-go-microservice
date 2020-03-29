@@ -128,7 +128,7 @@ func wrapFunc(f func(c context.Context)) (res func(context.Context)) {
 }
 
 // Do save a callback func.
-func (c *Fanout) Do(ctx context.Context, f func(ctx context.Context)) (err error) {
+func (c *Fanout) Do(ctx context.Context, f func(c context.Context)) (err error) {
 	if f == nil || c.ctx.Err() != nil {
 		return c.ctx.Err()
 	}

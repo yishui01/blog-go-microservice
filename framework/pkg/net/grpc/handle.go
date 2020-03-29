@@ -34,7 +34,7 @@ func (s *GrpcServer) handle() grpc.UnaryServerInterceptor {
 				timeout = ctimeout
 			}
 			ctx, cancel = context.WithTimeout(ctx, timeout)
-			defer cancel()
+			defer cancel() //note: 服务端在返回时会直接cancel防止内存泄露，那么异步任务传这个ctx的时候需要注意，需要copy出一个不会cancel的ctx才行
 		}
 		resp, err = handler(ctx, req)
 		return resp, transform.FromError(err).Err()
