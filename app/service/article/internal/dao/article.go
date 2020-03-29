@@ -12,6 +12,8 @@ import (
 	"github.com/zuiqiangqishao/framework/pkg/utils"
 	etcdlock "github.com/zuiqiangqishao/framework/pkg/utils/lock/etcd"
 	"go.uber.org/zap"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -44,23 +46,16 @@ func (d *Dao) ArtMetasList(c context.Context, req *model.ArtQueryReq) ([]*model.
 	return res, nil
 }
 
-//异步累加metas
-func (d *Dao) AddMetasCount(c context.Context, sn string, field string) {
-	d.cacheQueue.Do(c, func(ctx context.Context) {
-		if err := d.IncCacheMetas(c, sn, field); err != nil {
-			log.SugarWithContext(c).Warnf("AddMetasCount.IncCacheMetas Err(%#v)", err)
-		}
-	})
-}
-
 //获取文章详情,不包含metas
 func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err error) {
 	res, err = d.GetCacheArticle(c, sn)
 	addCache := true
 	if err != nil {
-		log.SugarWithContext(c).Errorf("d.GetCacheArticle ERR:(%#+v),sn:(%#v),req(%#v)", err, sn, res)
+		if !ecode.EqualError(ecode.JsonErr, err) {
+			log.SugarWithContext(c).Errorf("d.GetCacheArticle ERR:(%#+v),sn:(%#v),req(%#v)", err, sn, res)
+			addCache = false //cache挂了就不要往里加缓存了
+		}
 		err = nil
-		addCache = false //cache挂了就不要往里加缓存了
 	}
 	defer func() {
 		if res != nil && res.Id == -1 {
@@ -87,10 +82,14 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 			if cacheRes != nil {
 				return cacheRes, nil
 			}
-			if err != nil { //cache挂了
-				log.SugarWithContext(c).Errorf("d.GetCacheArticle ERR on DistLock:(%#+v),sn:(%#v),req(%#v)", err, sn, res)
-				addCache = false
-				break
+			if err != nil {
+				if !ecode.EqualError(ecode.JsonErr, err) {
+					//cache挂了
+					log.SugarWithContext(c).Errorf("d.GetCacheArticle ERR on DistLock:(%#+v),sn:(%#v),req(%#v)", err, sn, res)
+					addCache = false
+					break
+				}
+				err = nil
 			}
 			//try lock is nonblock
 			m, err := etcdlock.DistributeTryLock(c, key, lockTTL, failLockSleepMill)
@@ -116,65 +115,171 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 		cacheTime = utils.TimeHourSecond
 	}
 	if addCache {
-		d.cacheQueue.Do(c, func(ctx context.Context) {
-			d.SetCacheArt(c, cacheData, cacheTime)
-		})
+		if err := d.cacheQueue.Do(c, func(c context.Context) {
+			if err := d.SetCacheArt(c, cacheData, cacheTime); err != nil {
+				log.SugarWithContext(c).Errorf("d.SetCacheArt Err(%#+v)", err)
+			}
+		}); err != nil {
+			log.SugarWithContext(c).Errorf("d.cacheQueue.Do Err(%#+v)", err)
+		}
 	}
 
 	return res, errors.WithStack(err)
 }
 
-//DB创建文章+metas
-func (d *Dao) CreateArtMetas(c context.Context, art *model.Article, metas *model.Metas) (id int64, err error) {
-	db := d.db
+//DB创建文章+metas+tags中间表维护
+func (d *Dao) CreateArtMetas(c context.Context, art *model.Article, metas *model.Metas) (int64, error) {
+	var (
+		db         = d.db
+		tagNameStr = ""
+		tags       = []*model.Tag{}
+		err        error
+	)
 	art.Id = 0 //Omit ID Column
+
 	tx := db.Begin()
+
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			if perr := recover(); perr != nil {
+				tx.Rollback()
+				panic(perr) //这里panic应该往上层抛出
+			}
+			tx.Commit()
+		}
+	}()
+
+	//1、找出tag
+	if len(art.Tags) > 0 {
+		if tags, tagNameStr, err = d.extractTagFromIdStr(art.Tags); err != nil {
+			return art.Id, err
+		}
+		art.Tags = tagNameStr
+	}
+	//2、添加文章
 	if err = tx.Create(&art).Error; err != nil {
-		tx.Rollback()
 		return art.Id, errors.WithStack(err)
 	}
 	metas.ArticleId = art.Id
 	metas.Sn = art.Sn
+	//3、添加metas
 	if err = tx.Create(metas).Error; err != nil {
-		tx.Rollback()
 		return art.Id, errors.WithStack(err)
 	}
-	tx.Commit()
+	//4、维护article_tag中间表
+	if len(tagNameStr) > 0 {
+		if err = d.updateRelationArtTag(art.Id, tags, tx); err != nil {
+			return art.Id, err
+		}
+	}
 
 	return art.Id, nil
 }
 
-//更新时查找更新的文章是否存在
-func (d *Dao) CheckArtExist(art *model.Article) (bool, error) {
-	res := new(model.Article)
-	if err := d.db.Table("mc_article").Where("id=?", art.Id).First(&res).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return false, nil
+func (d *Dao) extractTagFromIdStr(tagIdStr string) ([]*model.Tag, string, error) {
+	tagIds := []int64{}
+	res := []*model.Tag{}
+	tagNameSlice := []string{}
+	uniqueMaps := make(map[int]bool)
+	for _, v := range strings.Split(tagIdStr, ",") {
+		tagId, err := strconv.Atoi(v)
+		if err != nil {
+			return nil, "", errors.Wrap(ecode.RequestErr, "tag错误："+err.Error())
 		}
-		return false, errors.WithStack(err)
+		if uniqueMaps[tagId] {
+			continue
+		}
+		uniqueMaps[tagId] = true
+		tagIds = append(tagIds, int64(tagId))
+	}
+	for _, tagId := range tagIds {
+		t := &model.Tag{}
+		if err := d.db.Table("mc_tag").Where("id = ?", tagId).First(&t).Error; err != nil {
+			return nil, "", errors.Wrap(ecode.RequestErr, "tag错误："+err.Error())
+		}
+		res = append(res, t)
+		tagNameSlice = append(tagNameSlice, t.Name)
+	}
+	return res, strings.Join(tagNameSlice, ","), nil
+}
+
+func (d *Dao) updateRelationArtTag(artId int64, tags []*model.Tag, tx *gorm.DB) error {
+	if tx == nil {
+		return errors.New("tx can not be nil")
+	}
+	var err error
+	//带tx参数的函数不要再开事务了，因为这个是被调用者，强行开会 can't start transaction
+	//defer func() {
+	//	if err != nil {
+	//		tx.Rollback()
+	//	} else {
+	//		if perr := recover(); perr != nil {
+	//			tx.Rollback()
+	//			panic(perr)
+	//		}
+	//		tx.Commit()
+	//	}
+	//}()
+
+	//更新中间表，先delete再insert，由于是更新关联，接Exec硬删除即可
+	if err = tx.Exec("DELETE FROM mc_article_tag Where article_id=?", artId).Error; err != nil {
+		return errors.WithStack(err)
 	}
 
-	return true, nil
+	for _, tag := range tags {
+		if err = tx.Table("mc_article_tag").Create(&model.ArticleTag{ArticleId: artId,
+			TagId: tag.Id, TagName: tag.Name}).Error; err != nil {
+			return errors.WithStack(err)
+		}
+	}
+	return nil
 }
 
 //DB修改文章+metas
 func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model.Metas) (id int64, err error) {
-	b, err := d.CheckArtExist(art)
+	b, err := d.CheckExist("mc_article", "id = ?", art.Id)
 	if err != nil {
 		return art.Id, err
 	}
 	if !b {
 		return art.Id, ecode.NothingFound
 	}
+
 	tx := d.db.Begin()
+	defer func() {
+		if err != nil {
+			tx.Rollback()
+		} else {
+			if perr := recover(); perr != nil {
+				tx.Rollback()
+				panic(perr)
+			}
+			tx.Commit()
+		}
+	}()
+
 	if err = tx.Table("mc_metas").Where("article_id=?", metas.ArticleId).Update(map[string]interface{}{
 		"view_count": metas.ViewCount,
 		"cm_count":   metas.CmCount,
 		"laud_count": metas.LaudCount,
 	}).Error; err != nil {
-		tx.Rollback()
 		return art.Id, errors.WithStack(err)
 	}
+	if len(art.Tags) > 0 {
+		var (
+			tags = []*model.Tag{}
+			err  error
+		)
+		if tags, _, err = d.extractTagFromIdStr(art.Tags); err != nil {
+			return art.Id, err
+		}
+		if err := d.updateRelationArtTag(art.Id, tags, tx); err != nil {
+			return art.Id, err
+		}
+	}
+
 	ArtMaps := map[string]interface{}{
 		"title":   art.Title,
 		"tags":    art.Tags,
@@ -190,10 +295,8 @@ func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model
 	}
 
 	if err = tx.Table("mc_article").Where("id=?", art.Id).Update(ArtMaps).Error; err != nil {
-		tx.Rollback()
 		return art.Id, errors.WithStack(err)
 	}
-	tx.Commit()
 	return art.Id, nil
 }
 
@@ -205,10 +308,15 @@ func (d *Dao) DelArtMetas(c context.Context, id int64, physical bool) error {
 	}
 	var err error
 	tx := db.Begin()
+
 	defer func() {
-		if pe := recover(); pe != nil || err != nil {
+		if err != nil {
 			tx.Rollback()
 		} else {
+			if perr := recover(); perr != nil {
+				tx.Rollback()
+				panic(perr) //这里panic应该往上层抛出
+			}
 			tx.Commit()
 		}
 	}()
@@ -241,21 +349,40 @@ func (d *Dao) DelArtMetas(c context.Context, id int64, physical bool) error {
 	return nil
 }
 
-//刷新文章缓存，metas缓存、ES数据
-func (d *Dao) SetArtMetasCacheAndEs(c context.Context, artId int64) error {
+//刷新文章tags冗余字段、文章缓存，metas缓存、ES数据
+func (d *Dao) RefreshArt(c context.Context, artId int64) error {
 	art := new(model.Article)
-	db := d.db
-	if err := db.Where("id = ?", artId).First(art).Error; err != nil {
+	if err := d.db.Where("id = ?", artId).First(art).Error; err != nil {
 		return errors.WithStack(err)
 	}
+	tags, err := d.GetArtTagsFromDB(c, artId)
+	if err != nil {
+		return err
+	}
+	art.Tags = model.BuildArtTagStr(tags)
+	if err := d.db.Table("mc_article").Where("id=?", art.Id).Update(map[string]interface{}{
+		"tags": art.Tags,
+	}).Error; err != nil {
+		return err
+	}
+
 	if err := d.SetCacheArt(c, art, 0); err != nil {
 		return err
 	}
-	metas, _ := d.GetMetasFromDB(c, art.Sn)
+	metas, err := d.GetMetasFromDB(c, art.Sn)
+	if err != nil {
+		return err
+	}
 	if _, err := d.EsPutArtMetas(c, art, metas); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (d *Dao) GetArtTagsFromDB(c context.Context, artId int64) ([]*model.ArticleTag, error) {
+	res := make([]*model.ArticleTag, 0)
+	err := d.db.Table("mc_article_tag").Where("article_id =?", artId).Find(&res).Error
+	return res, errors.WithStack(err)
 }
 
 func (d *Dao) GetArtFromDB(c context.Context, sn string) (res *model.Article, err error) {
@@ -283,4 +410,15 @@ func (d *Dao) GetMetasFromDB(c context.Context, sn string) (res *model.Metas, er
 	}
 	err = errors.WithStack(err)
 	return
+}
+
+//异步累加metas
+func (d *Dao) AddMetasCount(c context.Context, sn string, field string) {
+	if err := d.cacheQueue.Do(c, func(c context.Context) {
+		if err := d.IncCacheMetas(c, sn, field); err != nil {
+			log.SugarWithContext(c).Warnf("AddMetasCount.IncCacheMetas Err(%#v)", err)
+		}
+	}); err != nil {
+		log.SugarWithContext(c).Warnf("d.AddMetasCount Err(%#v)", err)
+	}
 }

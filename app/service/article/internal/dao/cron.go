@@ -45,9 +45,11 @@ func (d *Dao) CronStart(c context.Context) (close func()) {
 					}
 					select {
 					case <-t.C:
-						d.jobQueue.Do(c, func(ctx context.Context) {
+						if err := d.jobQueue.Do(c, func(c context.Context) {
 							v.Run(d)
-						})
+						}); err != nil {
+							log.SugarWithContext(nil).Warnf("d.jobQueue.Doerr:(%#+v)", err)
+						}
 					}
 				}
 			})
@@ -84,11 +86,13 @@ func (d *Dao) MetasSync() {
 		}
 
 		//DB
-		d.db.Table("mc_metas").Where("article_id=?", metas.ArticleId).Update(map[string]int64{
+		if err := d.db.Table("mc_metas").Where("article_id=?", metas.ArticleId).Update(map[string]int64{
 			"view_count": metas.ViewCount,
 			"cm_count":   metas.CmCount,
 			"laud_count": metas.LaudCount,
-		})
+		}).Error; err != nil {
+			log.SugarWithContext(nil).Errorf("d.MetasSync Err(%#v)", err)
+		}
 
 		bulkRequest.Add(elastic.NewBulkUpdateRequest().Doc(map[string]int64{
 			"view_count": metas.ViewCount,

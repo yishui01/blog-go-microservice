@@ -10,7 +10,7 @@ import (
 )
 
 type Article struct {
-	Id        int64     `gorm:"primary_key";json:"_"`
+	Id        int64     `gorm:"primary_key"`
 	Sn        string    `json:"sn"`
 	Title     string    `json:"title"`
 	Tags      string    `json:"tags"`
@@ -24,7 +24,7 @@ type Article struct {
 
 //从ES查出来后解析json到结构体用的
 type EsArticle struct {
-	Id        int64     `gorm:"primary_key";json:"_"`
+	Id        int64     `gorm:"primary_key"`
 	Sn        string    `json:"sn"`
 	Title     string    `json:"title"`
 	Tags      []string  `json:"tags"`

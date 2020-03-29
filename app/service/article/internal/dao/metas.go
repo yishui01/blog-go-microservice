@@ -34,7 +34,7 @@ func (d *Dao) GetMetasBySn(c context.Context, sn string) (res *model.Metas, err 
 		cacheTime = utils.TimeHourSecond
 	}
 	if addCache {
-		d.cacheQueue.Do(c, func(ctx context.Context) {
+		d.cacheQueue.Do(c, func(c context.Context) {
 			d.SetCacheMetas(c, cacheData, cacheTime)
 		})
 	}

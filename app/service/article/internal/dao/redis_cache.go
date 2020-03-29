@@ -5,14 +5,16 @@ import (
 	"context"
 	"github.com/gomodule/redigo/redis"
 	"github.com/pkg/errors"
+	"github.com/zuiqiangqishao/framework/pkg/ecode"
+	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/utils"
 	"strings"
 )
 
 const ART_PREFIX = "art_"
-const TAG_PREFIX = "tag_"
-
 const META_PREFIX = "meta_"
+
+const TAG_ALL_KEY = "tag_all"
 
 /***********************  文章缓存   *********************************/
 func (d *Dao) GetCacheArticle(c context.Context, sn string) (*model.Article, error) {
@@ -28,8 +30,9 @@ func (d *Dao) GetCacheArticle(c context.Context, sn string) (*model.Article, err
 	}
 
 	art := new(model.Article)
-	if err = utils.JsonUnmarshal(reply, art); err != nil {
-		return nil, errors.Wrap(err, "GetCacheArticle err")
+	if err = utils.JsonUnmarshal(reply, art); err != nil { //缓存没挂，log真实err，返回固定err让上层知道缓存没挂
+		log.SugarWithContext(c).Errorf("d.GetCacheArticle sn:(%s),reply:(#%v),err:(%#+v)", sn, reply, errors.WithStack(err))
+		return nil, ecode.JsonErr
 	}
 
 	return art, nil
@@ -134,6 +137,38 @@ func (d *Dao) DelCacheMetas(c context.Context, sn string) error {
 	defer conn.Close()
 	_, err := conn.Do("DEL", MetasCacheKey(sn))
 	return errors.Wrap(err, "DelMetas DEL err")
+}
+
+/***************************  Tag缓存  ********************************************/
+func (d *Dao) GetAllTagCache(c context.Context) ([]*model.Tag, error) {
+	conn := d.redis.Get()
+	defer conn.Close()
+	reply, err := redis.Bytes(conn.Do("GET", TAG_ALL_KEY))
+	if err != nil {
+		if err == redis.ErrNil {
+			return nil, nil
+		}
+		return nil, errors.Wrap(err, "GetAllTagCache GET err")
+	}
+
+	var res []*model.Tag
+	if err = utils.JsonUnmarshal(reply, &res); err != nil {
+		log.SugarWithContext(c).Errorf("d.GetAllTagCache sn:(%s),reply:(#%v),err:(%#+v)", reply, errors.WithStack(err))
+		return nil, ecode.JsonErr
+	}
+
+	return res, nil
+}
+
+func (d *Dao) SetAllTagCache(c context.Context, tags []*model.Tag) error {
+	conn := d.redis.Get()
+	defer conn.Close()
+	data, err := utils.JsonMarshal(tags)
+	if err != nil {
+		return errors.WithStack(err)
+	}
+	_, err = conn.Do("SET", TAG_ALL_KEY, data)
+	return errors.WithStack(err)
 }
 
 func ArtCacheKey(sn string) string {

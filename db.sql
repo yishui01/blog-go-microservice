@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS `mc_article` (
   UNIQUE KEY `sn` (`sn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文章表';
 
+
 CREATE TABLE IF NOT EXISTS `mc_metas` (
   `article_id` int(10) unsigned NOT NULL DEFAULT 0 COMMENT '文章ID',
   `sn`  varchar(32) NOT NULL DEFAULT '' COMMENT '冗余字段',
@@ -30,3 +31,23 @@ CREATE TABLE IF NOT EXISTS `mc_metas` (
   PRIMARY KEY (`article_id`),
   UNIQUE KEY `sn` (`sn`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文章扩展表';
+
+
+CREATE TABLE IF NOT EXISTS `mc_tag`(
+    `id` mediumint unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `name` varchar(30) NOT NULL,
+    `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` timestamp DEFAULT NULL COMMENT '删除时间，软删除',
+    PRIMARY KEY (`id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文章tags表';
+
+
+CREATE TABLE IF NOT EXISTS `mc_article_tag`(
+    `article_id` int unsigned NOT NULL,
+    `tag_id` int unsigned NOT NULL,
+    `tag_name` varchar (30) NOT NULL COMMENT '冗余字段',
+    CONSTRAINT article_tag_id  FOREIGN KEY (article_id) references mc_article(id) on DELETE CASCADE on update CASCADE,
+     `deleted_at` timestamp DEFAULT NULL COMMENT '删除时间，软删除',
+     KEY (`article_id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '文章-tag关联表';

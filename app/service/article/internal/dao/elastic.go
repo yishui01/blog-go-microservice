@@ -80,7 +80,7 @@ func (d *Dao) EsSearchArtMetas(ctx context.Context, req *model.ArtQueryReq) (*el
 
 //更新整个文档
 func (d *Dao) EsPutArtMetas(ctx context.Context, art *model.Article, metas *model.Metas) (*elastic.IndexResponse, error) {
-	exists, err := d.es.IndexExists(model.ART_ES_INDEX).Do(ctx)
+	exists, err := d.es.IndexExists(model.ART_ES_INDEX).Do(ctx) //这里传ctx进来为什么会cancel？
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -97,7 +97,7 @@ func (d *Dao) EsPutArtMetas(ctx context.Context, art *model.Article, metas *mode
 	}
 
 	resp, err := d.es.Index().Index(model.ART_ES_INDEX).
-		Id(strconv.Itoa(int(art.Id))).BodyJson(model.ArtToEsMap(ctx, art, metas)).Do(ctx)
+		Id(strconv.Itoa(int(art.Id))).BodyJson(model.ArtToEsMap(ctx, art, metas)).Do(context.TODO())
 
 	if err != nil {
 		return resp, errors.WithStack(err)

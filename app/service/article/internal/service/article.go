@@ -157,21 +157,21 @@ func AssignSave(req *pb.SaveArtReq) (*model.Article, *model.Metas) {
 }
 
 //创建文章
-func (s *Service) CreateArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveArtResp, error) {
+func (s *Service) CreateArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveResp, error) {
 	return s.SaveArt(ctx, req, false)
 }
 
 //修改文章
-func (s *Service) UpdateArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveArtResp, error) {
+func (s *Service) UpdateArt(ctx context.Context, req *pb.SaveArtReq) (*pb.SaveResp, error) {
 	return s.SaveArt(ctx, req, true)
 }
 
-func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool) (*pb.SaveArtResp, error) {
+func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool) (*pb.SaveResp, error) {
 	var (
 		err   error
 		artId int64
 	)
-	var reply = new(pb.SaveArtResp)
+	var reply = new(pb.SaveResp)
 
 	art, metas := AssignSave(req)
 	if isUpdate {
@@ -180,15 +180,18 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool
 		artId, err = s.dao.CreateArtMetas(ctx, art, metas)
 	}
 	if err != nil {
+		if ecode.EqualError(ecode.RequestErr, err) {
+			return reply, ecode.Error(ecode.RequestErr, err.Error())
+		}
 		if ecode.EqualError(ecode.NothingFound, err) {
 			return reply, ecode.NothingFound
 		}
 		log.SugarWithContext(ctx).Errorf("s.dao.SaveArt art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
-		return nil, ecode.Error(ecode.ServerErr, "save err")
+		return nil, ecode.Error(ecode.ServerErr, err.Error())
 	}
 	reply.Data = strconv.FormatInt(artId, 10)
 
-	err = s.dao.SetArtMetasCacheAndEs(ctx, art.Id)
+	err = s.dao.RefreshArt(ctx, art.Id)
 	reply.Data = strconv.FormatInt(artId, 10)
 	if err != nil {
 		log.SugarWithContext(ctx).Errorf("s.dao.SetArtCache art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
@@ -199,8 +202,8 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool
 }
 
 //删除文章
-func (s *Service) DeleteArt(ctx context.Context, req *pb.DelArtRequest) (*pb.SaveArtResp, error) {
-	res := new(pb.SaveArtResp)
+func (s *Service) DeleteArt(ctx context.Context, req *pb.DelArtRequest) (*pb.SaveResp, error) {
+	res := new(pb.SaveResp)
 	var err error
 	if err := s.dao.DelArtMetas(ctx, req.Id, req.Physical); err != nil {
 		log.SugarWithContext(ctx).Errorf("Service s.dao.DelArt req:(%#+v), Err:(%+v)", req, err)

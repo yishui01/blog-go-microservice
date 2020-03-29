@@ -6,6 +6,7 @@ import "google/api/annotations.proto";
 
 package article.service.v1;
 
+
 //文章列表
 message ArtListRequest {
      int64 pageNum = 1;
@@ -49,7 +50,6 @@ message ArtDetailResp {
     int64 laud_count = 14;
 }
 
-
 //添加/修改文章
 message SaveArtReq {
     int64  id      = 1;
@@ -66,18 +66,56 @@ message SaveArtReq {
     int64 laud_count = 14;
 }
 
-message SaveArtResp {
-    int64 status      = 1;
+//公共save/delete 响应
+message SaveResp {
+    int64  status     = 1;
     string data       = 2;
     string msg        = 3;
 }
-
 
 //删除文章
 message DelArtRequest {
     int64 id = 1 [(gogoproto.moretags) = 'validate:"required"'];
     bool   physical = 2; //是否为物理删除，false为软删除
 }
+
+
+
+
+
+//Tag列表请求
+message TagListReq {
+    string keyword = 1;
+}
+//Tag列表响应
+message TagListResp {
+    repeated TagDetailResp lists = 1;
+}
+//单个Tag请求
+message TagDetailReq {
+    int64 id = 1 [(gogoproto.moretags) = 'validate:"required"'];
+}
+//单个Tag响应
+message TagDetailResp {
+    int64  id = 1;
+    string name = 2;
+    int64  created_at = 3;
+    int64  updated_at = 4;
+    int64  deleted_at = 5;
+}
+//添加/修改Tag请求
+message SaveTagReq {
+    int64  id      = 1 [(gogoproto.moretags) = 'validate:"min=0"'];
+    string name    = 2 [(gogoproto.moretags) = 'validate:"required"'];
+    int64  created_at = 3 [(gogoproto.moretags) = 'validate:"min=0"'];
+    int64  updated_at = 4 [(gogoproto.moretags) = 'validate:"min=0"'];
+}
+//删除Tag请求
+message DelTagReq {
+    int64 id = 1 [(gogoproto.moretags) = 'validate:"required"'];
+    bool   physical = 2; //是否为物理删除，false为软删除
+}
+
 
 
 
@@ -94,21 +132,50 @@ service Article {
             get:"/article/sn/{sn}"
         };
     };
-    rpc CreateArt(SaveArtReq) returns (SaveArtResp){
+    rpc CreateArt(SaveArtReq) returns (SaveResp){
         option(google.api.http) = {
             post:"/article/create"
             body:"*"
         };
     };
-    rpc UpdateArt(SaveArtReq) returns (SaveArtResp){
+    rpc UpdateArt(SaveArtReq) returns (SaveResp){
         option(google.api.http) = {
             post:"/article/update"
             body:"*"
         };
     };
-    rpc DeleteArt(DelArtRequest) returns (SaveArtResp){
+    rpc DeleteArt(DelArtRequest) returns (SaveResp){
         option(google.api.http) = {
             post:"/article/id/{id}/physical/{physical}"
         };
     };
+
+
+
+    rpc TagList(TagListReq)returns(TagListResp){
+        option(google.api.http) = {
+            get:"/tag/{keyword}"
+        };
+    }
+
+    rpc CreateTag(SaveTagReq) returns (SaveResp){
+        option(google.api.http) = {
+            post:"/tag/create"
+            body:"*"
+        };
+    };
+    rpc UpdateTag(SaveTagReq) returns (SaveResp){
+        option(google.api.http) = {
+            post:"/tag/update"
+            body:"*"
+        };
+    };
+    rpc DeleteTag(DelTagReq) returns (SaveResp){
+        option(google.api.http) = {
+            post:"/tag/id/{id}/physical/{physical}"
+        };
+    };
+
+
+
 }

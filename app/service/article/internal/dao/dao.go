@@ -5,6 +5,7 @@ import (
 	xredis "github.com/gomodule/redigo/redis"
 	"github.com/jinzhu/gorm"
 	"github.com/olivere/elastic/v7"
+	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/db/db"
 	"github.com/zuiqiangqishao/framework/pkg/db/es"
 	"github.com/zuiqiangqishao/framework/pkg/db/redis"
@@ -62,4 +63,12 @@ func NewDB() *gorm.DB {
 
 func NewESClient() *elastic.Client {
 	return es.New(nil)
+}
+
+func (d *Dao) CheckExist(tableName string, query interface{}, args ...interface{}) (bool, error) {
+	count := 0
+	if err := d.db.Table(tableName).Where(query, args...).Count(&count).Error; err != nil {
+		return false, errors.WithStack(err)
+	}
+	return count > 0, nil
 }
