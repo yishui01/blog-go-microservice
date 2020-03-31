@@ -16,7 +16,7 @@ import (
 var _cron = Cron{}
 
 var _defaultJobs = []CommJob{
-	{Name: "metasSync", Time: time.Second, Run: (*Dao).MetasSync},
+	{Name: "metasSync", Time: time.Hour, Run: (*Dao).MetasSync},
 }
 
 type CommJob struct {
