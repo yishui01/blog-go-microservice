@@ -6,6 +6,7 @@ import (
 	"blog-go-microservice/app/service/article/internal/model"
 	"context"
 	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/sync/errgroup"
@@ -38,9 +39,13 @@ func (s *Service) ArtList(ctx context.Context, listReq *pb.ArtListRequest) (*pb.
 	query.CreatedAt = listReq.CreatedAt
 	query.UpdatedAt = listReq.UpdatedAt
 	query.Unscoped = listReq.Unscoped
+	query.Terms = listReq.Terms
 	esArtList, err := s.dao.ArtMetasList(ctx, query)
 	reply := new(pb.ArtListResp)
 	if err != nil {
+		if _, ok := errors.Cause(err).(ecode.Codes); ok {
+			return nil, err
+		}
 		log.SugarWithContext(ctx).Errorf("s.dao.ArtList Query(%#+v),  Err:(%#+v)", query, err)
 		return reply, ecode.ServerErr
 	}
@@ -103,7 +108,9 @@ func (s *Service) GetArtBySn(ctx context.Context, artReq *pb.ArtDetailRequest) (
 		}
 		return nil
 	})
-	s.dao.AddMetasCount(ctx, artReq.Sn, model.ViewRedisKey)
+	if se := s.dao.AddMetasCount(ctx, artReq.Sn, model.ViewRedisKey); se != nil {
+		log.SugarWithContext(ctx).Warnf("d.AddMetasCount Err(%#v)", se)
+	}
 	if err := g.Wait(); err != nil {
 		log.SugarWithContext(ctx).Errorf("s.dao.GetMetasBySn wait Err artReq：(%#+v),Err:(%s)", artReq, err.Error())
 		return nil, ecode.ServerErr

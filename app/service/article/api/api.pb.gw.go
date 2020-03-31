@@ -32,7 +32,7 @@ var _ = utilities.NewDoubleArray
 var _ = descriptor.ForMessage
 
 var (
-	filter_Article_ArtList_0 = &utilities.DoubleArray{Encoding: map[string]int{"pageNum": 0, "pageSize": 1, "keyword": 2, "tags": 3, "status": 4, "order": 5, "unscoped": 6}, Base: []int{1, 1, 2, 3, 4, 5, 6, 7, 0, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8}}
+	filter_Article_ArtList_0 = &utilities.DoubleArray{Encoding: map[string]int{"pageNum": 0, "pageSize": 1, "keyword": 2, "tags": 3, "status": 4, "order": 5, "unscoped": 6, "terms": 7}, Base: []int{1, 1, 2, 3, 4, 5, 6, 7, 8, 0, 0, 0, 0, 0, 0, 0, 0}, Check: []int{0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 3, 4, 5, 6, 7, 8, 9}}
 )
 
 func request_Article_ArtList_0(ctx context.Context, marshaler runtime.Marshaler, client ArticleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
@@ -121,6 +121,17 @@ func request_Article_ArtList_0(ctx context.Context, marshaler runtime.Marshaler,
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "unscoped", err)
+	}
+
+	val, ok = pathParams["terms"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "terms")
+	}
+
+	protoReq.Terms, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "terms", err)
 	}
 
 	if err := req.ParseForm(); err != nil {
@@ -221,6 +232,17 @@ func local_request_Article_ArtList_0(ctx context.Context, marshaler runtime.Mars
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "unscoped", err)
+	}
+
+	val, ok = pathParams["terms"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "terms")
+	}
+
+	protoReq.Terms, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "terms", err)
 	}
 
 	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_Article_ArtList_0); err != nil {
@@ -1038,7 +1060,7 @@ func RegisterArticleHandlerClient(ctx context.Context, mux *runtime.ServeMux, cl
 }
 
 var (
-	pattern_Article_ArtList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 8, 2, 9, 1, 0, 4, 1, 5, 9}, []string{"article", "pagenum", "pageNum", "pagesize", "pageSize", "keyword", "tags", "status", "order", "unscoped"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_Article_ArtList_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 2, 3, 1, 0, 4, 1, 5, 4, 2, 5, 1, 0, 4, 1, 5, 5, 2, 6, 1, 0, 4, 1, 5, 6, 2, 7, 1, 0, 4, 1, 5, 7, 2, 8, 1, 0, 4, 1, 5, 8, 2, 9, 1, 0, 4, 1, 5, 9, 2, 10, 1, 0, 4, 1, 5, 10}, []string{"article", "pagenum", "pageNum", "pagesize", "pageSize", "keyword", "tags", "status", "order", "unscoped", "terms"}, "", runtime.AssumeColonVerbOpt(true)))
 
 	pattern_Article_GetArtBySn_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 1}, []string{"article", "sn"}, "", runtime.AssumeColonVerbOpt(true)))
 

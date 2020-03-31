@@ -59,11 +59,11 @@
 
 [db]
     driver = "mysql"
-	dsn = "root:123456@tcp(192.168.136.109:3306)/blog?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
+	dsn = "root:123456@tcp(192.168.136.109:3306)/test_blog?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
 	active = 500
 	idle = 10
 	idleTimeout =24 #hour
-	logMode = true
+	logMode = false
 	sTable = true  #SingularTable  如果设置为true,`User`的默认表名为`user`,使用`TableName`设置的表名不受影响
 	tablePrefix="mc_"
 

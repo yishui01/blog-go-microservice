@@ -3,10 +3,12 @@ package dao
 import (
 	"blog-go-microservice/app/service/article/internal/model"
 	"context"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
+	"strconv"
 )
 
 //查询Tag，一次性取出
@@ -73,9 +75,9 @@ func (d *Dao) UpdateTag(c context.Context, tag *model.Tag) (tagId int64, err err
 	}
 	if _, err := d.GetFirstTagFromDB(c, map[string]interface{}{"id": tag.Id}); err != nil {
 		if gorm.IsRecordNotFoundError(errors.Cause(err)) {
-			return -1, ecode.NothingFound
+			return tag.Id, ecode.NothingFound
 		}
-		return -1, err
+		return tag.Id, err
 	}
 
 	var (
@@ -84,27 +86,15 @@ func (d *Dao) UpdateTag(c context.Context, tag *model.Tag) (tagId int64, err err
 	//看下Tag名是否重复
 	existTag, err = d.CheckExist("mc_tag", "name = ? AND id != ?", tag.Name, tag.Id)
 	if err != nil {
-		return -1, err
+		return tag.Id, err
 	}
 	if existTag {
-		return -1, ecode.UniqueErr
+		return tag.Id, ecode.UniqueErr
 	}
 
 	tx := d.db.Begin()
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		} else {
-			if perr := recover(); perr != nil {
-				tx.Rollback()
-				panic(perr)
-			}
-			err = errors.WithStack(tx.Commit().Error)
-		}
-	}()
 
 	//更新Tag表
-
 	tagMaps := map[string]interface{}{
 		"name": tag.Name,
 	}
@@ -116,32 +106,66 @@ func (d *Dao) UpdateTag(c context.Context, tag *model.Tag) (tagId int64, err err
 	}
 
 	if err = tx.Table("mc_tag").Where("id=?", tag.Id).Update(tagMaps).Error; err != nil {
-		return -1, errors.WithStack(err)
+		tx.Rollback()
+		return tag.Id, errors.WithStack(err)
 	}
 	//更新中间表Name字段
 	if err = tx.Table("mc_article_tag").Where("tag_id = ?", tag.Id).
 		Update("tag_name", tag.Name).Error; err != nil {
-		return -1, errors.WithStack(err)
+		tx.Rollback()
+		return tag.Id, errors.WithStack(err)
 	}
-	//刷新Tag列表缓存
-	if err = d.RefreshTagAllCache(c); err != nil {
-		return -1, err
+
+	//这里要先commit，成功后再刷新缓存，不然刷新缓存的时候，从db里面不能读到未提交的事务
+	if err = tx.Commit().Error; err != nil {
+		return tag.Id, errors.Wrap(err, "d.UpdateTag transaction commit error")
+	}
+
+	/***************************************非事务部分*************************************/
+	//获取关联到的文章ID
+	relateArtIds, err := d.GetRelateArtIds(c, tag.Id)
+	if err != nil {
+		return tag.Id, err
 	}
 
 	//让关联到的文章刷新tag
-	err = d.cacheQueue.Do(c, func(c context.Context) {
-		if err := d.RefreshRelateArt(c, tag.Id); err != nil {
-			log.SugarWithContext(c).Errorf("d.RefreshRelateArt Err(%#+v)", err)
-		}
-	})
+	if err := d.RefreshRelateArt(c, relateArtIds); err != nil {
+		return tag.Id, errors.WithStack(err)
+	}
+
+	//刷新Tag列表缓存
+	if err = d.RefreshTagAllCache(c); err != nil {
+		return tag.Id, err
+	}
 
 	return tag.Id, errors.WithStack(err)
+}
+
+//先找出tag所有的关联的文章id
+func (d *Dao) GetRelateArtIds(c context.Context, tagId int64) (artIds []int64, err error) {
+	rows, err := d.db.Raw("SELECT article_id FROM mc_article_tag WHERE tag_id = ?", tagId).Rows()
+	if err != nil {
+		fmt.Println("8888888888888", err)
+		return nil, errors.WithStack(err)
+	}
+	defer rows.Close()
+	artId := 0
+	relateArtIds := []int64{}
+	for rows.Next() {
+		if err := rows.Scan(&artId); err != nil {
+			return nil, err
+		}
+		if artId > 0 {
+			relateArtIds = append(relateArtIds, int64(artId))
+		}
+	}
+	return relateArtIds, nil
 }
 
 //删除Tag
 func (d *Dao) DeleteTag(c context.Context, tagId int64, physical bool) (err error) {
 	if tagId <= 0 {
-		return nil
+		return errors.Wrap(ecode.RequestErr, "tagId must grater than 0,now is"+strconv.FormatInt(tagId, 10))
 	}
 	db := d.db
 	if physical {
@@ -149,50 +173,48 @@ func (d *Dao) DeleteTag(c context.Context, tagId int64, physical bool) (err erro
 	}
 	tx := db.Begin()
 
-	defer func() {
-		if err != nil {
-			tx.Rollback()
-		} else {
-			if perr := recover(); perr != nil {
-				tx.Rollback()
-				panic(perr)
-			}
-			err = errors.WithStack(tx.Commit().Error)
-		}
-	}()
-
+	//先删除Tag表
 	if err = tx.Where("id=?", tagId).Delete(model.Tag{}).Error; err != nil {
+		tx.Rollback()
 		if err != gorm.ErrRecordNotFound {
 			return errors.WithStack(err)
 		}
 	}
+	//获取关联到的文章ID
+	relateArtIds, err := d.GetRelateArtIds(c, tagId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	//删除中间关联表
 	if err = tx.Table("mc_article_tag").Where("tag_id = ?", tagId).Delete(model.ArticleTag{}).
 		Error; err != nil {
+		tx.Rollback()
 		return errors.WithStack(err)
 	}
 
+	//这里要先commit，成功后再刷新缓存，不然刷新缓存的时候，从db里面不能读到未提交的事务
+	if err = tx.Commit().Error; err != nil {
+		return errors.Wrap(err, "d.DeleteTag transaction commit error")
+	}
+
+	/********************************非事务部分*****************************************/
+	//刷新文章冗余tag字段就不走事务了，走事务调用链太长，报错了直接看log手动调整
+	if err := d.RefreshRelateArt(c, relateArtIds); err != nil {
+		return err
+	}
 	if err = d.RefreshTagAllCache(c); err != nil {
 		return err
 	}
-	//让关联到的文章刷新tag
-	err = d.cacheQueue.Do(c, func(c context.Context) {
-		if err := d.RefreshRelateArt(c, tagId); err != nil {
-			log.SugarWithContext(c).Errorf("d.RefreshRelateArt Err(%#+v)", err)
-		}
-	})
 
 	return errors.WithStack(err)
 }
 
 //刷新文章表对应的tag字段
-func (d *Dao) RefreshRelateArt(c context.Context, tagId int64) error {
-	artTag := make([]*model.ArticleTag, 0)
-	if err := d.db.Table("mc_article_tag").Select("article_id").
-		Where("tag_id = ?", tagId).Find(&artTag).Error; err != nil {
-		return err
-	}
-	for _, v := range artTag {
-		if err := d.RefreshArt(c, v.ArticleId); err != nil {
+func (d *Dao) RefreshRelateArt(c context.Context, ArtIds []int64) error {
+	for _, v := range ArtIds {
+		if err := d.RefreshArt(c, v); err != nil {
 			return err
 		}
 	}

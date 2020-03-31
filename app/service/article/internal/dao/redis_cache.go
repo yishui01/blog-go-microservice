@@ -8,6 +8,7 @@ import (
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/utils"
+	etcdlock "github.com/zuiqiangqishao/framework/pkg/utils/lock/etcd"
 	"strings"
 )
 
@@ -111,24 +112,46 @@ func (d *Dao) SetCacheMetas(c context.Context, metas *model.Metas, timeS int) er
 func (d *Dao) IncCacheMetas(c context.Context, sn string, field string) error {
 	conn := d.redis.Get()
 	defer conn.Close()
-	//先看有没有
-	e, err := redis.Int(conn.Do("exists", MetasCacheKey(sn)))
-	if err != nil {
-		return errors.Wrap(err, "AddMetas exisis Err")
-	}
-	if e == 0 {
-		//todo 没有缓存，去查mysql，mysql有被打穿的风险，可引入消息队列或分布式锁
-		metas, _ := d.GetMetasFromDB(c, sn)
-		t := 0
-		if metas == nil {
-			metas = new(model.Metas)
-			t = utils.TimeHourSecond
+	for i := 0; i < 5; i++ {
+		//先看有没有
+		e, err := redis.Int(conn.Do("exists", MetasCacheKey(sn)))
+		if err != nil {
+			return errors.Wrap(err, "AddMetas exisis Err")
 		}
-		if err = d.SetCacheMetas(c, metas, t); err != nil {
-			return err
+		if e == 0 {
+			//没有就抢锁
+			key := model.IncLockKey(sn)
+			lockTTL := 5    //锁持续时间 s
+			sleepTTL := 300 //锁争抢失败持续，睡眠时间
+			m, err := etcdlock.DistributeTryLock(c, key, lockTTL, sleepTTL)
+
+			if err != nil { //etcd server 挂了
+				log.SugarWithContext(c).Errorf("etcdlock.DistributeTryLock ERR:(%#+v),sn:(%#v)", err, sn)
+				break
+			}
+
+			if m == nil {
+				continue
+			}
+
+			//lock success
+			defer m.Release(c)
+			break
+		} else {
+			_, err := conn.Do("HINCRBY", MetasCacheKey(sn), field, 1)
+			return errors.Wrap(err, "AddMetas HINCRBY Err")
 		}
 	}
-	_, err = conn.Do("HINCRBY", MetasCacheKey(sn), field, 1)
+	metas, _ := d.GetMetasFromDB(c, "sn=?", sn)
+	t := 0
+	if metas == nil {
+		metas = new(model.Metas)
+		t = utils.TimeHourSecond
+	}
+	if err := d.SetCacheMetas(c, metas, t); err != nil {
+		return err
+	}
+	_, err := conn.Do("HINCRBY", MetasCacheKey(sn), field, 1)
 	return errors.Wrap(err, "AddMetas HINCRBY Err")
 }
 

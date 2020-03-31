@@ -22,6 +22,8 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/mitchellh/mapstructure v1.1.2 // indirect
 	github.com/olivere/elastic/v7 v7.0.12
+	github.com/onsi/ginkgo v1.12.0
+	github.com/onsi/gomega v1.9.0
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/prashantv/gostub v1.0.0

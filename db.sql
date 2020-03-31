@@ -1,8 +1,4 @@
 
-CREATE DATABASE IF NOT EXISTS `micro_blog` DEFAULT CHARACTER SET utf8mb4;
-
-USE `blog`;
-
 CREATE TABLE IF NOT EXISTS `mc_article` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
   `sn` varchar(32) NOT NULL DEFAULT '' COMMENT '文章序号，程序生成',

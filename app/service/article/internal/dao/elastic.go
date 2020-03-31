@@ -5,11 +5,24 @@ import (
 	"context"
 	"github.com/olivere/elastic/v7"
 	"github.com/pkg/errors"
+	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"go.uber.org/zap"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
+)
+
+var (
+	ascReg   = regexp.MustCompile(`^(.+)\|(asc|desc)$`)
+	orderKey = map[string]bool{
+		"created_at": true,
+		"updated_at": true,
+		"view_count": true,
+		"cm_count":   true,
+		"laud_count": true,
+	}
 )
 
 //查询ES中的文章数据
@@ -23,9 +36,11 @@ func (d *Dao) EsSearchArtMetas(ctx context.Context, req *model.ArtQueryReq) (*el
 		query = query.Must(keyWordQuery)
 	}
 	if req.Tags != "" {
-		tags := make([]interface{}, len(req.Tags))
-		for k, v := range strings.Split(req.Tags, ",") {
-			tags[k] = v
+		tags := make([]interface{}, 0)
+		for _, v := range strings.Split(req.Tags, ",") {
+			if strings.Trim(v, " ") != "" {
+				tags = append(tags, v)
+			}
 		}
 		q := elastic.NewTermsQuery("tags", tags...)
 		query = query.Filter(q)
@@ -34,6 +49,18 @@ func (d *Dao) EsSearchArtMetas(ctx context.Context, req *model.ArtQueryReq) (*el
 	if req.Status != -1 {
 		q := elastic.NewTermsQuery("status", req.Status)
 		query = query.Filter(q)
+	}
+
+	if req.Terms != "" {
+		ts := strings.Split(req.Terms, ",")
+		if len(ts)%2 != 0 {
+			return nil, ecode.Error(ecode.RequestErr, "terms参数个数必须为双数")
+		}
+		for i := 0; i < len(ts); i += 2 {
+			q := elastic.NewTermQuery(ts[i], ts[i+1])
+			query = query.Filter(q)
+		}
+
 	}
 
 	if req.CreatedAt > 0 {
@@ -58,10 +85,16 @@ func (d *Dao) EsSearchArtMetas(ctx context.Context, req *model.ArtQueryReq) (*el
 		From(int((req.PageNum - 1) * int64(req.PageSize))).
 		Size(int(req.PageSize))
 
+	//created_at|desc
 	if req.Order == "" {
 		search.Sort("id", false)
 	} else {
-
+		matchSlice := ascReg.FindStringSubmatch(req.Order)
+		if len(matchSlice) >= 3 && orderKey[matchSlice[1]] && (matchSlice[2] == "asc" || matchSlice[2] == "desc") {
+			search.Sort(matchSlice[1], matchSlice[2] == "asc")
+		} else {
+			search.Sort("id", false)
+		}
 	}
 
 	res, err := search.Do(ctx)
@@ -80,7 +113,7 @@ func (d *Dao) EsSearchArtMetas(ctx context.Context, req *model.ArtQueryReq) (*el
 
 //更新整个文档
 func (d *Dao) EsPutArtMetas(ctx context.Context, art *model.Article, metas *model.Metas) (*elastic.IndexResponse, error) {
-	exists, err := d.es.IndexExists(model.ART_ES_INDEX).Do(ctx) //这里传ctx进来为什么会cancel？
+	exists, err := d.es.IndexExists(model.ART_ES_INDEX).Do(ctx)
 	if err != nil {
 		return nil, errors.WithStack(err)
 	}
@@ -118,7 +151,7 @@ func (d *Dao) EsUpdateArtMetas(ctx context.Context, art *model.Article, metas *m
 		return nil, errors.New("not set invalid ID")
 	}
 	resp, err := d.es.Update().Index(model.ART_ES_INDEX).Id(strconv.FormatInt(id, 10)).
-		Upsert(model.ArtToEsMap(ctx, art, metas)).Do(ctx)
+		Doc(model.ArtToEsMap(ctx, art, metas)).Do(ctx)
 	if err != nil {
 		return resp, errors.WithStack(err)
 	}

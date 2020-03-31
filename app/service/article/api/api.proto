@@ -18,6 +18,7 @@ message ArtListRequest {
      int64 createdAt = 7;
      int64 updatedAt = 8;
      bool unscoped = 9;
+     string terms = 10;
 }
 
 message ArtListResp {
@@ -124,7 +125,7 @@ service Article {
 
     rpc ArtList(ArtListRequest)returns(ArtListResp){
         option(google.api.http) = {
-            get:"/article/pagenum/{pageNum}/pagesize/{pageSize}/keyword/{keyword}/tags/{tags}/status/{status}/order/{order}/unscoped/{unscoped}"
+            get:"/article/pagenum/{pageNum}/pagesize/{pageSize}/keyword/{keyword}/tags/{tags}/status/{status}/order/{order}/unscoped/{unscoped}/terms/{terms}"
         };
     }
     rpc GetArtBySn(ArtDetailRequest) returns (ArtDetailResp){

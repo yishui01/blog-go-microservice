@@ -98,8 +98,7 @@ func (d *Dao) MetasSync() {
 			"view_count": metas.ViewCount,
 			"cm_count":   metas.CmCount,
 			"laud_count": metas.LaudCount,
-		}).
-			Id(strconv.FormatInt(metas.ArticleId, 10)))
+		}).Id(strconv.FormatInt(metas.ArticleId, 10)))
 	}
 
 	//ES

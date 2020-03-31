@@ -109,7 +109,7 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 	//2、已到获取锁最大次数，不再尝试获取
 	//3、cache 挂了
 	//4、etcd server 挂了
-	res, err = d.GetArtFromDB(c, sn)
+	res, err = d.GetArtFromDB(c, "sn=?", sn)
 	if err != nil {
 		cacheData = &model.Article{Id: -1, Sn: sn}
 		cacheTime = utils.TimeHourSecond
@@ -135,9 +135,19 @@ func (d *Dao) CreateArtMetas(c context.Context, art *model.Article, metas *model
 		tags       = []*model.Tag{}
 	)
 	art.Id = 0 //Omit ID Column
+	if metas == nil {
+		metas = new(model.Metas)
+	}
+
+	//1、找出tag
+	if len(art.Tags) > 0 {
+		if tags, tagNameStr, err = d.extractTagFromIdStr(art.Tags); err != nil {
+			return art.Id, err
+		}
+		art.Tags = tagNameStr
+	}
 
 	tx := db.Begin()
-
 	defer func() {
 		if err != nil {
 			tx.Rollback()
@@ -150,13 +160,6 @@ func (d *Dao) CreateArtMetas(c context.Context, art *model.Article, metas *model
 		}
 	}()
 
-	//1、找出tag
-	if len(art.Tags) > 0 {
-		if tags, tagNameStr, err = d.extractTagFromIdStr(art.Tags); err != nil {
-			return art.Id, err
-		}
-		art.Tags = tagNameStr
-	}
 	//2、添加文章
 	if err = tx.Create(&art).Error; err != nil {
 		return art.Id, errors.WithStack(err)
@@ -225,7 +228,7 @@ func (d *Dao) updateRelationArtTag(artId int64, tags []*model.Tag, tx *gorm.DB) 
 	return nil
 }
 
-//DB修改文章+metas
+//DB修改文章+metas+tags
 func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model.Metas) (id int64, err error) {
 	b, err := d.CheckExist("mc_article", "id = ?", art.Id)
 	if err != nil {
@@ -255,12 +258,15 @@ func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model
 	}).Error; err != nil {
 		return art.Id, errors.WithStack(err)
 	}
+
+	var tagNameStr = ""
+
 	if len(art.Tags) > 0 {
 		var (
 			tags = []*model.Tag{}
 			err  error
 		)
-		if tags, _, err = d.extractTagFromIdStr(art.Tags); err != nil {
+		if tags, tagNameStr, err = d.extractTagFromIdStr(art.Tags); err != nil {
 			return art.Id, err
 		}
 		if err := d.updateRelationArtTag(art.Id, tags, tx); err != nil {
@@ -270,7 +276,7 @@ func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model
 
 	ArtMaps := map[string]interface{}{
 		"title":   art.Title,
-		"tags":    art.Tags,
+		"tags":    tagNameStr,
 		"img":     art.Img,
 		"content": art.Content,
 		"status":  art.Status,
@@ -290,6 +296,9 @@ func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model
 
 //删除文章
 func (d *Dao) DelArtMetas(c context.Context, id int64, physical bool) (err error) {
+	if id <= 0 {
+		return errors.New("id is invalid")
+	}
 	db := d.db
 	if physical {
 		db = d.db.Unscoped()
@@ -356,7 +365,7 @@ func (d *Dao) RefreshArt(c context.Context, artId int64) error {
 	if err := d.SetCacheArt(c, art, 0); err != nil {
 		return err
 	}
-	metas, err := d.GetMetasFromDB(c, art.Sn)
+	metas, err := d.GetMetasFromDB(c, "sn = ?", art.Sn)
 	if err != nil {
 		return err
 	}
@@ -372,27 +381,29 @@ func (d *Dao) GetArtTagsFromDB(c context.Context, artId int64) ([]*model.Article
 	return res, errors.WithStack(err)
 }
 
-func (d *Dao) GetArtFromDB(c context.Context, sn string) (res *model.Article, err error) {
-	if err = d.db.Where("sn= ? ", sn).First(&res).Error; err != nil {
+func (d *Dao) GetArtFromDB(c context.Context, query interface{}, args ...interface{}) (res *model.Article, err error) {
+	res = new(model.Article)
+	if err = d.db.Where(query, args...).First(&res).Error; err != nil {
+		res = nil
 		//todo... db err add metrics
 		if err == gorm.ErrRecordNotFound {
 			err = ecode.NothingFound
 		} else {
-			err = fmt.Errorf("DB Select Art Err On GetArtFromDB  sn=(%s),err=(%v)", sn, err)
+			err = fmt.Errorf("DB Select Art Err On GetArtFromDB  query=(%#v), args=(%#v),err=(%v)", query, args, err)
 		}
 	}
 	err = errors.WithStack(err)
 	return
 }
 
-func (d *Dao) GetMetasFromDB(c context.Context, sn string) (res *model.Metas, err error) {
+func (d *Dao) GetMetasFromDB(c context.Context, query interface{}, args ...interface{}) (res *model.Metas, err error) {
 	res = new(model.Metas)
-	if err = d.db.Where("sn= ? ", sn).First(&res).Error; err != nil {
+	if err = d.db.Where(query, args...).First(&res).Error; err != nil {
 		//todo... db err add metrics
 		if err == gorm.ErrRecordNotFound {
 			err = ecode.NothingFound
 		} else {
-			err = fmt.Errorf("DB Select Metas Err On GetMetasFromDB  sn=(%s),err=(%v)", sn, err)
+			err = fmt.Errorf("DB Select Metas Err On GetMetasFromDB  query=(%#v),args=(%#v),err=(%v)", query, args, err)
 		}
 	}
 	err = errors.WithStack(err)
@@ -400,12 +411,10 @@ func (d *Dao) GetMetasFromDB(c context.Context, sn string) (res *model.Metas, er
 }
 
 //异步累加metas
-func (d *Dao) AddMetasCount(c context.Context, sn string, field string) {
-	if err := d.cacheQueue.Do(c, func(c context.Context) {
+func (d *Dao) AddMetasCount(c context.Context, sn string, field string) error {
+	return d.cacheQueue.Do(c, func(c context.Context) {
 		if err := d.IncCacheMetas(c, sn, field); err != nil {
 			log.SugarWithContext(c).Warnf("AddMetasCount.IncCacheMetas Err(%#v)", err)
 		}
-	}); err != nil {
-		log.SugarWithContext(c).Warnf("d.AddMetasCount Err(%#v)", err)
-	}
+	})
 }

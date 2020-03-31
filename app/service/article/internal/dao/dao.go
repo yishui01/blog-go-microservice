@@ -29,6 +29,7 @@ func New() (*Dao, func()) {
 		cacheQueue: fanout.New("cache", fanout.Worker(5)),
 		jobQueue:   fanout.New("job", fanout.Worker(5)),
 	}
+
 	go func() {
 		d.cronClose = d.CronStart(context.TODO())
 	}()

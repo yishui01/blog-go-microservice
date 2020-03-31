@@ -41,6 +41,7 @@ type EsArticle struct {
 
 type ArtQueryReq struct {
 	utils.PageRequest
+	Terms     string
 	KeyWords  string
 	Tags      string
 	Status    int32
@@ -80,6 +81,10 @@ func ArtToEsMap(ctx context.Context, art *Article, metas *Metas) map[string]inte
 
 func ArtLockKey(sn string) string {
 	return "art_lock_" + sn
+}
+
+func IncLockKey(sn string) string {
+	return "metas_inc_lock_" + sn
 }
 
 const ART_ES_INDEX = "article"

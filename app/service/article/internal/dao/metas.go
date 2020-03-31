@@ -29,14 +29,19 @@ func (d *Dao) GetMetasBySn(c context.Context, sn string) (res *model.Metas, err 
 	cacheData := res
 	cacheTime := 0
 	//todo use distribute lock to protect db
-	if err := d.db.Where("sn=?", sn).First(&res).Error; err != nil {
+	if err = d.db.Where("sn=?", sn).First(&res).Error; err != nil {
+		res = nil
 		cacheData = &model.Metas{ArticleId: -1, Sn: sn}
 		cacheTime = utils.TimeHourSecond
 	}
-	if addCache {
-		d.cacheQueue.Do(c, func(c context.Context) {
-			d.SetCacheMetas(c, cacheData, cacheTime)
-		})
+	if addCache { //里面的err
+		if cerr := d.cacheQueue.Do(c, func(c context.Context) {
+			if err := d.SetCacheMetas(c, cacheData, cacheTime); err != nil {
+				log.SugarWithContext(c).Error("d.cacheQueue.Do d.SetCacheMetas Err(%#v)", err)
+			}
+		}); cerr != nil {
+			log.SugarWithContext(c).Error("d.cacheQueue.Do Err(%#v)", cerr)
+		}
 	}
 	return res, errors.Wrap(err, "d.GetMetasBySn")
 }
