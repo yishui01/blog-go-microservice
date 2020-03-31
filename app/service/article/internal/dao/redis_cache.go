@@ -15,6 +15,8 @@ import (
 const ART_PREFIX = "art_"
 const META_PREFIX = "meta_"
 
+const META_CHANGE_SET = "meta_change_set"
+
 const TAG_ALL_KEY = "tag_all"
 
 /***********************  文章缓存   *********************************/
@@ -112,6 +114,19 @@ func (d *Dao) SetCacheMetas(c context.Context, metas *model.Metas, timeS int) er
 func (d *Dao) IncCacheMetas(c context.Context, sn string, field string) error {
 	conn := d.redis.Get()
 	defer conn.Close()
+	handler := func() error {
+		_, err := conn.Do("HINCRBY", MetasCacheKey(sn), field, 1)
+		if err != nil {
+			return errors.Wrap(err, "AddMetas HINCRBY Err")
+		}
+		//metas缓存发生变化，加入到该Set,定时任务会定时同步该set里面的metas信息到ES、DB中
+		_, err = conn.Do("SADD", MetasChangeSetKey(), sn)
+		if err != nil {
+			return errors.Wrap(err, "AddMetas HSET Err")
+		}
+		return nil
+	}
+	//分布式锁保证没有设置metas缓存的情况下，并发从DB中去取数据覆盖写缓存问题
 	for i := 0; i < 5; i++ {
 		//先看有没有
 		e, err := redis.Int(conn.Do("exists", MetasCacheKey(sn)))
@@ -138,8 +153,7 @@ func (d *Dao) IncCacheMetas(c context.Context, sn string, field string) error {
 			defer m.Release(c)
 			break
 		} else {
-			_, err := conn.Do("HINCRBY", MetasCacheKey(sn), field, 1)
-			return errors.Wrap(err, "AddMetas HINCRBY Err")
+			return handler()
 		}
 	}
 	metas, _ := d.GetMetasFromDB(c, "sn=?", sn)
@@ -151,8 +165,7 @@ func (d *Dao) IncCacheMetas(c context.Context, sn string, field string) error {
 	if err := d.SetCacheMetas(c, metas, t); err != nil {
 		return err
 	}
-	_, err := conn.Do("HINCRBY", MetasCacheKey(sn), field, 1)
-	return errors.Wrap(err, "AddMetas HINCRBY Err")
+	return handler()
 }
 
 func (d *Dao) DelCacheMetas(c context.Context, sn string) error {
@@ -199,6 +212,11 @@ func ArtCacheKey(sn string) string {
 }
 func MetasCacheKey(sn string) string {
 	return META_PREFIX + sn
+}
+
+//metas缓存发生变化，加入到该Set,定时任务会定时同步该set里面的metas信息到ES、DB中
+func MetasChangeSetKey() string {
+	return META_CHANGE_SET
 }
 
 func PickSn(key string) (string, error) {

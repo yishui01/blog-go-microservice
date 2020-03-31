@@ -16,7 +16,7 @@ import (
 var _cron = Cron{}
 
 var _defaultJobs = []CommJob{
-	{Name: "metasSync", Time: time.Hour, Run: (*Dao).MetasSync},
+	{Name: "metasSync", Time: time.Second * 2, Run: (*Dao).MetasSync},
 }
 
 type CommJob struct {
@@ -67,22 +67,25 @@ func (c *Cron) Close() {
 func (d *Dao) MetasSync() {
 	conn := d.redis.Get()
 	defer conn.Close()
-	keys, err := redis.Strings(conn.Do("keys", MetasKeyWild()))
+	keys, err := redis.Strings(conn.Do("SMEMBERS", MetasChangeSetKey()))
 	if err != nil {
-		log.SugarWithContext(context.TODO()).Warnf("Cron d.MetasSync err keys(%v),err:(%v)", keys, err)
+		log.SugarWithContext(context.TODO()).Warnf("Cron d.MetasSync SMEMBERS err keys(%v),err:(%v)", keys, err)
+		return
 	}
+	//同步完metas之后直接删了set,这个删了没事，保存的只是key，不会有并发问题
+	_, err = conn.Do("DEL", MetasChangeSetKey())
+	if err != nil {
+		log.SugarWithContext(context.TODO()).Warnf("Cron d.MetasSync del DEL keys(%v),err:(%v)", keys, err)
+		return
+	}
+
 	var metas *model.Metas
 	bulkRequest := d.es.Bulk().Index(model.ART_ES_INDEX).Type("_doc")
-	for _, v := range keys {
-		sn, err := PickSn(v)
-		if err != nil || sn == "" {
-			log.SugarWithContext(context.TODO()).Warnf("Cron d.MetasSync PickSn err:(%#+v),v(%s)", err, v)
-			continue
-		}
+	for _, sn := range keys {
 		metas, err = d.GetCacheMetas(context.TODO(), sn)
 
 		if metas == nil {
-			return
+			continue
 		}
 
 		//DB
@@ -101,9 +104,12 @@ func (d *Dao) MetasSync() {
 		}).Id(strconv.FormatInt(metas.ArticleId, 10)))
 	}
 
-	//ES
-	bulkResp, err := bulkRequest.Do(context.TODO())
-	if err != nil {
-		log.SugarWithContext(nil).Warnf("Cron MetasSync:err=(%#v),bulkResp=(%#v)", err, bulkResp)
+	if len(keys) > 0 {
+		//ES
+		bulkResp, err := bulkRequest.Do(context.TODO())
+		if err != nil {
+			log.SugarWithContext(nil).Warnf("Cron MetasSync:err=(%#v),bulkResp=(%#v)", err, bulkResp)
+		}
 	}
+
 }

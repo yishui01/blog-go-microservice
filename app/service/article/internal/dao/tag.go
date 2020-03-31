@@ -27,7 +27,7 @@ func (d *Dao) GetTagAll(c context.Context) ([]*model.Tag, error) {
 	}
 
 	res = []*model.Tag{}
-	err = d.db.Table("mc_tags").Find(&res).Error
+	err = d.db.Table("mc_tag").Find(&res).Error
 	if err != nil {
 		return res, errors.WithStack(err)
 	}
