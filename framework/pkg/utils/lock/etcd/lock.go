@@ -59,6 +59,9 @@ func DistributeTryLock(c context.Context, OriginKey string, ttl int, failLockSle
 				failLockSleepMill = 300
 			}
 			delay := rand.Intn(failLockSleepMill)
+			if delay < failLockSleepMill/2 {
+				delay += failLockSleepMill / 2
+			}
 			time.Sleep(time.Duration(delay) * time.Millisecond)
 			return nil, nil
 		}
