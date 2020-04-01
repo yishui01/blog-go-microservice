@@ -230,7 +230,7 @@ func (d *Dao) updateRelationArtTag(artId int64, tags []*model.Tag, tx *gorm.DB) 
 
 //DB修改文章+metas+tags
 func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model.Metas) (id int64, err error) {
-	b, err := d.CheckExist("mc_article", "id = ?", art.Id)
+	b, err := utils.CheckExist(d.db, "mc_article", "id = ?", art.Id)
 	if err != nil {
 		return art.Id, err
 	}

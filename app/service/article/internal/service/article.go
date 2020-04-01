@@ -187,13 +187,10 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool
 		artId, err = s.dao.CreateArtMetas(ctx, art, metas)
 	}
 	if err != nil {
-		if ecode.EqualError(ecode.RequestErr, err) {
-			return reply, ecode.Error(ecode.RequestErr, err.Error())
+		if _, ok := errors.Cause(err).(ecode.Codes); ok {
+			return nil, err
 		}
-		if ecode.EqualError(ecode.NothingFound, err) {
-			return reply, ecode.NothingFound
-		}
-		log.SugarWithContext(ctx).Errorf("s.dao.SaveArt art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
+		log.SugarWithContext(ctx).Errorf("s.SaveArt art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
 		return nil, ecode.Error(ecode.ServerErr, err.Error())
 	}
 	reply.Data = strconv.FormatInt(artId, 10)

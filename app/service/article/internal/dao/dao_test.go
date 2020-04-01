@@ -7,6 +7,7 @@ import (
 	"github.com/onsi/gomega"
 	. "github.com/smartystreets/goconvey/convey"
 	"github.com/zuiqiangqishao/framework/pkg/setting"
+	"github.com/zuiqiangqishao/framework/pkg/utils"
 	"os"
 	"strconv"
 	"strings"
@@ -73,12 +74,12 @@ func TestCheckExist(t *testing.T) {
 			err := d.db.Table(table).Create(&art).Error
 			So(err, ShouldBeNil)
 
-			exists, err := d.CheckExist(table, "id = ?", art.Id)
+			exists, err := utils.CheckExist(d.db, table, "id = ?", art.Id)
 			Convey("Then err should be nil.id should not be nil.", func() {
 				So(err, ShouldBeNil)
 				So(exists, ShouldEqual, true)
 			})
-			exists, err = d.CheckExist(table, "id = -5")
+			exists, err = utils.CheckExist(d.db, table, "id = -5")
 			Convey("Then err should be nil.id should not be nil2.", func() {
 				So(err, ShouldBeNil)
 				So(exists, ShouldEqual, false)

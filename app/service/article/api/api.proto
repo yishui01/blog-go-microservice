@@ -147,7 +147,7 @@ service Article {
     };
     rpc DeleteArt(DelArtRequest) returns (SaveResp){
         option(google.api.http) = {
-            post:"/article/id/{id}/physical/{physical}"
+            post:"/article/delete/id/{id}/physical/{physical}"
         };
     };
 

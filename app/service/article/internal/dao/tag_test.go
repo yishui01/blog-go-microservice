@@ -163,7 +163,7 @@ func TestDaoRefreshRelateArt(t *testing.T) {
 		Convey("When everything goes positive", func() {
 			err := d.RefreshRelateArt(c, tagId)
 			Convey("Then err should be nil.", func() {
-				So(errors.Cause(err), ShouldEqual,gorm.ErrRecordNotFound)
+				So(errors.Cause(err), ShouldEqual, gorm.ErrRecordNotFound)
 			})
 		})
 	})

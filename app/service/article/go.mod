@@ -1,6 +1,6 @@
 module blog-go-microservice/app/service/article
 
-go 1.13
+go 1.14
 
 replace github.com/zuiqiangqishao/framework => ../../../framework
 

@@ -36,7 +36,7 @@ type EsArticle struct {
 	LaudCount int64     `json:"laud_count"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
-	DeletedAt time.Time `json:"deleted_at" gorm:"-"` //gorm ignore
+	DeletedAt time.Time `json:"deleted_at" gorm:"-"` //gorm ignore in create and update method
 }
 
 type ArtQueryReq struct {

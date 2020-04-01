@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
+	"github.com/zuiqiangqishao/framework/pkg/utils"
 	"strconv"
 )
 
@@ -50,7 +51,7 @@ func (d *Dao) CreateTag(c context.Context, tag *model.Tag) (int64, error) {
 	tag.Id = 0
 
 	//看下Tag名是否重复
-	e, err := d.CheckExist("mc_tag", "name = ?", tag.Name)
+	e, err := utils.CheckExist(d.db, "mc_tag", "name = ?", tag.Name)
 	if err != nil {
 		return -1, err
 	}
@@ -84,7 +85,7 @@ func (d *Dao) UpdateTag(c context.Context, tag *model.Tag) (tagId int64, err err
 		existTag bool
 	)
 	//看下Tag名是否重复
-	existTag, err = d.CheckExist("mc_tag", "name = ? AND id != ?", tag.Name, tag.Id)
+	existTag, err = utils.CheckExist(d.db, "mc_tag", "name = ? AND id != ?", tag.Name, tag.Id)
 	if err != nil {
 		return tag.Id, err
 	}
