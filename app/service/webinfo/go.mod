@@ -13,6 +13,7 @@ require (
 	github.com/jinzhu/gorm v1.9.12
 	github.com/pkg/errors v0.9.1
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
+	github.com/smartystreets/goconvey v1.6.4
 	github.com/zuiqiangqishao/framework v0.0.0-00010101000000-000000000000
 	google.golang.org/genproto v0.0.0-20191216205247-b31c10ee225f
 	google.golang.org/grpc v1.26.0

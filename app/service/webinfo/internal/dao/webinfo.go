@@ -7,18 +7,20 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/utils"
-	"regexp"
 	"strings"
 )
 
 var (
-	ascReg   = regexp.MustCompile(`^(.+)\|(asc|desc)$`)
-	orderKey = map[string]bool{
+	_orderKey = map[string]bool{
 		"id":         true,
+		"sn":         true,
+		"web_key":    true,
+		"web_val":    true,
+		"status":     true,
+		"unique_val": true,
 		"ord":        true,
-		"webkey":     true,
 		"created_at": true,
-		"updated_at": true,
+		"deleted_at": true,
 	}
 )
 
@@ -32,8 +34,10 @@ type Query struct {
 func (d *Dao) GetInfoListDB(c context.Context, query *Query) ([]*model.WebInfo, error) {
 	//这些直接从DB查了，因为要分页、搜索过滤、排序、用缓存不太好存，太麻烦
 	var (
-		db  = d.db
-		err error
+		db       = d.db
+		err      error
+		offset   int64 = 0
+		pageSize int64 = 20
 	)
 	db, err = d.BuildFilter(c, query.Filter, db)
 	if err != nil {
@@ -46,8 +50,22 @@ func (d *Dao) GetInfoListDB(c context.Context, query *Query) ([]*model.WebInfo, 
 			return nil, err
 		}
 	} else {
-		db.Order("ord desc").Order("id desc")
+		db = db.Order("ord desc").Order("id desc")
 	}
+
+	if query.Unscoped {
+		db = db.Unscoped()
+	}
+
+	if query.PageRequest.PageSize > 0 {
+		pageSize = int64(query.PageRequest.PageSize)
+	}
+	//从1开始。1为第一页，2为第二页
+	if query.PageRequest.PageNum > 1 {
+		offset = (query.PageRequest.PageNum - 1) * pageSize
+	}
+	db = db.Offset(offset).Limit(pageSize)
+
 	res := make([]*model.WebInfo, 0)
 	if err = db.Find(&res).Error; err != nil {
 		return nil, errors.WithStack(err)
@@ -73,7 +91,7 @@ func (d *Dao) CreateInfoDB(c context.Context, info *model.WebInfo) (int64, error
 
 func (d *Dao) UpdateInfoDB(c context.Context, info *model.WebInfo) (int64, error) {
 	b, err := utils.CheckExist(d.db, "mc_web_info", "id = ?",
-		info.Id, info.WebVal, info.UniqueVal)
+		info.Id)
 	if err != nil {
 		return info.Id, err
 	}
@@ -155,9 +173,28 @@ func (d *Dao) BuildFilter(c context.Context, filterStr string, db *gorm.DB) (*go
 }
 
 func (d *Dao) BuildOrder(c context.Context, orderStr string, db *gorm.DB) (*gorm.DB, error) {
-	matchSlice := ascReg.FindStringSubmatch(orderStr)
-	if len(matchSlice) >= 3 && orderKey[matchSlice[1]] && (matchSlice[2] == "asc" || matchSlice[2] == "desc") {
-		//todo... 排序
+	ss := strings.Split(orderStr, ",")
+	ordFlag := false
+	idFlag := false
+	for _, v := range ss {
+		if v != "" {
+			o := strings.Split(v, "|")
+			if len(o) == 2 && _orderKey[o[0]] && (o[1] == "asc" || o[1] == "desc") {
+				if o[0] == "ord" {
+					ordFlag = true
+				}
+				if o[0] == "id" {
+					idFlag = true
+				}
+				db = db.Order(o[0] + " " + o[1])
+			}
+		}
+	}
+	if !ordFlag {
+		db = db.Order("ord desc")
+	}
+	if !idFlag {
+		db = db.Order("id desc")
 	}
 	return db, nil
 }
