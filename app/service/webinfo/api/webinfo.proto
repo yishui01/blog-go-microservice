@@ -1,0 +1,91 @@
+syntax = "proto3";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+package webinfo.service.v1;
+
+//信息列表
+message InfoReq {
+    int64 pageNum = 1;
+    int32 pageSize = 2;
+    string filter = 3;
+    string order = 4;
+    bool unscoped = 5;
+}
+message InfoResp {
+    int64 total=1;
+    repeated InfoDetail lists = 2;
+    int64 page = 3;
+    int32 size = 4;
+}
+
+//信息详情
+message InfoDetail {
+    int64  id      = 1;
+    string sn      = 2;
+    string web_key   = 3;
+    string unique_val     = 4 ;
+    string web_val = 5 ;
+    int32  status  = 6 ;
+    int64 created_at = 7;
+    int64 updated_at = 8;
+    int64 deleted_at = 9;
+    string ord      = 11;
+}
+
+//添加/修改信息
+message SaveInfoReq {
+    int64  id      = 1;
+    string sn      = 2;
+    string web_key   = 3 [(gogoproto.moretags) = 'validate:"required"'];
+    string unique_val  = 4 [(gogoproto.moretags) = 'validate:"required"'];
+    string web_val = 5 [(gogoproto.moretags) = 'validate:"required"'];
+    int32  status  = 6 ;
+    int64 created_at = 7 [(gogoproto.moretags) = 'validate:"min=0"'];
+    int64 updated_at = 8 [(gogoproto.moretags) = 'validate:"min=0"'];
+    int64 deleted_at = 9;
+    string ord      = 11;
+}
+
+//公共save/delete 响应
+message SaveResp {
+    int32  status     = 1;
+    string data       = 2;
+    string msg        = 3;
+}
+
+//删除记录
+message DelInfoReq{
+    int64 id = 1 [(gogoproto.moretags) = 'validate:"required"'];
+    bool   physical = 2; //是否为物理删除，false为软删除
+}
+
+
+service WebInfo {
+    rpc Ping(.google.protobuf.Empty) returns (.google.protobuf.Empty);
+
+    rpc InfoList(InfoReq)returns(InfoResp){
+        option(google.api.http) = {
+            get:"/webinfo/pagenum/{pageNum}/pagesize/{pageSize}/filter/{filter}/order/{order}/unscoped/{unscoped}"
+        };
+    }
+    rpc CreateInfo(SaveInfoReq) returns (SaveResp){
+        option(google.api.http) = {
+            post:"/webinfo/create"
+            body:"*"
+        };
+    };
+    rpc UpdateInfo(SaveInfoReq) returns (SaveResp){
+        option(google.api.http) = {
+            post:"/webinfo/update"
+            body:"*"
+        };
+    };
+    rpc DeleteInfo(DelInfoReq) returns (SaveResp){
+        option(google.api.http) = {
+            post:"/webinfo/delete/id/{id}/physical/{physical}"
+        };
+    };
+
+}
