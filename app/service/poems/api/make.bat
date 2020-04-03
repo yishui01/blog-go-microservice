@@ -1,0 +1,1 @@
+protoc -I=. -I=../../../../framework/third_party/  --grpc-gateway_out=logtostderr=true:. --gofast_out=plugins=grpc:. poems.proto

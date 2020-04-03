@@ -1,0 +1,45 @@
+syntax="proto3";
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto";
+
+package poems.service.v1;
+
+message PoReq {
+    int64 pageNum = 1;
+    int32 pageSize = 2;
+    string filter = 3;
+}
+
+message PoResp {
+    int64 total=1;
+    repeated PoDetail lists = 2;
+    int64 page = 3;
+    int32 size = 4;
+}
+
+message PoDetail {
+    int64 Id = 1;
+	string Cate = 2;
+    string Title = 3;
+	string Author = 4;
+    string Content = 5;
+	string Chapter = 6;
+    string Paragraphs = 7;
+	string Notes = 8;
+    string Rhythmic = 9;
+	string Section = 10;
+    string Comment = 11;
+	string Sn = 12;
+    string CreateTime =13;
+}
+
+
+service Poems {
+    rpc Ping(.google.protobuf.Empty) returns (.google.protobuf.Empty);
+
+    rpc Search(PoReq)returns(PoResp){
+        option(google.api.http) = {
+          get:"/poems/pagenum/{pageNum}/pagesize/{pageSize}/filter/{filter}"
+        };
+    }
+}
