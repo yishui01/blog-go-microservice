@@ -25,13 +25,14 @@ type ListResp struct {
 }
 
 //只从ES中查找文章列表
-func (d *Dao) ArtMetasList(c context.Context, req *model.ArtQueryReq) ([]*model.EsArticle, error) {
+func (d *Dao) ArtMetasList(c context.Context, req *model.ArtQueryReq) ([]*model.EsArticle, int64, error) {
 	res := make([]*model.EsArticle, 0)
 	esResp, err := d.EsSearchArtMetas(c, req)
 	if err != nil {
-		return res, err
+		return res, 0, err
 	}
-	if esResp.TotalHits() > 0 {
+	var total int64 = 0
+	if total = esResp.TotalHits(); total > 0 {
 		for _, hit := range esResp.Hits.Hits {
 			var t model.EsArticle
 			err := utils.JsonUnmarshal(hit.Source, &t)
@@ -43,7 +44,7 @@ func (d *Dao) ArtMetasList(c context.Context, req *model.ArtQueryReq) ([]*model.
 		}
 	}
 
-	return res, nil
+	return res, total, nil
 }
 
 //获取文章详情,不包含metas

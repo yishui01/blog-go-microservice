@@ -40,7 +40,7 @@ func (s *Service) ArtList(ctx context.Context, listReq *pb.ArtListRequest) (*pb.
 	query.UpdatedAt = listReq.UpdatedAt
 	query.Unscoped = listReq.Unscoped
 	query.Terms = listReq.Terms
-	esArtList, err := s.dao.ArtMetasList(ctx, query)
+	esArtList, total, err := s.dao.ArtMetasList(ctx, query)
 	reply := new(pb.ArtListResp)
 	if err != nil {
 		if _, ok := errors.Cause(err).(ecode.Codes); ok {
@@ -50,7 +50,7 @@ func (s *Service) ArtList(ctx context.Context, listReq *pb.ArtListRequest) (*pb.
 		return reply, ecode.ServerErr
 	}
 
-	reply.Total = int64(len(esArtList))
+	reply.Total = total
 	t := make([]*pb.ArtDetailResp, len(esArtList))
 	for k, v := range esArtList {
 		t[k] = &pb.ArtDetailResp{

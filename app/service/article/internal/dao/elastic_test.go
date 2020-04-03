@@ -43,8 +43,9 @@ func TestDaoEsPutArtMetas(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(p1s, ShouldNotBeNil)
 
-		arts, err := d.ArtMetasList(ctx, req)
+		arts, total, err := d.ArtMetasList(ctx, req)
 		So(len(arts), ShouldEqual, 1)
+		So(total, ShouldEqual, 1)
 		So(arts[0].Content, ShouldEqual, art.Content)
 		So(arts[0].Title, ShouldEqual, art.Title)
 		So(arts[0].ViewCount, ShouldEqual, metas.ViewCount)
@@ -58,8 +59,9 @@ func TestDaoEsPutArtMetas(t *testing.T) {
 
 		//改完要等会查
 		time.Sleep(time.Second * 2)
-		narts, err := d.ArtMetasList(ctx, req)
+		narts, total, err := d.ArtMetasList(ctx, req)
 		So(len(narts), ShouldEqual, 1)
+		So(total, ShouldEqual, 1)
 		So(narts[0].Content, ShouldEqual, newArt.Content)
 		So(narts[0].ViewCount, ShouldEqual, newMetas.ViewCount)
 		So(narts[0].Title, ShouldEqual, newArt.Title)
@@ -72,8 +74,9 @@ func TestDaoEsPutArtMetas(t *testing.T) {
 		})
 
 		time.Sleep(time.Second * 2)
-		darts, err := d.ArtMetasList(ctx, req)
+		darts, total, err := d.ArtMetasList(ctx, req)
 		So(err, ShouldBeNil)
+		So(total, ShouldEqual, 0)
 		So(len(darts), ShouldEqual, 0)
 
 	})

@@ -3,7 +3,6 @@ package dao
 import (
 	"blog-go-microservice/app/service/article/internal/model"
 	"context"
-	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
@@ -67,7 +66,6 @@ func TestDaoGetTagAll(t *testing.T) {
 
 		//***********************修改Tag*******************************/
 		newTag := &model.Tag{Id: tag.Id, Name: strconv.FormatInt(time.Now().Unix(), 10) + "update88"}
-		fmt.Println("6666666666666666", newTag.Name)
 		tagId, err := d.UpdateTag(c, newTag)
 		So(err, ShouldBeNil)
 		So(tagId, ShouldBeGreaterThan, 0)
@@ -109,7 +107,6 @@ func TestDaoGetTagAll(t *testing.T) {
 		err = d.DeleteTag(c, tagId, false)
 		So(err, ShouldBeNil)
 
-		fmt.Println("deletedeletedeletedeletedeletedeletedeletedeletedeletedeletedeletedelete")
 		//缓存里没有了
 		getAllTags, err = d.GetTagAll(c)
 		So(err, ShouldBeNil)

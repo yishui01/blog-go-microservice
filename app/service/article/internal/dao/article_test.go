@@ -186,15 +186,17 @@ func TestDaoArtMetasList(t *testing.T) {
 			}
 		)
 		Convey("When everything goes positive", func() {
-			p1, err := d.ArtMetasList(c, req)
+			p1, total, err := d.ArtMetasList(c, req)
 			Convey("Then err should be nil.p1 should not be nil.", func() {
 				So(err, ShouldBeNil)
 				So(p1, ShouldNotBeNil)
+				So(total, ShouldBeGreaterThan, -1)
 			})
-			p1, err = d.ArtMetasList(c, req2)
+			p1, total, err = d.ArtMetasList(c, req2)
 			Convey("Then err should be nil.p1 should not be nil2.", func() {
 				So(err, ShouldBeNil)
 				So(p1, ShouldNotBeNil)
+				So(total, ShouldBeGreaterThan, -1)
 			})
 		})
 	})
@@ -317,7 +319,7 @@ func TestDaoDelArtMetas(t *testing.T) {
 			}
 
 			err = d.DelArtMetas(c, art.Id, false)
-			f := func() ([]*model.EsArticle, error) {
+			f := func() ([]*model.EsArticle, int64, error) {
 				return d.ArtMetasList(context.TODO(), &model.ArtQueryReq{
 					PageRequest: utils.PageRequest{PageNum: 1, PageSize: 10},
 					Terms:       "id," + strconv.FormatInt(art.Id, 10),
@@ -334,10 +336,11 @@ func TestDaoDelArtMetas(t *testing.T) {
 
 				time.Sleep(time.Millisecond * 1000) //es索引可能不能立即生效，等一秒
 
-				res, err := f()
+				res, total, err := f()
 
 				So(err, ShouldBeNil)
 				So(len(res), ShouldEqual, 1)
+				So(total, ShouldEqual, 1)
 				So((*res[0]).Title, ShouldEqual, art.Title)
 				So((*res[0]).DeletedAt.Second(), ShouldBeGreaterThan, 1)
 			})
@@ -349,8 +352,9 @@ func TestDaoDelArtMetas(t *testing.T) {
 				So(err, ShouldEqual, gorm.ErrRecordNotFound)
 
 				time.Sleep(time.Millisecond * 500)
-				res, err := f()
+				res, total, err := f()
 				So(err, ShouldBeNil)
+				So(total, ShouldEqual, 0)
 				So(len(res), ShouldEqual, 0)
 
 			})
