@@ -7,8 +7,7 @@ import (
 )
 
 func New(svc pb.WebInfoServer) (grpcServer *zgrpc.GrpcServer, err error) {
-	var conf *zgrpc.ServerConfig
-	grpcServer = zgrpc.New(conf)
+	grpcServer = zgrpc.New(zgrpc.GetFileConfig())
 	pb.RegisterWebInfoServer(grpcServer.Server(), svc)
 	grpcServer, _, err = grpcServer.Start() //启动grpc服务
 	if err != nil {

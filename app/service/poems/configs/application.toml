@@ -1,5 +1,5 @@
 [app]
-    appName="article"
+    appName="poems"
 [trace]
     agentAddr="192.168.136.109:6831"
     stdout=false
@@ -33,14 +33,16 @@
 [kafka]
     brokers = ["192.168.136.109:9092"]
 
-
 [grpc]
-    addr = "0.0.0.0:9000"
-    timeout = "10" #grpc ctx超时秒数
-[grpc.http]
-    addr="0.0.0.0:9001"
-    readTimeout="10"
-    writeTimeout="10"
+    #grpc配置
+    network="tcp"
+    addr="0.0.0.0:8100"
+    timeout="10s" #grpc ctx超时秒数
+    #grpc-gateway配置
+    httpEnable=true
+    httpAddr="0.0.0.0:8101"
+    httpReadTimeout="5s"
+    httpWriteTimeout="10s"
 
 [etcd] #如果使用etcd注册服务发现的话，需要配置该项
     endpoints=["192.168.136.109:2379","192.168.136.109:2479","192.168.136.109:2579"]

@@ -89,11 +89,12 @@ func (s *Service) GetArtBySn(ctx context.Context, artReq *pb.ArtDetailRequest) (
 	g.Go(func(ctx context.Context) error {
 		art, artErr = s.dao.GetArtBySn(ctx, artReq.Sn)
 		if artErr != nil {
-			if ecode.EqualError(ecode.NothingFound, artErr) {
+			if ecode.EqualError(ecode.NothingFound, errors.Cause(artErr)) {
 				artErr = ecode.NothingFound
+			} else {
+				log.SugarWithContext(ctx).Errorf("s.dao.GetArtBySn  artReq：(%#+v),Err:(%#+v)", artReq, artErr)
+				artErr = ecode.ServerErr
 			}
-			log.SugarWithContext(ctx).Errorf("s.dao.GetArtBySn  artReq：(%#+v),Err:(%#+v)", artReq, artErr)
-			artErr = ecode.ServerErr
 		}
 		return nil
 	})
@@ -101,8 +102,14 @@ func (s *Service) GetArtBySn(ctx context.Context, artReq *pb.ArtDetailRequest) (
 	g.Go(func(ctx context.Context) error {
 		metas, metasErr = s.dao.GetMetasBySn(ctx, artReq.Sn)
 		if metasErr != nil {
-			log.SugarWithContext(ctx).Errorf("s.dao.GetMetasBySn  artReq：(%#+v),Err:(%#+v)", artReq, metasErr)
+			if ecode.EqualError(ecode.NothingFound, errors.Cause(metasErr)) {
+				metasErr = ecode.NothingFound
+			} else {
+				log.SugarWithContext(ctx).Errorf("s.dao.GetMetasBySn  artReq：(%#+v),Err:(%#+v)", artReq, metasErr)
+				metasErr = ecode.ServerErr
+			}
 		}
+
 		if metas == nil {
 			metas = new(model.Metas)
 		}

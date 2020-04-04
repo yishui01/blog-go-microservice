@@ -9,12 +9,10 @@ type Dao struct {
 	db *gorm.DB
 }
 
-
 func New() (*Dao, func()) {
 	d := &Dao{
 		db: NewDB(),
 	}
-
 	return d, func() { d.Close() }
 }
 

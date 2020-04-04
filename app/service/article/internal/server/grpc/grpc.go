@@ -8,8 +8,7 @@ import (
 )
 
 func New(svc pb.ArticleServer) (grpcServer *zgrpc.GrpcServer, err error) {
-	var conf *zgrpc.ServerConfig
-	grpcServer = zgrpc.New(conf)
+	grpcServer = zgrpc.New(zgrpc.GetFileConfig())
 	pb.RegisterArticleServer(grpcServer.Server(), svc)
 	grpcServer, _, err = grpcServer.Start() //启动grpc服务
 	if err != nil {

@@ -28,8 +28,10 @@ func InitApp() (app *App, closeFunc func()) {
 		if err := grpcSrv.Shutdown(ctx); err != nil {
 			log.SugarWithContext(ctx).Errorf("grpcSrv Shutdown err(%v)" + err.Error())
 		}
-		if err := grpcSrv.HttpShutDown(ctx); err != nil {
-			log.SugarWithContext(ctx).Errorf("httpSrv Shutdown err(%v)" + err.Error())
+		if grpcSrv.GetConf().HttpEnable {
+			if err := grpcSrv.HttpShutDown(ctx); err != nil {
+				log.SugarWithContext(ctx).Errorf("httpSrv Shutdown err(%v)" + err.Error())
+			}
 		}
 		cancel()
 		closeD()

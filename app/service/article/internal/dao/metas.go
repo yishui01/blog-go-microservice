@@ -3,7 +3,9 @@ package dao
 import (
 	"blog-go-microservice/app/service/article/internal/model"
 	"context"
+	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/utils"
 )
@@ -30,6 +32,9 @@ func (d *Dao) GetMetasBySn(c context.Context, sn string) (res *model.Metas, err 
 	cacheTime := 0
 	//todo use distribute lock to protect db
 	if err = d.db.Where("sn=?", sn).First(&res).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			err = ecode.NothingFound
+		}
 		res = nil
 		cacheData = &model.Metas{ArticleId: -1, Sn: sn}
 		cacheTime = utils.TimeHourSecond

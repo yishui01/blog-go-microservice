@@ -125,7 +125,7 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 		}
 	}
 
-	return res, errors.WithStack(err)
+	return res, err
 }
 
 //DB创建文章+metas+tags中间表维护

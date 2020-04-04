@@ -12,7 +12,7 @@
 
 5、统一在最顶层的调用者处打Log，例如dao层SaveArt调用db出现err时直接 return errors.WithStack(err); 在dao上层的service层Log.Err(...)
 
-
+6、service层方法直接返回encode或者ecode.Err()，不需要用errors.Wrap包装
 #### 错误码处理：
 
 - grpc之间的错误信息统一使用实现 自定义Codes接口 的错误码进行传递
