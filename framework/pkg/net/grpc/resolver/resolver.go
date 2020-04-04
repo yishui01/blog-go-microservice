@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/discovery"
-	"github.com/zuiqiangqishao/framework/pkg/log"
 	"google.golang.org/grpc/resolver"
 	"net/url"
 	"sync"
@@ -94,7 +93,7 @@ func (r *Resolver) newAddress(instances []*discovery.Instance) {
 		}
 		addrs = append(addrs, addr)
 	}
-	log.SugarWithContext(nil).Debugf("grpc resolver: finally get %d instances:%v", len(addrs), addrs[0].Addr)
+	//log.SugarWithContext(nil).Debugf("grpc resolver: finally get %d instances:%v", len(addrs), addrs[0].Addr)
 	r.cc.UpdateState(resolver.State{Addresses: addrs}) //更新grpc内部服务列表
 }
 

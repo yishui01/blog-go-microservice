@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"github.com/spf13/viper"
 	"github.com/zuiqiangqishao/framework/pkg/app"
 	"math"
 	"time"
@@ -17,7 +18,7 @@ var (
 		ForceCloseWait:    time.Second * 20,
 		KeepAliveInterval: time.Second * 60,
 		KeepAliveTimeout:  time.Second * 20,
-		HttpEnable:        true,
+		HttpEnable:        false,
 		HttpAddr:          "0.0.0.0:9001",
 		HttpReadTimeout:   time.Second * 3,
 		HttpWriteTimeout:  time.Second * 20,
@@ -34,6 +35,8 @@ type ServerConfig struct {
 	Addr string
 	// Timeout is context timeout for per rpc call.
 	Timeout time.Duration
+
+	//**********keepalive参数*********************/
 	// IdleTimeout is a duration for the amount of time after which an idle connection would be closed by sending a GoAway.
 	// Idleness duration is defined since the most recent time the number of outstanding RPCs became zero or the connection establishment.
 	IdleTimeout time.Duration
@@ -47,13 +50,19 @@ type ServerConfig struct {
 	// KeepAliveTimeout  is After having pinged for keepalive check, the server waits for a duration of Timeout and if no activity is seen even after that
 	// the connection is closed.
 	KeepAliveTimeout time.Duration
-	// LogFlag to control log behaviour
-	// Disable: 1 DisableArgs: 2 DisableInfo: 4
-	LogFlag int8
+	/********************************************/
 
 	//grpc-gateway config
 	HttpEnable       bool
 	HttpAddr         string
 	HttpReadTimeout  time.Duration
 	HttpWriteTimeout time.Duration
+}
+
+func GetFileConfig() *ServerConfig {
+	conf := ServerConfig{}
+	if err := viper.Sub("grpc").Unmarshal(&conf); err != nil {
+		panic("viper decode struct grpc Err:" + err.Error())
+	}
+	return &conf
 }

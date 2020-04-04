@@ -7,11 +7,13 @@ import (
 	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/pkg/errors"
+	"github.com/zuiqiangqishao/framework/pkg/app"
 	"github.com/zuiqiangqishao/framework/pkg/discovery"
 	"github.com/zuiqiangqishao/framework/pkg/discovery/etcd"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/trace"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/reflection"
 	"net"
 	"net/http"
@@ -53,6 +55,14 @@ func New(conf *ServerConfig, opt ...grpc.ServerOption) (s *GrpcServer) {
 		panic(errors.Errorf("grpc: set config failed!err: %s", err.Error()))
 	}
 
+	keepParam := grpc.KeepaliveParams(keepalive.ServerParameters{
+		MaxConnectionIdle:     s.conf.IdleTimeout,       //超过该空闲时间就关闭
+		MaxConnectionAgeGrace: s.conf.ForceCloseWait,    //关闭时的宽限时间
+		Time:                  s.conf.KeepAliveInterval, //触发keepalive的时间
+		Timeout:               s.conf.KeepAliveTimeout,  //keepalive 的ack等待时间
+		MaxConnectionAge:      s.conf.MaxLifeTime,       //最大生存时间
+	})
+
 	//加入一元方法中间件
 	//1、recovery
 	//2、注册自定义log中间件
@@ -62,12 +72,13 @@ func New(conf *ServerConfig, opt ...grpc.ServerOption) (s *GrpcServer) {
 	s.UseUnary(
 		s.reovery(),
 		grpc_opentracing.UnaryServerInterceptor(grpc_opentracing.WithTracer(trace.Tracer())),
-		serverLog(s.conf.LogFlag),
+		serverLog(),
 		s.handle(),
 		s.validate(),
 	)
 
 	opt = append(opt,
+		keepParam,
 		grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(s.unaryMidle...)),
 		grpc.StreamInterceptor(grpc_middleware.ChainStreamServer(s.streamMidle...)))
 
@@ -162,6 +173,10 @@ func (s *GrpcServer) SetHttpServer(registerFn func(ctx context.Context, mux *run
 
 //将映射后的httpServer启动
 func (s *GrpcServer) HttpStart() *GrpcServer {
+	if !s.conf.HttpEnable {
+		log.ZapWithContext(nil).Info("HTTP Server is not Enable")
+		return s
+	}
 	go func() {
 		if s.httpServer == nil {
 			panic("http server is not set")
@@ -175,6 +190,10 @@ func (s *GrpcServer) HttpStart() *GrpcServer {
 }
 
 func (s *GrpcServer) HttpStartTLS(certFile, keyFile string) *GrpcServer {
+	if !s.conf.HttpEnable {
+		log.ZapWithContext(nil).Info("HTTP Server is not Enable")
+		return s
+	}
 	go func() {
 		if s.httpServer == nil {
 			panic("http server is not set")
@@ -189,11 +208,12 @@ func (s *GrpcServer) HttpStartTLS(certFile, keyFile string) *GrpcServer {
 
 //设置各项配置，地址、连接协议、grpc的ctx超时时间、各项keep-alive参数
 func (s *GrpcServer) SetConfig(conf *ServerConfig) error {
-
 	if conf == nil {
 		conf = _defaultSerConf
 	}
-
+	if conf.ServiceName == "" {
+		conf.ServiceName = app.GetAppConf().AppName
+	}
 	if conf.Addr == "" {
 		conf.Addr = "0.0.0.0:9000"
 	}
@@ -247,7 +267,7 @@ func (s *GrpcServer) Shutdown(ctx context.Context) (err error) {
 }
 
 func (s *GrpcServer) HttpShutDown(ctx context.Context) (err error) {
-	if s.HttpServer == nil {
+	if s.HttpServer() == nil {
 		return errors.New("not have http server")
 	}
 	return errors.WithStack(s.httpServer.Shutdown(ctx))
@@ -261,4 +281,9 @@ func (s *GrpcServer) Server() *grpc.Server {
 // Server return the grpc server for registering service.
 func (s *GrpcServer) HttpServer() *http.Server {
 	return s.httpServer
+}
+
+// Server return the grpc server for registering service.
+func (s *GrpcServer) GetConf() *ServerConfig {
+	return s.conf
 }

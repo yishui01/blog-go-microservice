@@ -1,16 +1,15 @@
-package http
+package khttp
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"net/http/httputil"
 	"os"
 	"runtime"
 )
 
-func Recovery() gin.HandlerFunc {
-	return func(c *gin.Context) {
+func Recovery() HandlerFunc {
+	return func(c *Context) {
 		defer func() {
 			var rawReq []byte
 			if err := recover(); err != nil {
@@ -21,7 +20,7 @@ func Recovery() gin.HandlerFunc {
 					rawReq, _ = httputil.DumpRequest(c.Request, false)
 					pl := fmt.Sprintf("http call panic: %s\n%v\n%s\n", string(rawReq), err, buf)
 					fmt.Fprintf(os.Stderr, pl)
-					log.ZapWithContext(ctx).Error(pl)
+					log.ZapWithContext(c).Error(pl)
 					c.AbortWithStatus(500)
 				}
 			}

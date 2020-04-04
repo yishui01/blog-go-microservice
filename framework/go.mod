@@ -5,9 +5,9 @@ go 1.13
 require (
 	github.com/g4zhuj/go-metrics-falcon v0.0.0-20180427054158-5159ced4eafb // indirect
 	github.com/g4zhuj/grpc-wrapper v0.0.0-20190508092021-ced55bb6c5d6 // indirect
-	github.com/gin-gonic/gin v1.5.0 // indirect
+	github.com/gin-gonic/gin v1.5.0
 	github.com/go-kratos/kratos v0.4.2 // indirect
-	github.com/gogo/protobuf v1.3.1 // indirect
+	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/gomodule/redigo v2.0.0+incompatible // indirect
 	github.com/google/uuid v1.1.1 // indirect
@@ -34,5 +34,6 @@ require (
 	golang.org/x/tools v0.0.0-20200211045251-2de505fc5306 // indirect
 	google.golang.org/genproto v0.0.0-20191216205247-b31c10ee225f
 	google.golang.org/grpc v1.26.0
+	gopkg.in/go-playground/validator.v9 v9.29.1
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 )

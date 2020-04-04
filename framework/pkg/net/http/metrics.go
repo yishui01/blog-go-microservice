@@ -1,4 +1,4 @@
-package http
+package khttp
 
 import "github.com/prometheus/client_golang/prometheus"
 

@@ -13,18 +13,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/peer"
-	"strconv"
 	"time"
-)
-
-// Log Flag
-const (
-	// disable all log.
-	LogFlagDisable = 1 << iota
-	// disable print args on log.
-	LogFlagDisableArgs
-	// disable info level log.
-	LogFlagDisableInfo
 )
 
 func logFn(ctx context.Context, code int, dt time.Duration) func(msg string, f ...zap.Field) {
@@ -38,7 +27,7 @@ func logFn(ctx context.Context, code int, dt time.Duration) func(msg string, f .
 	}
 }
 
-func serverLog(logFlag int8) grpc.UnaryServerInterceptor {
+func serverLog() grpc.UnaryServerInterceptor {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (resp interface{}, err error) {
 		//把网关注入的traceId提取出来，作为log的requestId注回context中
 		var reqId string
@@ -72,17 +61,8 @@ func serverLog(logFlag int8) grpc.UnaryServerInterceptor {
 
 		duration := time.Since(startTime)
 		// monitor
-		_metricServerReqDur.WithLabelValues(info.FullMethod, caller).Observe(float64(duration / time.Millisecond))
-		_metricServerReqCodeTotal.WithLabelValues(info.FullMethod, caller, strconv.Itoa(int(code))).Inc()
-
-		if logFlag&LogFlagDisable != 0 {
-			return resp, err
-		}
-
-		// TODO: find better way to deal with slow log.
-		if logFlag&LogFlagDisableInfo != 0 && err == nil && duration < 500*time.Millisecond {
-			return resp, err
-		}
+		//_metricServerReqDur.WithLabelValues(info.FullMethod, caller).Observe(float64(duration / time.Millisecond))
+		//_metricServerReqCodeTotal.WithLabelValues(info.FullMethod, caller, strconv.Itoa(int(code))).Inc()
 
 		logFields := []zap.Field{
 			zap.String("user", caller),
@@ -94,11 +74,9 @@ func serverLog(logFlag int8) grpc.UnaryServerInterceptor {
 			zap.String("source", "grpc-access-log"),
 		}
 
-		if logFlag&LogFlagDisableArgs == 0 {
-			// TODO: it will panic if someone remove String method from protobuf message struct that auto generate from protoc.
-			//logFields = append(logFields, zap.String("args", req.(fmt.Stringer).String())) //打不出中文，V2才支持
-			logFields = append(logFields, zap.String("args", fmt.Sprintf("%#+v", req))) //只能反射了
-		}
+		//logFields = append(logFields, zap.String("args", req.(fmt.Stringer).String())) //打不出中文，V2才支持
+		logFields = append(logFields, zap.String("args", fmt.Sprintf("%#+v", req))) //只能反射了
+
 		if err != nil {
 			logFields = append(logFields, zap.String("error", err.Error()), zap.String("stack", fmt.Sprintf("%+v", err)))
 		}
@@ -107,47 +85,9 @@ func serverLog(logFlag int8) grpc.UnaryServerInterceptor {
 	}
 }
 
-//grpc Client的logFlag只能从grpc的DialOption或者CallOption中提取，直接传没法传，所以只能封装下
-type logOption struct {
-	grpc.EmptyDialOption
-	grpc.EmptyCallOption
-	flag int8
-}
-
-// WithLogFlag disable client access log.
-func WithLogFlag(flag int8) grpc.CallOption {
-	return logOption{flag: flag}
-}
-
-// WithDialLogFlag set client level log behaviour.
-func WithDialLogFlag(flag int8) grpc.DialOption {
-	return logOption{flag: flag}
-}
-
-func extractLogCallOption(opts []grpc.CallOption) (flag int8) {
-	for _, opt := range opts {
-		if logOpt, ok := opt.(logOption); ok {
-			return logOpt.flag
-		}
-	}
-	return
-}
-
-func extractLogDialOption(opts []grpc.DialOption) (flag int8) {
-	for _, opt := range opts {
-		if logOpt, ok := opt.(logOption); ok {
-			return logOpt.flag
-		}
-	}
-	return
-}
-
 // clientLogging warden grpc logging
 func clientLogging(dialOptions ...grpc.DialOption) grpc.UnaryClientInterceptor {
-	defaultFlag := extractLogDialOption(dialOptions)
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		logFlag := extractLogCallOption(opts) | defaultFlag
-
 		startTime := time.Now()
 		var peerInfo peer.Peer
 		opts = append(opts, grpc.Peer(&peerInfo))
@@ -160,16 +100,8 @@ func clientLogging(dialOptions ...grpc.DialOption) grpc.UnaryClientInterceptor {
 		duration := time.Since(startTime)
 
 		// monitor
-		_metricClientReqDur.WithLabelValues(method).Observe(float64(duration / time.Millisecond))
-		_metricClientReqCodeTotal.WithLabelValues(method, strconv.Itoa(code)).Inc()
-
-		if logFlag&LogFlagDisable != 0 {
-			return err
-		}
-		// TODO: find better way to deal with slow log.
-		if logFlag&LogFlagDisableInfo != 0 && err == nil && duration < 500*time.Millisecond {
-			return err
-		}
+		//_metricClientReqDur.WithLabelValues(method).Observe(float64(duration / time.Millisecond))
+		//_metricClientReqCodeTotal.WithLabelValues(method, strconv.Itoa(code)).Inc()
 
 		logFields := []zap.Field{
 			zap.String("path", method),
@@ -181,11 +113,8 @@ func clientLogging(dialOptions ...grpc.DialOption) grpc.UnaryClientInterceptor {
 		if peerInfo.Addr != nil {
 			logFields = append(logFields, zap.String("ip", peerInfo.Addr.String()))
 		}
-		if logFlag&LogFlagDisableArgs == 0 {
-			// TODO: it will panic if someone remove String method from protobuf message struct that auto generate from protoc.
-			//logFields = append(logFields, zap.String("args", req.(fmt.Stringer).String()))
-			logFields = append(logFields, zap.String("args", fmt.Sprintf("%#+v", req)))
-		}
+		logFields = append(logFields, zap.String("args", fmt.Sprintf("%#+v", req)))
+
 		if err != nil {
 			logFields = append(logFields, zap.String("error", err.Error()), zap.String("stack", fmt.Sprintf("%+v", err)))
 		}

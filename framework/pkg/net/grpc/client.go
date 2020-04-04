@@ -25,7 +25,7 @@ var (
 	_once           sync.Once
 	_defaultCliConf = &ClientConfig{
 		Dial:              time.Second * 10,
-		Timeout:           time.Millisecond * 250,
+		Timeout:           time.Millisecond * 300,
 		KeepAliveInterval: time.Second * 60,
 		KeepAliveTimeout:  time.Second * 20,
 	}
@@ -110,7 +110,7 @@ func SetResolver() {
 // Target format is scheme://authority/endpoint?query_arg=value
 // example: discovery://default/account.account.service?cluster=shfy01&cluster=shfy02
 func (c *Client) Dial(ctx context.Context, target string, opts ...grpc.DialOption) (conn *grpc.ClientConn, err error) {
-	opts = append(opts, grpc.WithInsecure())
+	opts = append(opts, grpc.WithInsecure(), grpc.WithBlock())
 	return c.dial(ctx, target, opts...)
 }
 
@@ -153,7 +153,7 @@ func (c *Client) dial(ctx context.Context, target string, opts ...grpc.DialOptio
 	c.mutex.RUnlock()
 	if conf.Dial > 0 {
 		var cancel context.CancelFunc
-		ctx, cancel = context.WithTimeout(ctx, time.Duration(conf.Dial))
+		ctx, cancel = context.WithTimeout(ctx, conf.Dial)
 		defer cancel()
 	}
 
@@ -177,6 +177,7 @@ func (c *Client) dial(ctx context.Context, target string, opts ...grpc.DialOptio
 	if conn, err = grpc.DialContext(ctx, target, dialOptions...); err != nil {
 		fmt.Fprintf(os.Stderr, "mygrpc client: dial %s error %v!", target, err)
 	}
+
 	err = errors.WithStack(err)
 	return
 }
@@ -210,7 +211,7 @@ func (c *Client) SetConfig(conf *ClientConfig) (err error) {
 		conf.Dial = time.Second * 10
 	}
 	if conf.Timeout <= 0 {
-		conf.Timeout = time.Millisecond * 250
+		conf.Timeout = time.Millisecond * 300
 	}
 	if conf.KeepAliveInterval <= 0 {
 		conf.KeepAliveInterval = time.Second * 60

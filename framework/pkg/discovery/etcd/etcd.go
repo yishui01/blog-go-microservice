@@ -277,7 +277,7 @@ func (a *appInfo) watch(serviceName string) {
 	for wresp := range rch {
 		for _, ev := range wresp.Events {
 			if ev.Type == mvccpb.PUT || ev.Type == mvccpb.DELETE {
-				fmt.Println("监听到变化", ev.Type)
+				//fmt.Println("监听到变化", ev.Type)
 				_ = a.fetchStore(serviceName)
 			}
 		}

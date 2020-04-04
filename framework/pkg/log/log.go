@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"github.com/gin-gonic/gin"
 	"github.com/zuiqiangqishao/framework/pkg/app"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -24,6 +25,9 @@ type _slogKeyType struct{}
 
 var _zloggerKey = _zlogKeyType{}
 var _sloggerKey = _slogKeyType{}
+
+const _ginZlogKey = "_gin_zaplogger"
+const _ginSlogKey = "_gin_suglogger"
 
 //通用配置
 type LogConfig struct {
@@ -105,6 +109,37 @@ func SugarWithContext(ctx context.Context) *zap.SugaredLogger {
 		return _sugarLogger
 	}
 	l := ctx.Value(_sloggerKey)
+	ctxLogger, ok := l.(*zap.SugaredLogger)
+	if ok {
+		return ctxLogger
+	}
+	return _sugarLogger
+}
+
+func NewGinLogContext(ctx *gin.Context, fields ...zapcore.Field) *gin.Context {
+	zcore := GinZapWithContext(ctx).With(fields...)
+	ctx.Set(_ginZlogKey, zcore)
+	ctx.Set(_ginSlogKey, zcore.Sugar())
+	return ctx
+}
+
+func GinZapWithContext(ctx *gin.Context) *zap.Logger {
+	if ctx == nil {
+		return _zapLogger
+	}
+	l := ctx.Value(_ginZlogKey)
+	ctxLogger, ok := l.(*zap.Logger)
+	if ok {
+		return ctxLogger
+	}
+	return _zapLogger
+}
+
+func GinSugarWithContext(ctx *gin.Context) *zap.SugaredLogger {
+	if ctx == nil {
+		return _sugarLogger
+	}
+	l := ctx.Value(_ginSlogKey)
 	ctxLogger, ok := l.(*zap.SugaredLogger)
 	if ok {
 		return ctxLogger
