@@ -32,8 +32,9 @@ const (
 	// Mid    = "mid"     // NOTE: ！！！业务可重新修改key名！！！
 
 	// 外网账户用户sn
-	UserSn = "user_sn"
-	UserId = "user_id"
+	UserSn  = "user_sn"
+	UserId  = "user_id"
+	IsAdmin = "is_admin"
 
 	// Device 客户端信息
 	Device = "device"

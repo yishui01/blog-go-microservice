@@ -3,7 +3,6 @@ package khttp
 import (
 	"fmt"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	uuid "github.com/satori/go.uuid"
 	"github.com/uber/jaeger-client-go"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
@@ -28,8 +27,6 @@ func Logger() HandlerFunc {
 		//把网关注入的traceId提取出来，作为log的requestId注回context中
 		var reqId string
 		spanCtx, terr := trace.Tracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
-		span := trace.Tracer().StartSpan(req.URL.Path, ext.RPCServerOption(spanCtx))
-		defer span.Finish()
 		if sc, ok := spanCtx.(jaeger.SpanContext); ok {
 			reqId = sc.TraceID().String()
 		} else {

@@ -86,7 +86,7 @@ func serverLog() grpc.UnaryServerInterceptor {
 }
 
 // clientLogging warden grpc logging
-func clientLogging(dialOptions ...grpc.DialOption) grpc.UnaryClientInterceptor {
+func clientLogging() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 		startTime := time.Now()
 		var peerInfo peer.Peer

@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_opentracing "github.com/grpc-ecosystem/go-grpc-middleware/tracing/opentracing"
 	"github.com/pkg/errors"
 	"github.com/spf13/viper"
 	"github.com/zuiqiangqishao/framework/pkg/discovery"
 	"github.com/zuiqiangqishao/framework/pkg/net/grpc/resolver"
 	"github.com/zuiqiangqishao/framework/pkg/setting/flagvar"
+	"github.com/zuiqiangqishao/framework/pkg/trace"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/balancer/roundrobin"
 	"google.golang.org/grpc/credentials"
@@ -142,7 +144,8 @@ func (c *Client) dial(ctx context.Context, target string, opts ...grpc.DialOptio
 	// init default handler
 	var handlers []grpc.UnaryClientInterceptor
 	handlers = append(handlers, c.recovery())
-	handlers = append(handlers, clientLogging(dialOptions...))
+	handlers = append(handlers, clientLogging())
+	handlers = append(handlers, grpc_opentracing.UnaryClientInterceptor(grpc_opentracing.WithTracer(trace.Tracer())))
 	handlers = append(handlers, c.unaryMidle...)
 	// NOTE: c.handle must be a last interceptor.
 	handlers = append(handlers, c.handle())

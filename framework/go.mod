@@ -31,6 +31,7 @@ require (
 	github.com/uniplaces/carbon v0.1.6 // indirect
 	go.etcd.io/etcd v0.0.0-20200320040136-0eee733220fc
 	go.uber.org/zap v1.14.1
+	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
 	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5
 	golang.org/x/tools v0.0.0-20200211045251-2de505fc5306 // indirect
 	google.golang.org/genproto v0.0.0-20191216205247-b31c10ee225f

@@ -19,16 +19,16 @@ func Trace() HandlerFunc {
 		span := trace.Tracer().StartSpan(req.URL.Path, ext.RPCServerOption(spanCtx))
 		defer span.Finish()
 
-		ext.SpanKindRPCServer.Set(span)
 		ext.HTTPUrl.Set(span, req.URL.String())
 		ext.HTTPMethod.Set(span, req.Method)
 		// business tag
 		span.SetTag("caller", metadata.String(c.Context, metadata.Caller))
 
-		err = span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
-		if err != nil {
-			log.SugarWithContext(nil).Error("Inject trace err", err)
-		}
+		//上面已经开了span了，这里就不要再注入到req的Header中了，再注入那又开了一个span了
+		//err = span.Tracer().Inject(span.Context(), opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
+		//if err != nil {
+		//	log.SugarWithContext(nil).Error("Inject trace err", err)
+		//}
 		c.Context = opentracing.ContextWithSpan(c.Context, span)
 		c.Next()
 	}

@@ -45,14 +45,14 @@ func (s *GrpcServer) handle() grpc.UnaryServerInterceptor {
 func (c *Client) handle() grpc.UnaryClientInterceptor {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) (err error) {
 		var (
-			gmd    metadata.MD
+			gmd                  = make(metadata.MD)
 			conf   *ClientConfig = c.conf
 			cancel context.CancelFunc
 			p      peer.Peer
 		)
 		var ec ecode.Codes = ecode.OK
-
 		var timeOpt *TimeoutCallOption
+
 		for _, opt := range opts {
 			var tok bool
 			timeOpt, tok = opt.(*TimeoutCallOption)

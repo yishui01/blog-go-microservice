@@ -284,8 +284,18 @@ func (c *Context) BindWith(obj interface{}, b binding.Binding) error {
 // otherwise --> returns an error.
 // It parses the request's body as JSON if Content-Type == "application/json" using JSON or XML as a JSON input.
 // It decodes the json payload into the struct specified as a pointer.
-// It writes a 400 error and sets Content-Type header "text/plain" in the response if input is not valid.
+
 func (c *Context) Bind(obj interface{}) error {
+	b := binding.Default(c.Request.Method, c.Request.Header.Get("Content-Type"))
+	return c.bindWith(obj, b)
+}
+
+func (c *Context) bindWith(obj interface{}, b binding.Binding) (err error) {
+	return b.Bind(c.Request, obj)
+}
+
+// It writes a 400 error and sets Content-Type header "text/plain" in the response if input is not valid.
+func (c *Context) MustBind(obj interface{}) error {
 	b := binding.Default(c.Request.Method, c.Request.Header.Get("Content-Type"))
 	return c.mustBindWith(obj, b)
 }
