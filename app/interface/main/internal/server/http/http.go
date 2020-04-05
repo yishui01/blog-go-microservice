@@ -6,7 +6,6 @@ import (
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	khttp "github.com/zuiqiangqishao/framework/pkg/net/http"
-	"time"
 )
 
 var svc *service.Service
@@ -26,17 +25,20 @@ func Init(s *service.Service) *khttp.Engine {
 }
 
 func initRouter(e *khttp.Engine) {
+	login := svc.Permis.CheckLogin
+	admin := svc.Permis.CheckAdmin
+	e.POST("/login", svc.UserLogin)
 	g := e.Group("/article")
 	{
 		g.GET("/ping", ping)
-		g.GET("/start", helloWorld)
-		g.GET("/panic", testPanic)
+		g.GET("/start", login, helloWorld)
+		g.GET("/panic", admin, testPanic)
 		g.GET("/err", testErr)
 	}
 }
 
 func testErr(c *khttp.Context) {
-	c.JSON([]string{"报错了老弟","哎哟不错哦"}, ecode.RequestErr)
+	c.JSON([]string{"报错了老弟", "哎哟不错哦"}, ecode.RequestErr)
 }
 
 func testPanic(c *khttp.Context) {
@@ -46,7 +48,6 @@ func testPanic(c *khttp.Context) {
 // example for http request handler.
 func helloWorld(c *khttp.Context) {
 	log.ZapWithContext(c).Info("测试下完美请求的日志系统")
-	time.Sleep(8 * time.Second)
 	c.JSON("helloWorld完美请求", ecode.OK)
 }
 
