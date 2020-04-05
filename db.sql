@@ -65,3 +65,32 @@ CREATE TABLE IF NOT EXISTS `mc_web_info`(
      UNIQUE KEY `key-val` (web_key,unique_val) -- 同一个key下禁止重复配置
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '网站配置表';
 
+
+CREATE TABLE IF NOT EXISTS `mc_user`(
+    `id` int  unsigned NOT NULL AUTO_INCREMENT COMMENT '自增ID',
+    `sn` varchar(32) NOT NULL COMMENT 'SN',
+    `username` varchar(20)  COMMENT '用户名（登录名，授权登陆的无用户名）',
+    `password` varchar(500) COMMENT '密码（授权登陆的无密码）',
+    `password_token` varchar(500) NOT NULL COMMENT '密码对应令牌，每次修改密码都会重新生成',
+    `nickname` varchar (20) NOT NULL COMMENT '用户昵称',
+    `avatar` varchar(150) COMMENT '头像',
+    `desc` varchar(150) COMMENT '简介',
+    `email` varchar (20) COMMENT '邮箱',
+    `phone` varchar (20) COMMENT '手机号',
+    `cate` varchar(20) NOT NULL DEFAULT 'BACK' COMMENT '注册类型,BACK（后台添加）,OPEN（第三方登录）,EMAIL（邮箱注册），PHONE(手机）',
+    `openid` varchar(100) COMMENT '第三方OPENID',
+    `openinfo` varchar(5000) COMMENT '第三方OPEN信息',
+    `status` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '用户状态：0-正常;1-禁用',
+    `is_super` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '是否为管理员，0-否;1-是',
+    `cretaed_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    `deleted_at` timestamp DEFAULT NULL COMMENT '删除时间，软删除',
+    PRIMARY KEY `id` (id),
+    UNIQUE KEY `sn` (sn)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '用户表';
+
+INSERT INTO `mc_user` values(DEFAULT,"deedkuhlzxagysfdyks","admin",
+"$2a$10$cE2unOi2AzfToRfX8SOVkOLRsC0n1uQCmusZYdwW/PKqtwKa6kNy6",
+"jeyJpdiI6Inl1WSsyMld5d09yMW1QdDlrdlFIOVE9PSIsInZhbHVXSmZORVVodmZqUTJvOYyI6ImVlNzI4NDU0NzE0OT4M2YwY2MifQ",
+"initAdmin","avatar","desc","email","phone",DEFAULT,"","",0,1,DEFAULT,DEFAULT,DEFAULT);
+
