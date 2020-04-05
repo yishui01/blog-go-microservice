@@ -3,8 +3,8 @@ package etcd
 import (
 	"context"
 	"fmt"
-	"github.com/coreos/etcd/clientv3"
 	"github.com/zuiqiangqishao/framework/pkg/discovery"
+	"go.etcd.io/etcd/clientv3"
 	"google.golang.org/grpc"
 	"testing"
 	"time"

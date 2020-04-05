@@ -29,7 +29,11 @@ const (
 	Mirror = "mirror"
 
 	// Mid 外网账户用户id
-	Mid = "mid" // NOTE: ！！！业务可重新修改key名！！！
+	// Mid    = "mid"     // NOTE: ！！！业务可重新修改key名！！！
+
+	// 外网账户用户sn
+	UserSn = "user_sn"
+	UserId = "user_id"
 
 	// Device 客户端信息
 	Device = "device"

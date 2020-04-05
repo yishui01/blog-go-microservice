@@ -38,8 +38,8 @@ func DefaultKafkaCore() zapcore.Core {
 }
 
 func (k *KafWriter) Write(b []byte) (n int, err error) {
-	s:=make([]byte,len(b))
-	copy(s,b) //异步写入要copy slice数据到新的地方，不然这个slice马上要被下一个core进行写了
+	s := make([]byte, len(b))
+	copy(s, b) //异步写入要copy slice数据到新的地方，不然这个slice马上要被下一个core进行写了
 	msg := kafka.Message{
 		Value: s,
 	}
