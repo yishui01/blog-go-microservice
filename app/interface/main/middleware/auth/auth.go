@@ -77,7 +77,7 @@ func (a *Auth) handle(c *khttp.Context, isAdmin bool) {
 		c.Abort()
 		return
 	}
-	setUserInfo(c, user.ID, user.Sn)
+	setUserInfo(c, user)
 }
 
 func (a *Auth) checkUser(c *khttp.Context, isAdmin bool) (*model.User, error) {
@@ -90,9 +90,8 @@ func (a *Auth) checkUser(c *khttp.Context, isAdmin bool) (*model.User, error) {
 	} else {
 		maps, err = a.TokenAuth(c)
 	}
-
 	if err != nil {
-		return nil, ecode.Unauthorized
+		return nil, err
 	}
 
 	userSn := maps[ClaimUserSn].(string)
@@ -132,7 +131,7 @@ func (a *Auth) CookieAuth(c *khttp.Context) (jwt.MapClaims, error) {
 	}
 	if a.conf.EnableCSRF && strings.ToUpper(c.Request.Method) == "POST" {
 		if err = a.checkCSRF(c, jwtClaims[ClaimUserSn].(string)); err != nil {
-			return nil, ecode.Unauthorized
+			return nil, ecode.CSRFErr
 		}
 	}
 	return jwtClaims, nil
@@ -162,12 +161,14 @@ func (a *Auth) checkToken(tokenStr string, isCSRF bool) (jwt.MapClaims, error) {
 
 // set mid into context
 // NOTE: This method is not thread safe.
-func setUserInfo(ctx *khttp.Context, userId int64, sn string) {
-	ctx.Set(metadata.UserSn, sn)
-	ctx.Set(metadata.UserId, userId)
+func setUserInfo(ctx *khttp.Context, user *model.User) {
+	ctx.Set(metadata.UserSn, user.Sn)
+	ctx.Set(metadata.UserId, user.ID)
+	ctx.Set(metadata.IsAdmin, user.ISSuper)
 	if md, ok := metadata.FromContext(ctx); ok {
-		md[metadata.UserSn] = sn
-		md[metadata.UserId] = userId
+		md[metadata.UserSn] = user.Sn
+		md[metadata.UserId] = user.ID
+		md[metadata.IsAdmin] = user.ISSuper
 		return
 	}
 }
@@ -178,7 +179,7 @@ func (a *Auth) getUserStatusBySn(c *khttp.Context, userSn string) (*model.User, 
 
 // CSRF returns the csrf middleware to prevent invalid cross site request.
 // Only referer is checked currently.
-func (a *Auth) checkCSRF(c *khttp.Context, usreSn string) error {
+func (a *Auth) checkCSRF(c *khttp.Context, userSn string) error {
 	validations := []func(*url.URL) bool{}
 
 	addHostSuffix := func(suffix string) {
@@ -193,30 +194,24 @@ func (a *Auth) checkCSRF(c *khttp.Context, usreSn string) error {
 	for _, p := range a.conf.AllowPattern {
 		addPattern(p)
 	}
-	referer := c.Request.Header.Get("Referer")
-	if referer == "" {
-		return ecode.Unauthorized
-	}
 
-	if uri, err := url.Parse(referer); err == nil && uri.Host != "" {
-		for _, validate := range validations {
-			if validate(uri) {
-				return nil
-			}
+	for _, validate := range validations {
+		if validate(c.Request.URL) {
+			return nil
 		}
 	}
 
 	//check csrf token
 	token := c.Request.Header.Get(CSRF_NAME)
 	if token == "" {
-		return ecode.Unauthorized
+		return ecode.CSRFErr
 	}
 	claims, err := a.conf.JWTCfg.ParseJWTToken(token, true)
 	if err != nil {
-		return ecode.Unauthorized
+		return ecode.CSRFErr
 	}
-	if claims["uid"] != usreSn {
-		return ecode.Unauthorized
+	if claims[ClaimUserSn] != userSn {
+		return ecode.CSRFErr
 	}
 	return nil
 }

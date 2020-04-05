@@ -8,6 +8,7 @@ import (
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	khttp "github.com/zuiqiangqishao/framework/pkg/net/http"
+	"github.com/zuiqiangqishao/framework/pkg/net/metadata"
 	"net/http"
 )
 
@@ -34,6 +35,51 @@ func (s *Service) UserLogin(c *khttp.Context) {
 		return
 	}
 
+	//签发jwt
+	s.setCookieJwt(c, user)
+}
+
+func (s *Service) UpdatePassWord(c *khttp.Context) {
+	p := new(model.UpdatePass)
+	if err := c.Bind(p); err != nil {
+		c.JSON(p.GetError(err), ecode.RequestErr)
+		c.Abort()
+		return
+	}
+	userSn, _ := c.Get(metadata.UserSn)
+	sn, ok := userSn.(string)
+	if !ok {
+		log.SugarWithContext(c).Errorf("s.UpdatePassWord can not find usersn in context,userSn:(%#v)", userSn)
+		c.JSON(nil, ecode.ServerErr)
+		c.Abort()
+		return
+	}
+	if val, ok := c.Get(metadata.IsAdmin); !ok || val == 0 {
+		//不是管理员就验证下旧密码，管理员直接改了,如果有多个管理员，那就不能这么玩了，否则可以改别的管理员密码，然而总共就我一个管理员╮(╯▽╰)╭
+		err := s.d.UserUpdatePass(c, sn, p.OldPass, p.NewPass)
+		if err != nil {
+			if err == ecode.NothingFound || err == ecode.RequestErr {
+				c.JSON(nil, ecode.Error(ecode.RequestErr, "旧密码错误"))
+			} else {
+				c.JSON(nil, ecode.ServerErr)
+			}
+			c.Abort()
+			return
+		}
+	}
+
+	user, err := s.d.FindFirstUser(c, "sn=?", sn)
+	if err != nil {
+		log.SugarWithContext(c).Errorf("s.d.FindFirstUser select Err sn:(%#v),Err(%#+v)", sn, err)
+		c.JSON(nil, ecode.ServerErr)
+		c.Abort()
+		return
+	}
+	//重新签发jwt
+	s.setCookieJwt(c, user)
+}
+
+func (s *Service) setCookieJwt(c *khttp.Context, user *model.User) {
 	jCookie, err1 := s.generateTokenCookie(c, user, false)
 	csCookie, err2 := s.generateTokenCookie(c, user, true)
 	if err1 != nil || err2 != nil {
@@ -46,10 +92,6 @@ func (s *Service) UserLogin(c *khttp.Context) {
 	c.Writer.Header().Set("set-cookie", jCookie.String())
 	c.Writer.Header().Add("set-cookie", csCookie.String())
 	c.JSON(0, nil)
-}
-
-func (s *Service) UpdatePassWord(c *khttp.Context) {
-
 }
 
 func (s *Service) generateTokenCookie(c *khttp.Context, user *model.User, isCSRF bool) (*http.Cookie, error) {

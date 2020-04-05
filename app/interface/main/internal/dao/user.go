@@ -108,10 +108,12 @@ func (d *Dao) UserUpdatePass(c context.Context, userSn string, oldPass, newPass 
 		return ecode.RequestErr
 	}
 	newDBPassWord, err := utils.GeneratePassword(newPass)
+	newPassToken := utils.GetUUID()
 	if err != nil {
 		return err
 	}
-	if err := d.db.Exec("UPDATE mc_user SET password= ? WHERE sn = ?", newDBPassWord, userSn).Error; err != nil {
+	if err := d.db.Exec("UPDATE mc_user SET password= ?,password_token=? WHERE sn = ?",
+		newDBPassWord, newPassToken, userSn).Error; err != nil {
 		return errors.WithStack(err)
 	}
 	return nil

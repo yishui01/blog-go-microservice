@@ -82,15 +82,16 @@ func (j *JWTCfg) ParseJWTToken(tokenString string, isCSRF bool) (jwt.MapClaims, 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims, nil
 	}
-
 	return nil, errors.New("invalid jwt token")
 }
 
-func (j *JWTCfg) GenerateToken(claims jwt.Claims, isCSRF bool) (string, error) {
+func (j *JWTCfg) GenerateToken(claims jwt.MapClaims, isCSRF bool) (string, error) {
 	var (
 		res string
 		err error
 	)
+	claims["exp"] = time.Now().Add(j.TTL).Unix()
+	claims["iat"] = time.Now().Unix()
 	token := jwt.NewWithClaims(j.signHMAC, claims)
 	secret := j.jwtSecretBytes
 	msg := "jwt token signed Err"

@@ -3,15 +3,13 @@ package http
 import (
 	"blog-go-microservice/app/interface/main/internal/service"
 	"github.com/spf13/viper"
-	"github.com/zuiqiangqishao/framework/pkg/ecode"
-	"github.com/zuiqiangqishao/framework/pkg/log"
 	khttp "github.com/zuiqiangqishao/framework/pkg/net/http"
 )
 
-var svc *service.Service
+var srv *service.Service
 
 func Init(s *service.Service) *khttp.Engine {
-	svc = s
+	srv = s
 	var httpConf = khttp.ServerConfig{}
 	if err := viper.Sub("http").Unmarshal(&httpConf); err != nil {
 		panic("unable to decode httpConf struct, " + err.Error())
@@ -25,30 +23,71 @@ func Init(s *service.Service) *khttp.Engine {
 }
 
 func initRouter(e *khttp.Engine) {
-	login := svc.Permis.CheckLogin
-	admin := svc.Permis.CheckAdmin
-	e.POST("/login", svc.UserLogin)
-	g := e.Group("/article")
+	e.POST("/login", srv.UserLogin)
+	e.POST("/update/pass", srv.Permis.SelfPass, srv.UpdatePassWord)
+	e.GET("/ping", ping)
+
+	//前后台服务的返回数据内容是不一样的，所以肯定是分开
+
+	/*********************前台************************/
+	web := e.Group("/home")
 	{
-		g.GET("/ping", ping)
-		g.GET("/start", login, helloWorld)
-		g.GET("/panic", admin, testPanic)
-		g.GET("/err", testErr)
+		art := web.Group("/article")
+		{
+			art.GET("/list", srv.HomeArtList)
+			art.GET("/detail", srv.HomeArtDetail)
+		}
+
+		tag := web.Group("/tag")
+		{
+			tag.GET("/list", srv.HomeTagList)
+		}
+
+		webinfo := web.Group("/webinfo")
+		{
+			webinfo.GET("/list", srv.HomeWebInfoList)
+		}
+
+		poems := web.Group("/poems")
+		{
+			poems.GET("/list", srv.HomePoemList)
+		}
+
 	}
-}
 
-func testErr(c *khttp.Context) {
-	c.JSON([]string{"报错了老弟", "哎哟不错哦"}, ecode.RequestErr)
-}
+	/********************后台************************/
+	back := e.Group("/back", srv.Permis.CheckAdmin)
+	{
+		art := back.Group("/article")
+		{
+			art.GET("/list", srv.BackArtList)
+			art.GET("/detail", srv.BackArtDetail)
+			art.POST("/create", srv.BackArtCreate)
+			art.POST("/update", srv.BackArtUpdate)
+			art.POST("/delete", srv.BackArtDelete)
+		}
 
-func testPanic(c *khttp.Context) {
-	panic("我有点方啊老哥")
-}
+		tag := back.Group("/tag")
+		{
+			tag.GET("/list", srv.BackTagList)
+			tag.POST("/create", srv.BackTagCreate)
+			tag.POST("/update", srv.BackArtUpdate)
+			tag.POST("/delete", srv.BackArtDelete)
+		}
+		webinfo := back.Group("/webinfo")
+		{
+			webinfo.GET("/list", srv.BackWebInfoList)
+			webinfo.POST("/create", srv.BackWebInfoCreate)
+			webinfo.POST("/update", srv.BackWebInfoUpdate)
+			webinfo.POST("/delete", srv.BackWebInfoDelete)
+		}
 
-// example for http request handler.
-func helloWorld(c *khttp.Context) {
-	log.ZapWithContext(c).Info("测试下完美请求的日志系统")
-	c.JSON("helloWorld完美请求", ecode.OK)
+		poems := back.Group("/poems")
+		{
+			poems.GET("/list", srv.BackPoemList)
+		}
+	}
+
 }
 
 func ping(c *khttp.Context) {
