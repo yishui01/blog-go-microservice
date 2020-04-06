@@ -52,7 +52,6 @@ func initRouter(e *khttp.Engine) {
 		{
 			poems.GET("/list", srv.HomePoemList)
 		}
-
 	}
 
 	/********************后台************************/
