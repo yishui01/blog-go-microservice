@@ -8,7 +8,6 @@ import (
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/net/metadata"
-	"github.com/zuiqiangqishao/framework/pkg/trace"
 	"go.uber.org/zap"
 	"strconv"
 	"time"
@@ -26,16 +25,13 @@ func Logger() HandlerFunc {
 
 		//把网关注入的traceId提取出来，作为log的requestId注回context中
 		var reqId string
-		spanCtx, terr := trace.Tracer().Extract(opentracing.HTTPHeaders, opentracing.HTTPHeadersCarrier(req.Header))
-		if sc, ok := spanCtx.(jaeger.SpanContext); ok {
+		span := opentracing.SpanFromContext(c.Context) //trace一律从Context中获取，req的header头中没有trace
+		if sc, ok := span.Context().(jaeger.SpanContext); ok {
 			reqId = sc.TraceID().String()
 		} else {
 			reqId = "uuid-" + uuid.NewV4().String()
 		}
 		c.Context = log.NewContext(c.Context, zap.String("requestId", reqId)) //注入log
-		if terr != nil {
-			log.ZapWithContext(c).Error("trace.Extract in logger err:" + terr.Error())
-		}
 
 		var quota float64
 		if deadline, ok := c.Deadline(); ok {

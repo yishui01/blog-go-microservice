@@ -27,7 +27,7 @@ var (
 	_once           sync.Once
 	_defaultCliConf = &ClientConfig{
 		Dial:              time.Second * 10,
-		Timeout:           time.Millisecond * 300,
+		Timeout:           time.Second * 5, //客户端rpc调用超时时间，别人都是设置的300毫秒，我这机器配置直接设5秒，一点都不慌 o(^▽^)o
 		KeepAliveInterval: time.Second * 60,
 		KeepAliveTimeout:  time.Second * 20,
 	}

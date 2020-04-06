@@ -29,6 +29,8 @@ func Trace() HandlerFunc {
 		//if err != nil {
 		//	log.SugarWithContext(nil).Error("Inject trace err", err)
 		//}
+
+		//注入到ctx中
 		c.Context = opentracing.ContextWithSpan(c.Context, span)
 		c.Next()
 	}

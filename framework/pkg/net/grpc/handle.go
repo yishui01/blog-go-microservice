@@ -25,6 +25,7 @@ func (s *GrpcServer) handle() grpc.UnaryServerInterceptor {
 		s.mutex.RUnlock()
 		//将当前grpc剩余的超时时间和配置的超时时间比较，取较小的那个
 		timeout := conf.Timeout
+
 		if de, ok := ctx.Deadline(); ok {
 			ctimeout := time.Until(de)
 			if ctimeout-time.Millisecond*20 > 0 {

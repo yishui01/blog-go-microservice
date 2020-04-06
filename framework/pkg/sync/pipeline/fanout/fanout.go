@@ -133,11 +133,12 @@ func (c *Fanout) Do(ctx context.Context, f func(c context.Context)) (err error) 
 		return c.ctx.Err()
 	}
 	nakeCtx := metadata.WithContext(ctx)
-	if span := opentracing.SpanFromContext(ctx); span != nil { //如果里面有trace，就接着加一段，没有就不加
-		span := span.Tracer().StartSpan("Fanout:Do")
-		setTags(span)
-		nakeCtx = opentracing.ContextWithSpan(nakeCtx, span)
-	}
+	//去掉trace，感觉没啥用。。
+	//if span := opentracing.SpanFromContext(ctx); span != nil { //如果里面有trace，就接着加一段，没有就不加
+	//	span := span.Tracer().StartSpan("Fanout:Do")
+	//	setTags(span)
+	//	nakeCtx = opentracing.ContextWithSpan(nakeCtx, span)
+	//}
 	select {
 	case c.ch <- item{f: f, ctx: nakeCtx}:
 	default:
