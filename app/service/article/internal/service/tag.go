@@ -4,7 +4,7 @@ import (
 	pb "blog-go-microservice/app/service/article/api"
 	"blog-go-microservice/app/service/article/internal/model"
 	"context"
-	"errors"
+	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
 	"github.com/zuiqiangqishao/framework/pkg/utils"
@@ -45,14 +45,11 @@ func (s *Service) saveTag(c context.Context, req *pb.SaveTagReq, isUpdate bool) 
 		tagId, err = s.dao.CreateTag(c, tag)
 	}
 	if err != nil {
-		if ecode.EqualError(ecode.NothingFound, err) {
-			return reply, ecode.NothingFound
-		}
-		if ecode.EqualError(ecode.UniqueErr, err) {
-			return reply, errors.New("名称重复")
+		if _, ok := errors.Cause(err).(ecode.Codes); ok {
+			return nil, err
 		}
 		log.SugarWithContext(c).Errorf("s.dao.saveTag tag(%#+v), req(%#+v), Err:(%#+v)", tag, req, err)
-		return nil, ecode.Error(ecode.ServerErr, "save err")
+		return nil, ecode.Error(ecode.ServerErr, err.Error())
 	}
 	reply.Data = strconv.FormatInt(tagId, 10)
 	err = s.dao.RefreshTagAllCache(c)
@@ -60,13 +57,13 @@ func (s *Service) saveTag(c context.Context, req *pb.SaveTagReq, isUpdate bool) 
 		log.SugarWithContext(c).Errorf("s.dao.RefreshTagAllCache tag(%#+v), req(%#+v), Err:(%#+v)", tag, req, err)
 		reply.Status = 1 //flag cache err
 	}
-	return reply, err
+	return reply, nil
 }
 
 func (s *Service) DeleteTag(c context.Context, req *pb.DelTagReq) (*pb.SaveResp, error) {
 	res := new(pb.SaveResp)
 	var err error
-	if err := s.dao.DeleteTag(c, req.Id, req.Physical); err != nil {
+	if err = s.dao.DeleteTag(c, req.Id, req.Physical); err != nil {
 		log.SugarWithContext(c).Errorf("Service s.dao.DeleteTag req:(%#+v), Err:(%+v)", req, err)
 	}
 	return res, err

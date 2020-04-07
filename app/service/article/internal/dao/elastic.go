@@ -7,28 +7,16 @@ import (
 	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
 	"github.com/zuiqiangqishao/framework/pkg/log"
+	"github.com/zuiqiangqishao/framework/pkg/utils/business"
 	"go.uber.org/zap"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 )
 
-var (
-	ascReg   = regexp.MustCompile(`^(.+)\|(asc|desc)$`)
-	orderKey = map[string]bool{
-		"created_at": true,
-		"updated_at": true,
-		"view_count": true,
-		"cm_count":   true,
-		"laud_count": true,
-	}
-)
-
 //查询ES中的文章数据
 func (d *Dao) EsSearchArtMetas(ctx context.Context, req *model.ArtQueryReq) (*elastic.SearchResult, error) {
 	query := elastic.NewBoolQuery()
-
 	if req.KeyWords != "" {
 		keyWordQuery := elastic.NewMultiMatchQuery(req.KeyWords).
 			FieldWithBoost("title", 3).
@@ -89,8 +77,8 @@ func (d *Dao) EsSearchArtMetas(ctx context.Context, req *model.ArtQueryReq) (*el
 	if req.Order == "" {
 		search.Sort("id", false)
 	} else {
-		matchSlice := ascReg.FindStringSubmatch(req.Order)
-		if len(matchSlice) >= 3 && orderKey[matchSlice[1]] && (matchSlice[2] == "asc" || matchSlice[2] == "desc") {
+		matchSlice := business.ArtOrderReg().FindStringSubmatch(req.Order)
+		if len(matchSlice) >= 3 && business.ArtOrderKey()[matchSlice[1]] && (matchSlice[2] == "asc" || matchSlice[2] == "desc") {
 			search.Sort(matchSlice[1], matchSlice[2] == "asc")
 		} else {
 			search.Sort("id", false)

@@ -47,7 +47,7 @@ func (s *Service) ArtList(ctx context.Context, listReq *pb.ArtListRequest) (*pb.
 			return nil, err
 		}
 		log.SugarWithContext(ctx).Errorf("s.dao.ArtList Query(%#+v),  Err:(%#+v)", query, err)
-		return reply, ecode.ServerErr
+		return nil, ecode.ServerErr
 	}
 
 	reply.Total = total
@@ -102,14 +102,8 @@ func (s *Service) GetArtBySn(ctx context.Context, artReq *pb.ArtDetailRequest) (
 	g.Go(func(ctx context.Context) error {
 		metas, metasErr = s.dao.GetMetasBySn(ctx, artReq.Sn)
 		if metasErr != nil {
-			if ecode.EqualError(ecode.NothingFound, errors.Cause(metasErr)) {
-				metasErr = ecode.NothingFound
-			} else {
-				log.SugarWithContext(ctx).Errorf("s.dao.GetMetasBySn  artReq：(%#+v),Err:(%#+v)", artReq, metasErr)
-				metasErr = ecode.ServerErr
-			}
+			log.SugarWithContext(ctx).Errorf("s.dao.GetMetasBySn  artReq：(%#+v),Err:(%#+v)", artReq, metasErr)
 		}
-
 		if metas == nil {
 			metas = new(model.Metas)
 		}
@@ -216,7 +210,7 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool
 func (s *Service) DeleteArt(ctx context.Context, req *pb.DelArtRequest) (*pb.SaveResp, error) {
 	res := new(pb.SaveResp)
 	var err error
-	if err := s.dao.DelArtMetas(ctx, req.Id, req.Physical); err != nil {
+	if err = s.dao.DelArtMetas(ctx, req.Id, req.Physical); err != nil {
 		log.SugarWithContext(ctx).Errorf("Service s.dao.DelArt req:(%#+v), Err:(%+v)", req, err)
 	}
 	return res, err
