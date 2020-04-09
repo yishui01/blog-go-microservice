@@ -306,7 +306,7 @@ func (c *Context) MustBind(obj interface{}) error {
 func (c *Context) mustBindWith(obj interface{}, b binding.Binding) (err error) {
 	if err = b.Bind(c.Request, obj); err != nil {
 		c.Error = ecode.RequestErr
-		c.Render(http.StatusOK, render.JSON{
+		c.Render(http.StatusBadRequest, render.JSON{
 			Code:    ecode.RequestErr.Code(),
 			Message: err.Error(),
 			Data:    nil,
