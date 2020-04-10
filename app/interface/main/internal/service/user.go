@@ -10,22 +10,19 @@ import (
 	khttp "github.com/zuiqiangqishao/framework/pkg/net/http"
 	"github.com/zuiqiangqishao/framework/pkg/net/metadata"
 	"net/http"
+	"strconv"
 )
 
 //登陆，发放两个token到cookie中，一个JWT一个CSRF
 func (s *Service) UserLogin(c *khttp.Context) {
-	params := c.Request.Form
-	username := params.Get("username")
-	passwd := params.Get("passwd")
-	if username == "" || passwd == "" {
-		c.JSON(nil, ecode.Error(ecode.RequestErr, "用户名和密码不能为空"))
-		c.Abort()
+	form := &model.LoginForm{}
+	if err := c.MustBind(form); err != nil {
 		return
 	}
-	user, err := s.d.UserLogin(c, username, passwd)
+	user, err := s.d.UserLogin(c, form.UserName, form.PassWord)
 	if err != nil {
-		if ecode.EqualError(ecode.Unauthorized, err) {
-			c.JSON(nil, err)
+		if ecode.EqualError(ecode.RequestErr, err) {
+			c.JSON(nil, ecode.Error(ecode.RequestErr, "账号或密码错误"))
 			c.Abort()
 			return
 		}
@@ -120,4 +117,122 @@ func (s *Service) generateTokenCookie(c *khttp.Context, user *model.User, isCSRF
 		MaxAge:   s.jwt.TTLSecond,
 		HttpOnly: httpOnly,
 	}, nil
+}
+
+/**********************************************   后台  ************************************************/
+func (s *Service) BackUserList(c *khttp.Context) {
+	var (
+		query = new(model.BackUserQuery)
+		users = []*model.User{}
+		err   error
+	)
+	if err := c.MustBind(query); err != nil {
+		return
+	}
+	if users, err = s.d.BackUserList(c, query); err != nil {
+		log.SugarWithContext(c).Error("s.BackUserList Err:(%#+v)", err)
+		c.JSON(nil, err)
+		c.Abort()
+		return
+	}
+
+	datas := new(model.BackListUser)
+	datas.Lists = users
+	datas.Total = len(users)
+	datas.PageNum = query.PageNum
+	datas.PageSize = query.PageSize
+	c.JSON(datas, nil)
+}
+
+func (s *Service) BackUserCreate(c *khttp.Context) {
+	user := new(model.User)
+	if err := c.Bind(user); err != nil {
+		//ignore err
+	}
+	user.Cate = model.USERCATE_BACK
+	userId, err := s.d.BackUserCreate(c, user, user.ISSuper != 0)
+	if err != nil {
+		log.SugarWithContext(c).Error("s.BackUserUpdate Err:(%#+v)", err)
+		c.JSON(userId, err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(userId, nil)
+}
+
+func (s *Service) BackUserUpdate(c *khttp.Context) {
+	user := new(model.User)
+	c.Bind(user)
+	if user.ID == 0 {
+		c.JSON(nil, ecode.Error(ecode.RequestErr, "user id can not be empty"))
+		c.Abort()
+		return
+	}
+
+	selfId, exist := c.Get(metadata.UserId)
+	if !exist {
+		log.SugarWithContext(c).Error("S.BackUserUpdate can not get user_id in context")
+		c.JSON(nil, ecode.ServerErr)
+		c.Abort()
+		return
+	}
+	if selfId.(int64) == user.ID {
+		//管理员自己，那自己就不能禁用自己,以及取消自己的超管权限
+		user.Status = 0
+		user.ISSuper = 1
+	}
+
+	userId, err := s.d.BackUserUpdate(c, user)
+	if err != nil {
+		if err != ecode.NothingFound {
+			log.SugarWithContext(c).Error("s.BackUserUpdate Err:(%#+v)", err)
+		}
+		c.JSON(userId, err)
+		c.Abort()
+		return
+	}
+
+	c.JSON(userId, nil)
+}
+
+func (s *Service) BackUserDelete(c *khttp.Context) {
+	id := c.Request.Form.Get("id")
+	if id == "" {
+		c.JSON(nil, ecode.Error(ecode.RequestErr, "ID 不能为空"))
+		c.Abort()
+		return
+	}
+	idNum, err := strconv.Atoi(id)
+	if err != nil || idNum <= 0 {
+		c.JSON(nil, ecode.Error(ecode.RequestErr, "id参数不合法:"+id))
+		c.Abort()
+		return
+	}
+	selfId, exist := c.Get(metadata.UserId)
+	if !exist {
+		log.SugarWithContext(c).Error("S.BackUserUpdate can not get user_id in context")
+		c.JSON(nil, ecode.ServerErr)
+		c.Abort()
+		return
+	}
+
+	if selfId.(int64) == int64(idNum) {
+		//管理员自己，自己不能删除自己
+		c.JSON(nil, ecode.Error(ecode.RequestErr, "自己不能删除自己"))
+		c.Abort()
+		return
+	}
+
+	err = s.d.BackUserDelete(c, uint(idNum))
+	if err != nil {
+		if err == ecode.RequestErr {
+			c.JSON(1, nil)
+			return
+		}
+		log.SugarWithContext(c).Error("s.BackUserDelete Err(%#+v)", err)
+		c.JSON(0, err)
+		return
+	}
+	c.JSON(nil, nil)
 }

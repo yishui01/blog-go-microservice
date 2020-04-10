@@ -23,12 +23,12 @@ func Init(s *service.Service) *khttp.Engine {
 }
 
 func initRouter(e *khttp.Engine) {
-	e.POST("/login", srv.UserLogin)
+
+	e.POST("/back/login", srv.UserLogin)
 	e.POST("/update/pass", srv.Permis.SelfPass, srv.UpdatePassWord)
 	e.GET("/ping", ping)
 
 	//前后台服务的返回数据内容是不一样的，所以肯定是分开
-
 	/*********************前台************************/
 	web := e.Group("/home")
 	{
@@ -84,6 +84,14 @@ func initRouter(e *khttp.Engine) {
 		poems := back.Group("/poems")
 		{
 			poems.GET("/list", srv.BackPoemList)
+		}
+
+		user := back.Group("/user")
+		{
+			user.GET("/list", srv.BackUserList)
+			user.POST("/create", srv.BackUserCreate)
+			user.POST("/update", srv.BackUserUpdate)
+			user.POST("/delete", srv.BackUserDelete)
 		}
 	}
 

@@ -7,27 +7,39 @@ import (
 	"time"
 )
 
+const USERCATE_BACK = "BACK"
+const USERCATE_OPEN = "OPEN"
+const USERCATE_EMAIL = "EMAIL"
+const USERCATE_PHONE = "PHONE"
+
 type User struct {
-	ID            int64      `json:"-"`
-	Sn            string     `json:"sn"`
-	UserName      string     `gorm:"column:username" json:"username"`
-	PassWord      string     `gorm:"column:password" json:"-"`
-	PasswordToken string     `json:"password_token"`
-	NickName      string     `json:"nickname"`
-	Avatar        string     `json:"avatar"`
-	Desc          string     `json:"desc"`
-	Email         string     `json:"email"`
-	Phone         string     `json:"phone"`
-	Cate          string     `json:"cate"`
-	OpenId        string     `json:"openid"`
-	OpenInfo      string     `json:"openinfo"`
-	Status        int64      `json:"status"`
-	ISSuper       int64      `json:"is_super"`
-	CreatedAt     time.Time  `json:"created_at"`
-	UpdatedAt     time.Time  `json:"updated_at"`
-	DeletedAt     *time.Time `json:"deleted_at"`
+	ID            int64      `form:"id" gorm:"column:id" json:"id"` //输入到前台的时候注意要另外建立user结构体隐藏掉ID字段
+	Sn            string     `form:"sn" json:"sn"`
+	UserName      string     `form:"username" gorm:"column:username" json:"username"`
+	PassWord      string     `form:"password" gorm:"column:password" json:"-"`
+	PasswordToken string     `form:"password_token" json:"-"`
+	NickName      string     `form:"nickname" gorm:"column:nickname" json:"nickname"`
+	Avatar        string     `form:"avatar" json:"avatar"`
+	Desc          string     `form:"desc" json:"desc"`
+	Email         string     `form:"email" json:"email"`
+	Phone         string     `form:"phone" json:"phone"`
+	Cate          string     `form:"cate" json:"cate"`
+	OpenCate      string     `form:"open_cate" gorm:"column:open_cate" json:"open_cate"`
+	OpenId        string     `form:"openid" gorm:"column:openid" json:"openid"`
+	OpenInfo      string     `form:"openinfo" gorm:"column:openinfo" json:"openinfo"`
+	Status        int64      `form:"status" json:"status"`
+	ISSuper       int64      `form:"is_super" json:"is_super"`
+	CreatedAt     time.Time  `form:"created_at" json:"created_at"`
+	UpdatedAt     time.Time  `form:"updated_at" json:"updated_at"`
+	DeletedAt     *time.Time `form:"deleted_at" json:"deleted_at"`
 }
 
+type LoginForm struct {
+	UserName string `json:"username" validate:"required"`
+	PassWord string `json:"passwd" validate:"required"`
+}
+
+//前台/后台 修改密码都是这个form表单
 type UpdatePass struct {
 	OldPass          string `form:"old_pass" validate:"required"` //如果不加form标签，就得严格按照字段名大小写来传：OldPass
 	NewPass          string `form:"new_pass" validate:"required,eqfield=NewPassConfirmed"`
@@ -35,7 +47,30 @@ type UpdatePass struct {
 	Sn               string `form:"sn" validate:"required"`
 }
 
-//// 绑定模型获取验证错误的方法
+//后台管理user filter
+type BackUserQuery struct {
+	PageNum   uint   `form:"pageNum" validate:"required,numeric,min=1,max=200000"`
+	PageSize  uint   `form:"pageSize" validate:"required,numeric,min=1,max=200000000"`
+	UserName  string `form:"username"`
+	NickName  string `form:"nickname"`
+	Cate      string `form:"cate"`
+	OpenCate  string `form:"open_cate"`
+	Status    string `form:"status"`
+	CreatedAt string `form:"created_at" validate:"omitempty,datetime=2006-01-02"`
+	UpdatedAt string `form:"updated_at"  validate:"omitempty,datetime=2006-01-02"`
+	ISSuper   string `form:"is_super" validate:"omitempty,numeric,oneof=0 1"`
+	ISDelete  string `form:"is_delete" validate:"omitempty,numeric"`
+}
+
+//后台管理列表
+type BackListUser struct {
+	Total    int
+	PageNum  uint
+	PageSize uint
+	Lists    []*User
+}
+
+//// 修改密码表单验证自定义错误信息
 func (r *UpdatePass) GetError(err error) string {
 	str := err.Error()
 
