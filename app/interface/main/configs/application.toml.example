@@ -32,11 +32,13 @@
 
 [kafka]
     brokers = ["192.168.136.109:9092"]
+
 [jwt]
     JWTSecret="asdasadfsad2f6f235&^$*%&*(&*^*-*-+sf68sdf68"
     CSRFSecret="asdasadfsadasda2f6f235&^fawefsfsdf+sf68sdf68"
     SignMethod="HS256" #[HS256|HS384|HS512]
     TTL="8760h" #不想写自动刷新，直接一年有效期 o(^▽^)o
+
 [http]
     network = "tcp"
     addr = ":8080"
@@ -85,4 +87,9 @@
     passWd=""
     sniff = false
 
+[qiniu]
+    accessKey="xxxxx"
+    secretKey="xxxxxx"
+    Bucket="xxxxx"
+    UrlHost="https://xxxx.com"
 

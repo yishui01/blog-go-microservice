@@ -1,6 +1,7 @@
 .idea/
 .vscode/
 .DS_Store
+application.toml
 
 *.log
 *.exe

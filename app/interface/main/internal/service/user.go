@@ -26,6 +26,11 @@ func (s *Service) UserLogin(c *khttp.Context) {
 			c.Abort()
 			return
 		}
+		if ecode.EqualError(ecode.AccessDenied, err) {
+			c.JSON(nil, ecode.Error(ecode.RequestErr, "用户已被禁用"))
+			c.Abort()
+			return
+		}
 		log.SugarWithContext(c).Errorf("s.d.UserLogin Err:(%#v)", err)
 		c.JSON(nil, err)
 		c.Abort()
@@ -124,12 +129,13 @@ func (s *Service) BackUserList(c *khttp.Context) {
 	var (
 		query = new(model.BackUserQuery)
 		users = []*model.User{}
+		total = 0
 		err   error
 	)
 	if err := c.MustBind(query); err != nil {
 		return
 	}
-	if users, err = s.d.BackUserList(c, query); err != nil {
+	if users, total, err = s.d.BackUserList(c, query); err != nil {
 		log.SugarWithContext(c).Error("s.BackUserList Err:(%#+v)", err)
 		c.JSON(nil, err)
 		c.Abort()
@@ -138,7 +144,7 @@ func (s *Service) BackUserList(c *khttp.Context) {
 
 	datas := new(model.BackListUser)
 	datas.Lists = users
-	datas.Total = len(users)
+	datas.Total = total
 	datas.PageNum = query.PageNum
 	datas.PageSize = query.PageSize
 	c.JSON(datas, nil)
@@ -146,8 +152,8 @@ func (s *Service) BackUserList(c *khttp.Context) {
 
 func (s *Service) BackUserCreate(c *khttp.Context) {
 	user := new(model.User)
-	if err := c.Bind(user); err != nil {
-		//ignore err
+	if err := c.MustBind(user); err != nil {
+		return
 	}
 	user.Cate = model.USERCATE_BACK
 	userId, err := s.d.BackUserCreate(c, user, user.ISSuper != 0)
@@ -163,7 +169,9 @@ func (s *Service) BackUserCreate(c *khttp.Context) {
 
 func (s *Service) BackUserUpdate(c *khttp.Context) {
 	user := new(model.User)
-	c.Bind(user)
+	if err := c.MustBind(user); err != nil {
+		return
+	}
 	if user.ID == 0 {
 		c.JSON(nil, ecode.Error(ecode.RequestErr, "user id can not be empty"))
 		c.Abort()

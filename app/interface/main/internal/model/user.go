@@ -16,8 +16,8 @@ type User struct {
 	ID            int64      `form:"id" gorm:"column:id" json:"id"` //输入到前台的时候注意要另外建立user结构体隐藏掉ID字段
 	Sn            string     `form:"sn" json:"sn"`
 	UserName      string     `form:"username" gorm:"column:username" json:"username"`
-	PassWord      string     `form:"password" gorm:"column:password" json:"-"`
-	PasswordToken string     `form:"password_token" json:"-"`
+	PassWord      string     `form:"password" gorm:"column:password" json:"password"`
+	PasswordToken string     `form:"password_token" json:"password_token"`
 	NickName      string     `form:"nickname" gorm:"column:nickname" json:"nickname"`
 	Avatar        string     `form:"avatar" json:"avatar"`
 	Desc          string     `form:"desc" json:"desc"`
@@ -36,7 +36,29 @@ type User struct {
 
 type LoginForm struct {
 	UserName string `json:"username" validate:"required"`
-	PassWord string `json:"passwd" validate:"required"`
+	PassWord string `json:"password" validate:"required"`
+}
+
+type UserSaveForm struct {
+	ID            string     `form:"id" gorm:"column:id" json:"id"` //输入到前台的时候注意要另外建立user结构体隐藏掉ID字段
+	Sn            string     `form:"sn" json:"sn"`
+	UserName      string     `form:"username" gorm:"column:username" json:"username"`
+	PassWord      string     `form:"password" gorm:"column:password" json:"-"`
+	PasswordToken string     `form:"password_token" json:"-"`
+	NickName      string     `form:"nickname" gorm:"column:nickname" json:"nickname"`
+	Avatar        string     `form:"avatar" json:"avatar"`
+	Desc          string     `form:"desc" json:"desc"`
+	Email         string     `form:"email" json:"email"`
+	Phone         string     `form:"phone" json:"phone"`
+	Cate          string     `form:"cate" json:"cate"`
+	OpenCate      string     `form:"open_cate" gorm:"column:open_cate" json:"open_cate"`
+	OpenId        string     `form:"openid" gorm:"column:openid" json:"openid"`
+	OpenInfo      string     `form:"openinfo" gorm:"column:openinfo" json:"openinfo"`
+	Status        int64      `form:"status" json:"status"`
+	ISSuper       int64      `form:"is_super" json:"is_super"`
+	CreatedAt     time.Time  `form:"created_at" json:"created_at"`
+	UpdatedAt     time.Time  `form:"updated_at" json:"updated_at"`
+	DeletedAt     *time.Time `form:"deleted_at" json:"deleted_at"`
 }
 
 //前台/后台 修改密码都是这个form表单

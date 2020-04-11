@@ -27,6 +27,7 @@ func initRouter(e *khttp.Engine) {
 	e.POST("/back/login", srv.UserLogin)
 	e.POST("/update/pass", srv.Permis.SelfPass, srv.UpdatePassWord)
 	e.GET("/ping", ping)
+	e.POST("/upload", srv.Permis.CheckLogin, srv.Upload)
 
 	//前后台服务的返回数据内容是不一样的，所以肯定是分开
 	/*********************前台************************/
@@ -92,6 +93,12 @@ func initRouter(e *khttp.Engine) {
 			user.POST("/create", srv.BackUserCreate)
 			user.POST("/update", srv.BackUserUpdate)
 			user.POST("/delete", srv.BackUserDelete)
+		}
+
+		upload := back.Group("/upload")
+		{
+			upload.GET("/list", srv.UploadList)
+			upload.POST("/delete", srv.UploadDelete)
 		}
 	}
 

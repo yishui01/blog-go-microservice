@@ -21,6 +21,9 @@ func (d *Dao) UserLogin(c context.Context, username, passwd string) (*model.User
 		return nil, errors.WithStack(err)
 	}
 	if utils.ValidatePassword(passwd, users.PassWord) == nil {
+		if users.Status != 0 {
+			return nil, ecode.AccessDenied
+		}
 		//success
 		return users, nil
 	}
@@ -58,7 +61,7 @@ func (d *Dao) FrontUserUpdate(c context.Context, user *model.User) (userId int64
 }
 
 /*************************************   后台   **********************************************/
-func (d *Dao) BackUserList(c context.Context, params *model.BackUserQuery) ([]*model.User, error) {
+func (d *Dao) BackUserList(c context.Context, params *model.BackUserQuery) ([]*model.User, int, error) {
 	query := d.db
 	if params.UserName != "" {
 		query = query.Where("username like ?", "%"+params.UserName+"%")
@@ -88,8 +91,12 @@ func (d *Dao) BackUserList(c context.Context, params *model.BackUserQuery) ([]*m
 		query = query.Where("updated_at >= ? ", params.UpdatedAt)
 	}
 	users := make([]*model.User, 0)
+	total := 0
+	if err := query.Model(&model.User{}).Count(&total).Error; err != nil {
+		return nil, 0, errors.Wrap(err, "get total err")
+	}
 	err := query.Offset((params.PageNum - 1) * params.PageSize).Limit(params.PageSize).Find(&users).Error
-	return users, errors.WithStack(err)
+	return users, total, errors.WithStack(err)
 }
 
 func (d *Dao) BackUserCreate(c context.Context, user *model.User, isAdmin bool) (userID int64, err error) {
@@ -117,7 +124,6 @@ func (d *Dao) BackUserUpdate(c context.Context, user *model.User) (userId int64,
 	}
 
 	err = d.db.Table("mc_user").Where("id = ?", user.ID).Update(map[string]interface{}{
-		"username": user.UserName,
 		"nickname": user.NickName,
 		"avatar":   user.Avatar,
 		"desc":     user.Desc,
