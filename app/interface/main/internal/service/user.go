@@ -147,6 +147,7 @@ func (s *Service) BackUserList(c *khttp.Context) {
 	datas.Total = total
 	datas.PageNum = query.PageNum
 	datas.PageSize = query.PageSize
+	datas.HiddenPassword()
 	c.JSON(datas, nil)
 }
 
@@ -158,7 +159,11 @@ func (s *Service) BackUserCreate(c *khttp.Context) {
 	user.Cate = model.USERCATE_BACK
 	userId, err := s.d.BackUserCreate(c, user, user.ISSuper != 0)
 	if err != nil {
-		log.SugarWithContext(c).Error("s.BackUserUpdate Err:(%#+v)", err)
+		if !ecode.EqualError(ecode.UniqueErr, err) {
+			log.SugarWithContext(c).Error("s.BackUserUpdate Err:(%#+v)", err)
+		} else { //这种业务错误码最后都要转换为标准错误码才行，这样才能映射到http statusCode，客户端只管标准错误码
+			err = ecode.Error(ecode.RequestErr, "名称重复")
+		}
 		c.JSON(userId, err)
 		c.Abort()
 		return
@@ -193,8 +198,14 @@ func (s *Service) BackUserUpdate(c *khttp.Context) {
 
 	userId, err := s.d.BackUserUpdate(c, user)
 	if err != nil {
-		if err != ecode.NothingFound {
+		if _, ok := err.(ecode.Codes); !ok {
 			log.SugarWithContext(c).Error("s.BackUserUpdate Err:(%#+v)", err)
+		}
+		if err == ecode.UniqueErr {
+			err = ecode.Error(ecode.RequestErr, "名称重复")
+		}
+		if err == ecode.NothingFound {
+			err = ecode.Error(ecode.RequestErr, "数据不存在")
 		}
 		c.JSON(userId, err)
 		c.Abort()

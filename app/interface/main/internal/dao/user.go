@@ -106,6 +106,19 @@ func (d *Dao) BackUserCreate(c context.Context, user *model.User, isAdmin bool) 
 	} else {
 		user.ISSuper = 0
 	}
+	//查看username是否已经存在
+	var exists bool
+	if exists, err = utils.CheckExist(d.db.Unscoped(), "mc_user", "username=?", user.UserName); err != nil {
+		return 0, err
+	}
+	if exists {
+		return 0, ecode.UniqueErr
+	}
+	encPass, err := utils.GeneratePassword(user.PassWord)
+	if err != nil {
+		return 0, err
+	}
+	user.PassWord = string(encPass)
 	if err := d.db.Create(user).Error; err != nil {
 		return 0, errors.WithStack(err)
 	}
@@ -116,6 +129,7 @@ func (d *Dao) BackUserUpdate(c context.Context, user *model.User) (userId int64,
 	var (
 		exists bool
 	)
+	//检查用户是否存在
 	if exists, err = utils.CheckExist(d.db, "mc_user", "id=?", user.ID); err != nil {
 		return 0, err
 	}
@@ -123,7 +137,15 @@ func (d *Dao) BackUserUpdate(c context.Context, user *model.User) (userId int64,
 		return 0, ecode.NothingFound
 	}
 
-	err = d.db.Table("mc_user").Where("id = ?", user.ID).Update(map[string]interface{}{
+	//检查修改后的名称是否重复
+	if exists, err = utils.CheckExist(d.db, "mc_user", "username=? AND id != ?", user.UserName, user.ID); err != nil {
+		return 0, err
+	}
+	if exists {
+		return 0, ecode.UniqueErr
+	}
+
+	updateData := map[string]interface{}{
 		"nickname": user.NickName,
 		"avatar":   user.Avatar,
 		"desc":     user.Desc,
@@ -131,7 +153,15 @@ func (d *Dao) BackUserUpdate(c context.Context, user *model.User) (userId int64,
 		"phone":    user.Phone,
 		"is_super": user.ISSuper,
 		"status":   user.Status,
-	}).Error
+	}
+	if user.PassWord != "" {
+		updateData["password"], err = utils.GeneratePassword(user.PassWord)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	err = d.db.Table("mc_user").Where("id = ?", user.ID).Update(updateData).Error
 	return user.ID, errors.WithStack(err)
 }
 

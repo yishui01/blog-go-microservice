@@ -92,6 +92,13 @@ type BackListUser struct {
 	Lists    []*User
 }
 
+func (u *BackListUser)HiddenPassword()  {
+	for k,_:=range u.Lists {
+		u.Lists[k].PassWord = ""
+		u.Lists[k].PasswordToken = ""
+	}
+}
+
 //// 修改密码表单验证自定义错误信息
 func (r *UpdatePass) GetError(err error) string {
 	str := err.Error()
