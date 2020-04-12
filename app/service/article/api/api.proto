@@ -9,8 +9,8 @@ package article.service.v1;
 
 //文章列表
 message ArtListRequest {
-     int64 pageNum = 1;
-     int32 pageSize = 2;
+     int64 pageNum = 1 [(gogoproto.moretags) = 'form:"pageNum" json:"pageNum" validate:"numeric,min=1"'];
+     int32 pageSize = 2 [(gogoproto.moretags) = 'form:"pageSize" json:"pageSize" validate:"numeric,min=1"'];
      string keyword = 3;
      string tags = 4;
      int32 status = 5;
@@ -22,10 +22,10 @@ message ArtListRequest {
 }
 
 message ArtListResp {
-    int64 total=1;
+    int64 total=1 [(gogoproto.jsontag) = "total"];
     repeated ArtDetailResp lists = 2;
-    int64 page = 3;
-    int32 size = 4;
+    int64 page = 3 [(gogoproto.jsontag) = "page"];
+    int32 size = 4 [(gogoproto.jsontag) = "size"];
 }
 
 
@@ -35,20 +35,20 @@ message ArtDetailRequest {
 }
 
 message ArtDetailResp {
-    int64  id      = 1;
-    string sn      = 2;
-    string title   = 3;
-    string img     = 4 ;
-    string content = 5 ;
-    int32  status  = 6 ;
-    int64 created_at = 7;
-    int64 updated_at = 8;
-    int64 deleted_at = 9;
-    string tags    = 10;
-    int32 ord      = 11;
-    int64 view_count = 12;
-    int64 cm_count = 13;
-    int64 laud_count = 14;
+    int64  id      = 1 [(gogoproto.jsontag) = "id"];
+    string sn      = 2 [(gogoproto.jsontag) = "sn"];
+    string title   = 3 [(gogoproto.jsontag) = "title"];
+    string img     = 4 [(gogoproto.jsontag) = "img"];
+    string content = 5 [(gogoproto.jsontag) = "content"];
+    int32  status  = 6 [(gogoproto.jsontag) = "status"];
+    int64 created_at = 7 [(gogoproto.jsontag) = "created_at"];
+    int64 updated_at = 8 [(gogoproto.jsontag) = "updated_at"];
+    int64 deleted_at = 9 [(gogoproto.jsontag) = "deleted_at"];
+    string tags    = 10 [(gogoproto.jsontag) = "tags"];
+    int32 ord      = 11 [(gogoproto.jsontag) = "ord"];
+    int64 view_count = 12 [(gogoproto.jsontag) = "view_count"];
+    int64 cm_count = 13 [(gogoproto.jsontag) = "cm_count"];
+    int64 laud_count = 14 [(gogoproto.jsontag) = "laud_count"];
 }
 
 //添加/修改文章

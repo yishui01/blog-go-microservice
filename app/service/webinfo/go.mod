@@ -11,6 +11,7 @@ require (
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/grpc-ecosystem/grpc-gateway v1.13.0
 	github.com/jinzhu/gorm v1.9.12
+	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pkg/errors v0.9.1
 	github.com/siddontang/go v0.0.0-20180604090527-bdc77568d726
 	github.com/smartystreets/goconvey v1.6.4

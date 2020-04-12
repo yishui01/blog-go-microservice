@@ -1,12 +1,13 @@
 syntax="proto3";
+import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "google/protobuf/empty.proto";
 import "google/api/annotations.proto";
 
 package poems.service.v1;
 
 message PoReq {
-    int64 pageNum = 1;
-    int32 pageSize = 2;
+    int64 pageNum = 1 [(gogoproto.moretags) = 'form:"pageNum" validate:"numeric,min=1"'];
+    int32 pageSize = 2 [(gogoproto.moretags) = 'form:"pageSize" validate:"numeric,min=1"'];
     string filter = 3;
 }
 
@@ -18,19 +19,19 @@ message PoResp {
 }
 
 message PoDetail {
-    int64 Id = 1;
-	string Cate = 2;
-    string Title = 3;
-	string Author = 4;
-    string Content = 5;
-	string Chapter = 6;
-    string Paragraphs = 7;
-	string Notes = 8;
-    string Rhythmic = 9;
-	string Section = 10;
-    string Comment = 11;
-	string Sn = 12;
-    string CreateTime =13;
+    int64 Id = 1 [(gogoproto.jsontag) = "id"];
+	string Cate = 2 [(gogoproto.jsontag) = "cate"];
+    string Title = 3 [(gogoproto.jsontag) = "title"];
+	string Author = 4 [(gogoproto.jsontag) = "author"];
+    string Content = 5 [(gogoproto.jsontag) = "content"];
+	string Chapter = 6 [(gogoproto.jsontag) = "chapter"];
+    string Paragraphs = 7 [(gogoproto.jsontag) = "paragraphs"];
+	string Notes = 8 [(gogoproto.jsontag) = "notes"];
+    string Rhythmic = 9 [(gogoproto.jsontag) = "rhythmic"];
+	string Section = 10 [(gogoproto.jsontag) = "section"];
+    string Comment = 11 [(gogoproto.jsontag) = "comment"];
+	string Sn = 12 [(gogoproto.jsontag) = "sn"];
+    string CreateTime =13 [(gogoproto.jsontag) = "create_time"];
 }
 
 
