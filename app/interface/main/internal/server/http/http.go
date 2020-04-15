@@ -23,14 +23,14 @@ func Init(s *service.Service) *khttp.Engine {
 }
 
 func initRouter(e *khttp.Engine) {
-
-	e.POST("/back/login", srv.UserLogin)
-	e.POST("/update/pass", srv.Permis.SelfPass, srv.UpdatePassWord)
+	e.POST("/logout", srv.UserLogout)
 	e.GET("/ping", ping)
 	e.POST("/upload", srv.Permis.CheckLogin, srv.Upload)
+	e.GET("/user_info", srv.Permis.CheckLogin, srv.GetUserInfo)
 
 	//前后台服务的返回数据内容是不一样的，所以肯定是分开
 	/*********************前台************************/
+	e.POST("/home/login", srv.FrontLogin)
 	web := e.Group("/home")
 	{
 		art := web.Group("/article")
@@ -53,11 +53,21 @@ func initRouter(e *khttp.Engine) {
 		{
 			poems.GET("/list", srv.HomePoemList)
 		}
+
+		user := web.Group("/user", srv.FrontLogin)
+		{
+			user.POST("/update/pass", srv.FrontUpdatePassWord)
+		}
+
 	}
 
 	/********************后台************************/
+	e.POST("/back/login", srv.BackLogin)
 	back := e.Group("/back", srv.Permis.CheckAdmin)
 	{
+		back.POST("/update/pass", srv.BackUpdatePassWord)
+		back.POST("/user_info", srv.GetUserInfo)
+
 		art := back.Group("/article")
 		{
 			art.GET("/list", srv.BackArtList)
@@ -71,8 +81,8 @@ func initRouter(e *khttp.Engine) {
 		{
 			tag.GET("/list", srv.BackTagList)
 			tag.POST("/create", srv.BackTagCreate)
-			tag.POST("/update", srv.BackArtUpdate)
-			tag.POST("/delete", srv.BackArtDelete)
+			tag.POST("/update", srv.BackTagUpdate)
+			tag.POST("/delete", srv.BackTagDelete)
 		}
 		webinfo := back.Group("/webinfo")
 		{

@@ -182,6 +182,9 @@ func (d *Dao) CreateArtMetas(c context.Context, art *model.Article, metas *model
 }
 
 func (d *Dao) extractTagFromIdStr(tagIdStr string) ([]*model.Tag, string, error) {
+	if len(strings.Trim(tagIdStr," ")) == 0 {
+		return nil,"",nil
+	}
 	tagIds := []int64{}
 	res := []*model.Tag{}
 	tagNameSlice := []string{}
@@ -260,19 +263,15 @@ func (d *Dao) UpdateArtMetas(c context.Context, art *model.Article, metas *model
 		return art.Id, errors.WithStack(err)
 	}
 
-	var tagNameStr = ""
-
-	if len(art.Tags) > 0 {
-		var (
-			tags = []*model.Tag{}
-			err  error
-		)
-		if tags, tagNameStr, err = d.extractTagFromIdStr(art.Tags); err != nil {
-			return art.Id, err
-		}
-		if err := d.updateRelationArtTag(art.Id, tags, tx); err != nil {
-			return art.Id, err
-		}
+	var (
+		tagNameStr = ""
+		tags       = []*model.Tag{}
+	)
+	if tags, tagNameStr, err = d.extractTagFromIdStr(art.Tags); err != nil {
+		return art.Id, err
+	}
+	if err := d.updateRelationArtTag(art.Id, tags, tx); err != nil {
+		return art.Id, err
 	}
 
 	ArtMaps := map[string]interface{}{

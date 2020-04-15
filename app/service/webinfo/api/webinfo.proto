@@ -9,9 +9,9 @@ package webinfo.service.v1;
 message InfoReq {
     int64 pageNum = 1  [(gogoproto.moretags) = 'form:"pageNum" validate:"numeric,min=1"'];
     int32 pageSize = 2 [(gogoproto.moretags) = 'form:"pageSize" validate:"numeric,min=1"'];
-    string filter = 3;
-    string order = 4;
-    bool unscoped = 5;
+    string filter = 3 [(gogoproto.moretags) = 'form:"filter"'];
+    string order = 4 [(gogoproto.moretags) = 'form:"order"'];
+    bool unscoped = 5 [(gogoproto.moretags) = 'form:"unscoped"'];
 }
 message InfoResp {
     int64 total=1;
@@ -57,8 +57,8 @@ message SaveResp {
 
 //删除记录
 message DelInfoReq{
-    int64 id = 1 [(gogoproto.moretags) = 'validate:"required"'];
-    bool   physical = 2; //是否为物理删除，false为软删除
+    int64 id = 1 [(gogoproto.moretags) = 'form:"id" validate:"required"'];
+    bool   physical = 2 [(gogoproto.moretags) = 'form:"physical"']; //是否为物理删除，false为软删除
 }
 
 

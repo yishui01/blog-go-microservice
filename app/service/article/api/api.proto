@@ -11,14 +11,14 @@ package article.service.v1;
 message ArtListRequest {
      int64 pageNum = 1 [(gogoproto.moretags) = 'form:"pageNum" json:"pageNum" validate:"numeric,min=1"'];
      int32 pageSize = 2 [(gogoproto.moretags) = 'form:"pageSize" json:"pageSize" validate:"numeric,min=1"'];
-     string keyword = 3;
-     string tags = 4;
-     int32 status = 5;
-     string order = 6;
-     int64 createdAt = 7;
-     int64 updatedAt = 8;
-     bool unscoped = 9;
-     string terms = 10;
+     string keyword = 3 [(gogoproto.moretags) = 'form:"keyword"'];
+     string tags = 4 [(gogoproto.moretags) = 'form:"tags"'];
+     int32 status = 5 [(gogoproto.moretags) = 'form:"status"'];
+     string order = 6 [(gogoproto.moretags) = 'form:"order"'];
+     int64 createdAt = 7 [(gogoproto.moretags) = 'form:"createdAt"'];
+     int64 updatedAt = 8 [(gogoproto.moretags) = 'form:"updatedAt"'];
+     bool unscoped = 9 [(gogoproto.moretags) = 'form:"unscoped"'];
+     string terms = 10 [(gogoproto.moretags) = 'form:"terms"'];
 }
 
 message ArtListResp {
@@ -31,7 +31,7 @@ message ArtListResp {
 
 //文章详情
 message ArtDetailRequest {
-    string sn = 1 [(gogoproto.moretags) = 'validate:"required"'];
+    string sn = 1 [(gogoproto.moretags) = 'form:"sn" validate:"required"'];
 }
 
 message ArtDetailResp {
@@ -76,8 +76,8 @@ message SaveResp {
 
 //删除文章
 message DelArtRequest {
-    int64 id = 1 [(gogoproto.moretags) = 'validate:"required"'];
-    bool   physical = 2; //是否为物理删除，false为软删除
+    int64 id = 1 [(gogoproto.moretags) = 'form:"id" validate:"required"'];
+    bool   physical = 2 [(gogoproto.moretags) = 'form:"physical"']; //是否为物理删除，false为软删除
 }
 
 
@@ -86,7 +86,7 @@ message DelArtRequest {
 
 //Tag列表请求
 message TagListReq {
-    string keyword = 1;
+    string keyword = 1 [(gogoproto.moretags) = 'form:"keyword"'];
 }
 //Tag列表响应
 message TagListResp {
@@ -113,8 +113,8 @@ message SaveTagReq {
 }
 //删除Tag请求
 message DelTagReq {
-    int64 id = 1 [(gogoproto.moretags) = 'validate:"required"'];
-    bool   physical = 2; //是否为物理删除，false为软删除
+    int64 id = 1 [(gogoproto.moretags) = 'form:"id" validate:"required"'];
+    bool   physical = 2 [(gogoproto.moretags) = 'form:"physical"']; //是否为物理删除，false为软删除
 }
 
 

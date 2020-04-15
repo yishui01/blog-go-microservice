@@ -106,8 +106,8 @@ func (d *Dao) EsSearch(c context.Context, req *model.Query) ([]*model.Poem, int6
 		Size(int(req.PageSize))
 	resp, err := search.Do(c)
 	if err != nil {
-		source, err := query.Source()
-		log.SugarWithContext(c).Errorf("poems EsSearch  Err: Source:%#v\n Err:%#v\n", source, err)
+		source, err2 := query.Source()
+		log.SugarWithContext(c).Errorf("poems EsSearch  Err: Source:(%#+v) Err:(%#+v), sourceErr:(%#+v)\n", source, err,err2)
 		return poems, 0, errors.WithStack(err)
 	}
 	log.SugarWithContext(c).Debugf("poems EsSearch Res:%#v\n", resp)

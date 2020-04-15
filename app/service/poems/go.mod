@@ -5,6 +5,7 @@ go 1.14
 replace github.com/zuiqiangqishao/framework => ../../../framework
 
 require (
+	github.com/gogo/protobuf v1.3.1
 	github.com/golang/protobuf v1.3.2
 	github.com/grpc-ecosystem/grpc-gateway v1.13.0
 	github.com/jinzhu/gorm v1.9.12

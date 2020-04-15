@@ -188,8 +188,8 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool
 		artId, err = s.dao.CreateArtMetas(ctx, art, metas)
 	}
 	if err != nil {
-		if _, ok := errors.Cause(err).(ecode.Codes); ok {
-			return nil, err
+		if e, ok := errors.Cause(err).(ecode.Code); ok {
+			return nil, ecode.Error(e,err.Error())
 		}
 		log.SugarWithContext(ctx).Errorf("s.SaveArt art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
 		return nil, ecode.Error(ecode.ServerErr, err.Error())
@@ -202,7 +202,6 @@ func (s *Service) SaveArt(ctx context.Context, req *pb.SaveArtReq, isUpdate bool
 		log.SugarWithContext(ctx).Errorf("s.dao.SetArtCache art(%#+v), metas(%#+v), Err:(%#+v)", art, metas, err)
 		reply.Status = 1 //flag cache err
 	}
-
 	return reply, nil
 }
 

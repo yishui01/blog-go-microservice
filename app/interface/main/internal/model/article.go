@@ -27,8 +27,12 @@ func AssignFrontArticle(resp *pb.ArtDetailResp) *FrontArtDetail {
 	font := new(FrontArtDetail)
 	font.Sn = resp.Sn
 	font.Title = resp.Title
-
-	font.Tags = strings.Split(resp.Tags, ",")
+	font.Img = resp.Img
+	if len(resp.Tags) > 0{
+		font.Tags = strings.Split(resp.Tags, ",")
+	} else {
+		font.Tags = []string{}
+	}
 	font.Content = resp.Content
 	font.CreatedAt = utils.TimeUnixToTime(resp.CreatedAt).Format(TIME_LAYOUT)
 	font.ViewCount = resp.ViewCount

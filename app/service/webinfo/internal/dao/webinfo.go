@@ -154,7 +154,7 @@ func (d *Dao) BuildFilter(c context.Context, filterStr string, db *gorm.DB) (*go
 		"id":         {"id", "="},
 		"sn":         {"sn", "="},
 		"web_key":    {"web_key", "="},
-		"unique_key": {"unique_key", "="},
+		"unique_val": {"unique_val", "="},
 		"web_val":    {"web_val", "like"},
 		"status":     {"status", "="},
 		"c_start":    {"created_at", ">="},

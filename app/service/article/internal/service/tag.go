@@ -19,6 +19,9 @@ func (s *Service) TagList(c context.Context, req *pb.TagListReq) (*pb.TagListRes
 	}
 	reply := new(pb.TagListResp)
 	for _, v := range tags {
+		if req.Keyword != "" && req.Keyword != v.Name {
+			continue
+		}
 		reply.Lists = append(reply.Lists, &pb.TagDetailResp{Id: v.Id, Name: v.Name, CreatedAt: v.CreatedAt.Unix(), UpdatedAt: v.UpdatedAt.Unix(), DeletedAt: v.DeletedAt.Unix()})
 	}
 	return reply, nil

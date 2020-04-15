@@ -63,10 +63,10 @@ type UserSaveForm struct {
 
 //前台/后台 修改密码都是这个form表单
 type UpdatePass struct {
-	OldPass          string `form:"old_pass" validate:"required"` //如果不加form标签，就得严格按照字段名大小写来传：OldPass
-	NewPass          string `form:"new_pass" validate:"required,eqfield=NewPassConfirmed"`
-	NewPassConfirmed string `form:"new_pass_confirmed" validate:"required"`
-	Sn               string `form:"sn" validate:"required"`
+	OldPass          string `json:"old_pass" form:"old_pass" validate:"required"` //如果不加form标签，就得严格按照字段名大小写来传：OldPass
+	NewPass          string `json:"new_pass" form:"new_pass" validate:"required,eqfield=NewPassConfirmed"`
+	NewPassConfirmed string `json:"new_pass_confirmed" form:"new_pass_confirmed" validate:"required"`
+	Sn               string `json:"sn" form:"sn" validate:"required"`
 }
 
 //后台管理user filter

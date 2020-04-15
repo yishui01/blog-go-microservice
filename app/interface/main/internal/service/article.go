@@ -56,6 +56,8 @@ func (s *Service) HomeArtDetail(c *khttp.Context) {
 //也是可以完成的，只是很麻烦，不如直接用rpc client一样，还是长连接
 func (s *Service) BackArtList(c *khttp.Context) {
 	req := new(pbArt.ArtListRequest)
+	//这里status默认是0，这样会有问题，不知道这个0是查的值=0还是没有传status参数,因此和rpc server端约定好 -1 代表不过滤status
+	req.Status = -1
 	if err := c.MustBind(req); err != nil {
 		return
 	}

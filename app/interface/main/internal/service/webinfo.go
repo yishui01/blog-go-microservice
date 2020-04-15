@@ -38,6 +38,7 @@ func (s *Service) BackWebInfoList(c *khttp.Context) {
 	if err := c.MustBind(req); err != nil {
 		return
 	}
+	req.Filter = model.BuildFilter(c.Request.Form)
 	resp, err := s.webInfoRPC.InfoList(c, req)
 	c.JSON(resp, err)
 }
@@ -73,11 +74,12 @@ func (s *Service) BackWebInfoDelete(c *khttp.Context) {
 func (s *Service) assignWebListReq(c *khttp.Context) *webPb.InfoReq {
 	var (
 		page    int64 = 1
-		size    int32 = 10
+		size    int32 = 20
 		keyMaps       = map[string]bool{
-			"music":  true,
-			"friend": true,
-			"bgi":    true,
+			model.MUSIC_WEBINFO_KEY:  true,
+			model.FRIEND_WEBINFO_KEY: true,
+			model.IMG_WEBINFO_KEY:    true,
+			model.PUBLIC_WEBINFO_KEY: true,
 		}
 	)
 

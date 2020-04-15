@@ -3,7 +3,6 @@ package dao
 import (
 	"blog-go-microservice/app/service/article/internal/model"
 	"context"
-	"fmt"
 	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
 	"github.com/zuiqiangqishao/framework/pkg/ecode"
@@ -26,7 +25,6 @@ func (d *Dao) GetTagAll(c context.Context) ([]*model.Tag, error) {
 	if res != nil { //todo... add cache hit metrics
 		return res, nil
 	}
-
 	res = []*model.Tag{}
 	err = d.db.Table("mc_tag").Find(&res).Error
 	if err != nil {
@@ -146,7 +144,6 @@ func (d *Dao) UpdateTag(c context.Context, tag *model.Tag) (tagId int64, err err
 func (d *Dao) GetRelateArtIds(c context.Context, tagId int64) (artIds []int64, err error) {
 	rows, err := d.db.Raw("SELECT article_id FROM mc_article_tag WHERE tag_id = ?", tagId).Rows()
 	if err != nil {
-		fmt.Println("8888888888888", err)
 		return nil, errors.WithStack(err)
 	}
 	defer rows.Close()

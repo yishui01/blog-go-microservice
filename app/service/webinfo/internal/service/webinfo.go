@@ -44,6 +44,7 @@ func (s *Service) InfoList(c context.Context, req *pb.InfoReq) (*pb.InfoResp, er
 	}
 	res.Lists = details
 	res.Page = req.PageNum
+	res.Size_ = req.PageSize
 	res.Total = int64(len(lists))
 
 	return res, nil

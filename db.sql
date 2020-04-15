@@ -35,7 +35,8 @@ CREATE TABLE IF NOT EXISTS `mc_tag`(
     `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     `deleted_at` timestamp DEFAULT NULL COMMENT '删除时间，软删除',
-    PRIMARY KEY (`id`)
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `name` (`name`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文章tags表';
 
 

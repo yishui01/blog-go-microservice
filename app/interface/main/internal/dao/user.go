@@ -165,7 +165,7 @@ func (d *Dao) BackUserUpdate(c context.Context, user *model.User) (userId int64,
 	return user.ID, errors.WithStack(err)
 }
 
-func (d *Dao) UserUpdatePass(c context.Context, userSn string, oldPass, newPass string) error {
+func (d *Dao) CheckOldPass(c context.Context, userSn string, oldPass string) error {
 	var (
 		err  error
 		user model.User
@@ -180,6 +180,10 @@ func (d *Dao) UserUpdatePass(c context.Context, userSn string, oldPass, newPass 
 	if utils.ValidatePassword(oldPass, user.PassWord) != nil {
 		return ecode.RequestErr
 	}
+	return nil
+}
+
+func (d *Dao) UserUpdatePass(c context.Context, userSn string, newPass string) error {
 	newDBPassWord, err := utils.GeneratePassword(newPass)
 	newPassToken := utils.GetUUID()
 	if err != nil {

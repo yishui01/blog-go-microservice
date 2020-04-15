@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+const USER_INFO_NAME = "user_val"
+
 const JWT_NAME = "access_token"
 const CSRF_NAME = "_csrf"
 
