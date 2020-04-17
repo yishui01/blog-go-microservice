@@ -1,5 +1,5 @@
 [app]
-    appName="article"
+    appName="boundary"
 [trace]
     agentAddr="jaeger:6831"
     stdout=false
@@ -31,21 +31,23 @@
      topic="service-log"
 
 [kafka]
-    brokers = ["192.168.136.109:9092"]
+    brokers = ["kafka1:9092"]
 
-[grpc]
-    #grpc配置
-    network="tcp"
-    addr="0.0.0.0:8000"
-    timeout="10s" #grpc ctx超时秒数
-    #grpc-gateway配置
-    httpEnable=true
-    httpAddr="0.0.0.0:8001"
-    httpReadTimeout="5s"
-    httpWriteTimeout="10s"
+[jwt]
+    JWTSecret="asdasadfsad2f6f235&^$*%&*(&*^*-*-+sf68sdf68"
+    CSRFSecret="asdasadfsadasda2f6f235&^fawefsfsdf+sf68sdf68"
+    SignMethod="HS256" #[HS256|HS384|HS512]
+    TTL="8760h" #不想写自动刷新，直接一年有效期 o(^▽^)o
+
+[http]
+    network = "tcp"
+    addr = ":8080"
+    readTimeout = "2s"
+    writeTimeout = "2s"
+    timeout="5s"
 
 [etcd] #如果使用etcd注册服务发现的话，需要配置该项
-    endpoints=["192.168.136.109:2379","192.168.136.109:2479","192.168.136.109:2579"]
+    endpoints=["etcd0:2379","etcd1:2479","etcd2:2579"]
     userName=""
     passwd=""
     leaseTTL="5"   #5秒续约一次
@@ -61,17 +63,17 @@
 
 [db]
     driver = "mysql"
-	dsn = "root:123456@tcp(192.168.136.109:3306)/blog?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
+	dsn = "root:123456@tcp(mysql:3306)/blog?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
 	active = 500
 	idle = 10
 	idleTimeout =24 #hour
 	logMode = true #是否打开gorm debug输出
 	sTable = true  #SingularTable  如果设置为true,`User`的默认表名为`user`,使用`TableName`设置的表名不受影响
-	tablePrefix="mc_"
+	tablePrefix="mc_" #这个不要改，改了G了，代码不规范，里面很多代码固定的前缀，到时候直接去掉前缀
 
 [redis]
 	proto = "tcp"
-	addr = "192.168.136.109:6379"
+	addr = "redis:6379"
 	db = 1
 	passwd = ""
 	idle = 10
@@ -80,9 +82,14 @@
 	lifetime = 4 # hour
 
 [elastic]
-    urls = ["http://192.168.136.109:9200"]
+    urls = ["http://elasticsearch:9200"]
     userName=""
     passWd=""
     sniff = false
 
+[qiniu]
+    accessKey="kxDprbrGWFxV95W-gRx_HUXR9JcJXjIQvgfPbbZ9"
+    secretKey="Dg9aYY4Ezr_ioUwe9f9FHqScqh5lCtkDf2CjU_7q"
+    Bucket="wuxxin"
+    UrlHost="https://file.wuxxin.com"
 

@@ -31,7 +31,7 @@
      topic="service-log"
 
 [kafka]
-    brokers = ["192.168.136.109:9092"]
+    brokers = ["kafka1:9092"]
 
 [grpc]
     #grpc配置
@@ -45,7 +45,7 @@
     httpWriteTimeout="10s"
 
 [etcd] #如果使用etcd注册服务发现的话，需要配置该项
-    endpoints=["192.168.136.109:2379","192.168.136.109:2479","192.168.136.109:2579"]
+    endpoints=["etcd0:2379","etcd1:2479","etcd2:2579"]
     userName=""
     passwd=""
     leaseTTL="5"   #5秒续约一次
@@ -61,7 +61,7 @@
 
 [db]
     driver = "mysql"
-	dsn = "root:123456@tcp(192.168.136.109:3306)/blog?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
+	dsn = "root:123456@tcp(mysql:3306)/blog?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
 	active = 500
 	idle = 10
 	idleTimeout =24 #hour
@@ -71,7 +71,7 @@
 
 [redis]
 	proto = "tcp"
-	addr = "192.168.136.109:6379"
+	addr = "redis:6379"
 	db = 1
 	passwd = ""
 	idle = 10
@@ -80,7 +80,7 @@
 	lifetime = 4 # hour
 
 [elastic]
-    urls = ["http://192.168.136.109:9200"]
+    urls = ["http://elasticsearch:9200"]
     userName=""
     passWd=""
     sniff = false

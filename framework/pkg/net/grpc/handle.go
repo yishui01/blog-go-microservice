@@ -25,7 +25,6 @@ func (s *GrpcServer) handle() grpc.UnaryServerInterceptor {
 		s.mutex.RUnlock()
 		//将当前grpc剩余的超时时间和配置的超时时间比较，取较小的那个
 		timeout := conf.Timeout
-
 		if de, ok := ctx.Deadline(); ok {
 			ctimeout := time.Until(de)
 			if ctimeout-time.Millisecond*20 > 0 {
@@ -34,9 +33,10 @@ func (s *GrpcServer) handle() grpc.UnaryServerInterceptor {
 			if timeout > ctimeout {
 				timeout = ctimeout
 			}
-			ctx, cancel = context.WithTimeout(ctx, timeout)
-			defer cancel() //note: 服务端在返回时会直接cancel防止内存泄露，那么异步任务传这个ctx的时候需要注意，需要copy出一个不会cancel的ctx才行
 		}
+		ctx, cancel = context.WithTimeout(ctx, timeout)
+		defer cancel() //note: 服务端在返回时会直接cancel防止内存泄露，那么异步任务传这个ctx的时候需要注意，需要copy出一个不会cancel的ctx才行
+
 		resp, err = handler(ctx, req)
 		return resp, transform.FromError(err).Err()
 	}
