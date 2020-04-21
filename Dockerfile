@@ -4,7 +4,10 @@ ENV GOPROXY https://goproxy.cn,direct
 
 WORKDIR /build
 
-COPY . .
+COPY ./app ./app
+COPY ./framework ./framework
+COPY ./.env ./.env
+COPY ./entrypoint.sh ./entrypoint.sh
 
 RUN cd /build/app/service/article/cmd \
     && CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -a -o article ./main.go \
@@ -14,7 +17,6 @@ RUN cd /build/app/service/article/cmd \
     && CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -a -o webinfo ./main.go \
     && cd /build/app/interface/main/cmd \
     && CGO_ENABLED=0 GOARCH=amd64 GOOS=linux go build -a -o main ./main.go
-
 
 FROM alpine:3.10 AS final
 
@@ -29,8 +31,6 @@ RUN addgroup -g ${USER_ID} -S ${USER_NAME} && adduser -u ${USER_ID} -S ${USER_NA
     && chown -R ${USER_NAME}:${USER_NAME} /app/
 
 USER ${USER_NAME}
-
-RUN touch /app/app/service/article/cmd/output.log
 
 EXPOSE 8000 8001 8100 8101 8200 8201 8080
 

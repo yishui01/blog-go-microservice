@@ -8,11 +8,14 @@ services:
     volumes:
       - ${MYSQL_CONF_FILE}:/etc/mysql/conf.d/mysql.cnf:ro
       - ${MYSQL_DATA_DIR}:/var/lib/mysql/:rw
+      - ${MYSQL_INIT_FILE}:/docker-entrypoint-initdb.d/:rw
     restart: always
     networks:
       - default
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "${MYSQL_INIT_DB}"
+      MYSQL_PORT: "${MYSQL_HOST_PORT}"
       TZ: "$TZ"
 
   redis:
@@ -223,8 +226,9 @@ services:
     ports:
       - "${KAFKA_PORT_1}:9092"
     environment:
+      KAFKA_HEAP_OPTS: "-Xmx256M -Xmx1g"
       KAFKA_ZOOKEEPER_CONNECT: zoo1:2181
-      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-192.168.136.109}:9092
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-kafka1}:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_DOCKER_INTERNAL
       KAFKA_BROKER_ID: 1
@@ -254,7 +258,7 @@ services:
       - ${ARTICLE_CONF_FILE}:/app/app/service/article/configs/application.toml
       - ${POEMS_CONF_FILE}:/app/app/service/poems/configs/application.toml
       - ${WEBINFO_CONF_FILE}:/app/app/service/webinfo/configs/application.toml
-      - ${INTERFACE_CONF_FILE}:/app/app/service/webinfo/configs/application.toml
+      - ${INTERFACE_CONF_FILE}:/app/app/interface/main/configs/application.toml
     ports:
       - "${ART_GRPC}:8000"
       - "${ART_HTTP}:8001"
