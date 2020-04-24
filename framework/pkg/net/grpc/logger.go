@@ -69,7 +69,7 @@ func serverLog() grpc.UnaryServerInterceptor {
 			zap.String("ip", remoteIP),
 			zap.String("path", info.FullMethod),
 			zap.Int("ret", code),
-			zap.Float64("ts", duration.Seconds()),
+			zap.Float64("spendSec", duration.Seconds()),
 			zap.Float64("timeout_quota", quota),
 			zap.String("source", "grpc-access-log"),
 		}
@@ -106,7 +106,7 @@ func clientLogging() grpc.UnaryClientInterceptor {
 		logFields := []zap.Field{
 			zap.String("path", method),
 			zap.Int("ret", code),
-			zap.Float64("ts", duration.Seconds()),
+			zap.Float64("spendSec", duration.Seconds()),
 			zap.String("source", "grpc-access-log"),
 		}
 

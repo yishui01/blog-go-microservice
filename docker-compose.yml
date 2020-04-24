@@ -226,7 +226,7 @@ services:
     ports:
       - "${KAFKA_PORT_1}:9092"
     environment:
-      KAFKA_HEAP_OPTS: "-Xmx256M -Xmx1g"
+      KAFKA_HEAP_OPTS: "-Xms256m -Xmx256M"
       KAFKA_ZOOKEEPER_CONNECT: zoo1:2181
       KAFKA_ADVERTISED_LISTENERS: LISTENER_DOCKER_INTERNAL://kafka1:19092,LISTENER_DOCKER_EXTERNAL://${DOCKER_HOST_IP:-kafka1}:9092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_DOCKER_INTERNAL:PLAINTEXT,LISTENER_DOCKER_EXTERNAL:PLAINTEXT
@@ -239,15 +239,15 @@ services:
     networks:
       - default
 
-  kafka-manager:
-    image: sheepkiller/kafka-manager:latest
-    restart: always
-    ports:
-      - "${KAFKAMANAGER_PORT}:9000"
-    environment:
-      ZK_HOSTS: zoo1:2181
-      APPLICATION_SECRET: letmein
-      KM_ARGS: -Djava.net.preferIPv4Stack=true
+#  kafka-manager:
+#    image: sheepkiller/kafka-manager:latest
+#    restart: always
+#    ports:
+#      - "${KAFKAMANAGER_PORT}:9000"
+#    environment:
+#      ZK_HOSTS: zoo1:2181
+#      APPLICATION_SECRET: letmein
+#      KM_ARGS: -Djava.net.preferIPv4Stack=true
 
   app_service:
     build:
@@ -267,5 +267,7 @@ services:
       - "${WEBINFO_GRPC}:8200"
       - "${WEBINFO_HTTP}:8201"
       - "${INTERFACE_HTTP}:8080"
+    environment:
+      TZ: "$TZ"
 networks:
   default:

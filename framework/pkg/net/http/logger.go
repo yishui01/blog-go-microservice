@@ -79,7 +79,7 @@ func Logger() HandlerFunc {
 			zap.String("stack", fmt.Sprintf("%+v", err)),
 			zap.String("err", errmsg),
 			zap.Float64("timeout_quota", quota),
-			zap.Float64("ts", dt.Seconds()),
+			zap.Float64("spendSec", dt.Seconds()),
 			zap.String("source", "http-access-log"),
 		)
 	}
