@@ -1,4 +1,60 @@
 # blog-go-microservice
+blog-go-microservice 是一个微服务架构的个人博客。
+该项目致力于构建一个分布式博客系统，并不断加入各种微服务组件，以此达到练习微服务架构项目的目的。
+本项目大量参考[kratos](https://github.com/go-kratos/kratos)的代码，在此感谢[kratos](https://github.com/go-kratos/kratos)框架带我入门微服务
+
+## 架构图
+ ![image](https://file.wuxxin.com/jiagou/a/jiagou.png)
+
+## 仓库目录
+| 目录 | 描述 |
+| -------- | -------------- |
+| app     | 项目应用    |
+| app.interface| 聚合服务层 |
+| app.service    | 基础服务层   |
+| build    |  docker构建、挂载目录  |
+| framework | 微服务框架     |
+
+## Quick start
+1、启动服务
+```bash
+make
+```
+OR
+```bash
+chmod -R 777 ./build/docker/elasticsearch && docker-compose up;
+```
+2、访问api
+```bash
+curl http://localhost:8080/ping
+```
+
+## Note
+理论上每一个微服务在聚合层都要有一个单独的对外服务，但是由于目前时间原因，将所有微服务的聚合api全部写到了一个main服务中，这样就只有main这一个app对外提供服务了，节约时间，但是耦合度较高，生产环境建议拆分。
+
+## Introduce
+### 项目整体介绍
+1、用户服务：采用jwt认证，jwt存cookie httponly，另外再在cookie中存一个csrf token，非httponly，用于带在header中。在聚合层 （调用用户服务API）校验用户状态、判断用户权限。
+
+2、文章服务：目前文章查询是直接查询ElasticSearch，详情页单独请求detail接口，从redis中查询文章详情，并使用etcd实现分布式锁，防止缓存击穿
+
+3、诗词服务：需要手动使用 [chinese-poetry-Mysql-Elastic](https://github.com/zuiqiangqishao/chinese-poetry-Mysql-Elastic)  导入2W条诗词到ES中，提供筛选，并随机返回一条res
+
+4、站点信息服务：提供友链、音乐、背景图 等服务
+
+5、使用GoConvey对基础服务层的Dao层进行了测试，覆盖率保证在60%以上（后续会对所有服务的service以及dao层进行测试）
+
+### framework框架介绍
+1、通信：所有底层微服务均使用grpc对外提供grpc服务，并用grpc-gateway提供http服务
+
+2、服务注册/发现：微服务启动后使用将ip地址等信息注册到etcd，客户端使用grpc内部resolver（用etcd实现Builder接口）进行服务发现，并使用grpc自带的轮询策略进行客户端负载均衡调用。
+
+3、全链路超时控制：从最外层请求进入时设置context.Timeout, 在grpc server中间件处拦截判断请求剩余时间，将剩余时间和本接口超时时间比对，取小的那个，对ctx设置超时后，再传给handler
+
+4、全链路追踪：最外层使用jaeger生成trace，grpc之间使用client和server两端的grpc_opentracing中间件进行span的传递，http就手动打到header中传递。
+
+5、全链路日志系统：使用zap进行日志库封装，server中间件从context中提取之前注入的traceId，并以此作为本次请求的requestId，对打log的方法进行封装，用该方法打出的每一条log都会带上requestId字段，以此方便elk定位分析每条请求的所有日志。目前主要将日志输出到kafka，logstash从kafka中提取日志再输入到es，通过kibana展示
+
 
 ### 错误处理
     
