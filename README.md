@@ -3,6 +3,9 @@ blog-go-microservice 是一个微服务架构的个人博客。
 该项目致力于构建一个分布式博客系统，并不断加入各种微服务组件，以此达到练习微服务架构项目的目的。
 本项目大量参考[kratos](https://github.com/go-kratos/kratos)的代码，在此感谢[kratos](https://github.com/go-kratos/kratos)框架带我入门微服务
 
+- 线上地址（功能还未完整，基本可用）：
+- 前台vue仓库：https://github.com/zuiqiangqishao/blog_vue_font
+
 ## 架构图
  ![image](https://file.wuxxin.com/jiagou/a/jiagou.png)
 
@@ -120,5 +123,20 @@ curl http://localhost:8080/ping
     
     在返回给终端之前（一般是由网关返回给终端），最后负责response的方法收到call方法的ecode后，统一将其归纳到公共错误码ecode中，并将其映射成对应的http statusCode，让客户端收到有限的几种http状态码，而不是各种各样的自定义http状态码。
     
-    
         
+## 部分项目截图
+- 前端首页
+ ![image](https://file.wuxxin.com/blog/index.jpg)
+ 
+- 后台
+ ![image](https://file.wuxxin.com/blog/file.png)
+
+  ![image](https://file.wuxxin.com/blog/user.png)
+ 
+- trace
+ ![image](https://file.wuxxin.com/blog/trace1.png)
+ 
+  ![image](https://file.wuxxin.com/blog/trace2.png)
+
+- log
+![image](https://file.wuxxin.com/blog/kibana.png)
