@@ -44,6 +44,7 @@ services:
       - discovery.type=single-node
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     volumes:
+      - ${ELASTICSEARCH_JVM_OPT}:/usr/share/elasticsearch/config/jvm.options
       - ${ELASTICSEARCH_DATA_DIR}:/usr/share/elasticsearch/data
       - ${ELASTICSEARCH_CONF_FILE}:/usr/share/elasticsearch/elasticsearch.yml
     hostname: elasticsearch
@@ -77,6 +78,7 @@ services:
     depends_on:
       - elasticsearch
     volumes:
+      - ${LOGSTASH_JVM_OPT}:/usr/share/logstash/config/jvm.options
       - ${LOGSTASH_CONF_FILE}:/usr/share/logstash/config/logstash.yml
       - ${LOGSTASH_PIPELINE_DIR}:/usr/share/logstash/pipeline
     environment:
