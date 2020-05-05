@@ -69,8 +69,6 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 
 	//todo... add cache lose metrics
 	res = new(model.Article)
-	cacheData := res
-	cacheTime := 0 //forever
 
 	if addCache {
 		//没有缓存，并且redis没挂，etcd分布式锁 防止缓存击穿/穿透
@@ -111,13 +109,14 @@ func (d *Dao) GetArtBySn(c context.Context, sn string) (res *model.Article, err 
 	//3、cache 挂了
 	//4、etcd server 挂了
 	res, err = d.GetArtFromDB(c, "sn=?", sn)
+	cacheTime := 0
 	if err != nil {
-		cacheData = &model.Article{Id: -1, Sn: sn}
+		res = &model.Article{Id: -1, Sn: sn}
 		cacheTime = utils.TimeHourSecond
 	}
 	if addCache {
 		if err := d.cacheQueue.Do(c, func(c context.Context) {
-			if err := d.SetCacheArt(c, cacheData, cacheTime); err != nil {
+			if err := d.SetCacheArt(c, res, cacheTime); err != nil {
 				log.SugarWithContext(c).Errorf("d.SetCacheArt Err(%#+v)", err)
 			}
 		}); err != nil {
