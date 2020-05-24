@@ -87,7 +87,7 @@ func (d *Dao) EsSearchArtMetas(ctx context.Context, req *model.ArtQueryReq) (*el
 
 	res, err := search.Do(ctx)
 	if err != nil {
-		source, err := query.Source()
+		source, _ := query.Source()
 		log.SugarWithContext(ctx).Errorf("EsSearchArt Search Err: Source:%#v\n Err:%#v\n", source, err)
 	}
 	log.SugarWithContext(ctx).Debugf("EsSearchArt Res:%#v\n", res)
