@@ -65,9 +65,9 @@ func New(conf *ServerConfig, opt ...grpc.ServerOption) (s *GrpcServer) {
 
 	//加入一元方法中间件
 	//1、recovery
-	//2、注册自定义log中间件
-	//3、超时时间、ecode转换为grpc code
-	//4、jaeger trace
+	//2、jaeger trace
+	//3、自定义log中间件
+	//4、缩减ctx超时时间，执行handle
 	//5、验证请求参数是否合法
 	s.UseUnary(
 		s.reovery(),
