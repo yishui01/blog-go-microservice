@@ -1,9 +1,8 @@
 # blog-go-microservice
 blog-go-microservice 是一个微服务架构的个人博客。
 该项目致力于构建一个分布式博客系统，并不断加入各种微服务组件，以此达到练习微服务架构项目的目的。
-本项目大量参考[kratos](https://github.com/go-kratos/kratos)的代码，在此感谢[kratos](https://github.com/go-kratos/kratos)框架带我入门微服务
+本项目参考[kratos](https://github.com/go-kratos/kratos)的代码进行框架的设计以及编写，kartos NB！【手动滑稽】
 
-- 线上地址（功能还未完整，基本可用）：https://wuxxin.com/
 - 前台vue仓库：https://github.com/zuiqiangqishao/blog_vue_font
 
 ## 架构图
