@@ -125,7 +125,7 @@ curl http://localhost:8080/ping
         
 ## 部分项目截图
 - 前端首页
- ![image](https://file.wuxxin.com/blog/index.jpg)
+![](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/index.jpg))
  
 - 后台
  ![image](https://file.wuxxin.com/blog/file.png)
