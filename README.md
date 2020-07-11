@@ -7,7 +7,7 @@ blog-go-microservice 是一个微服务架构的个人博客。
 
 
 ## 架构图
- ![image](https://user-images.githubusercontent.com/324764/41384789-6fa309c6-6faa-11e8-93e0-eeb8d36fe7f7.jpg)
+ ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/jiagou.png)
 
 ## 仓库目录
 | 目录 | 描述 |
@@ -136,8 +136,8 @@ curl http://localhost:8080/ping
 - trace
  ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/trace1.png)
  
-  ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/trace2.png)
+ ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/trace2.png)
 
 - log
-![image](https://file.wuxxin.com/blog/kibana.png)
+ ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/kibana.png)
 
