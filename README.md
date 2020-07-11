@@ -6,8 +6,7 @@ blog-go-microservice 是一个微服务架构的个人博客。
 - 前台vue仓库：https://github.com/zuiqiangqishao/blog_vue_font
 
 ## 架构图
- ![image](https://file.wuxxin.com/asdf20850040.jpg) 
- <img src="https://file.wuxxin.com/asdf20850040.jpg" />
+ ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/jiagou.png) 
 
 ## 仓库目录
 | 目录 | 描述 |
@@ -129,14 +128,14 @@ curl http://localhost:8080/ping
 ![](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/index.jpg))
  
 - 后台
- ![image](https://file.wuxxin.com/blog/file.png)
+ ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/back1.png)
 
-  ![image](https://file.wuxxin.com/blog/user.png)
+  ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/back2.png)
  
 - trace
- ![image](https://file.wuxxin.com/blog/trace1.png)
+ ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/trace1.png)
  
-  ![image](https://file.wuxxin.com/blog/trace2.png)
+  ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/trace2.png)
 
 - log
-![image](https://file.wuxxin.com/blog/kibana.png)
+![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/kibana.png)
