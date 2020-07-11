@@ -6,7 +6,7 @@ blog-go-microservice 是一个微服务架构的个人博客。
 - 前台vue仓库：https://github.com/zuiqiangqishao/blog_vue_font
 
 ## 架构图
- ![image](https://file.wuxxin.com/jiagou/a/jiagou.png)
+ ![image](https://file.wuxxin.com/jiagou/jiagou.png)
 
 ## 仓库目录
 | 目录 | 描述 |
