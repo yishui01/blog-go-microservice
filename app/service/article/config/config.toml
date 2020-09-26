@@ -1,0 +1,124 @@
+[app]
+    appName="article"
+[trace]
+    agentAddr="jaeger:6831"
+    stdout=false
+[log]
+    enableHost=false  #Add host name and other additional fields
+    encode="console"    #json / console
+    level="debug"    #debug  info  warn  error fatal
+    callFull=false
+    stdout=true
+
+[log.file]
+    enableHost=true
+    encode="json"
+    callFull=true
+    level="debug"
+    fileName="service.log"   #为空时不启用file log
+    maxSize=5                #single log file size MB
+    maxAge=14                #time to keep, (day)
+    maxBackups=30            #max file numbers
+    localTime=true           #日志归档文件名是当地时间命名
+    compress=false           #是否压缩
+
+[log.kafka]      #需要配置好kafka brokers 地址
+     enable=true #是否开启输出到kafka
+     enableHost=true
+     encode="json"
+     callFull=true
+     level="debug"
+     topic="service-log"
+
+[kafka]
+    brokers = ["192.168.136.109:9092"]
+
+[grpc]
+    #grpc配置
+    network="tcp"
+    addr="0.0.0.0:8000"
+    timeout="10s" #grpc ctx超时秒数
+    #grpc-gateway配置
+    httpEnable=true
+    httpAddr="0.0.0.0:8001"
+    httpReadTimeout="5s"
+    httpWriteTimeout="10s"
+
+[etcd] #如果使用etcd注册服务发现的话，需要配置该项
+    endpoints=["192.168.136.109:2379","192.168.136.109:2479","192.168.136.109:2579"]
+    userName=""
+    passwd=""
+    leaseTTL="5"   #5秒续约一次
+    dialTimeout="5" #连接超时时间
+    prefix="micro_srv" #服务注册目录前缀
+
+[registry]
+    driver="etcd" #暂时只支持etcd和直连(direct)
+    loadBalance="round_robin" #客户端负载均衡方式
+[registry.direct]
+    article_service="0.0.0.0:9000" # [ 服务名=>grpc地址 ]
+    #user_service="0.0.0.0:9002" # [ 服务名=>grpc地址 ]
+
+[db]
+    driver = "mysql"
+	dsn = "root:123456@tcp(192.168.136.109:3306)/blog?timeout=1s&readTimeout=1s&writeTimeout=1s&parseTime=true&loc=Local&charset=utf8mb4,utf8"
+	active = 500
+	idle = 10
+	idleTimeout =24 #hour
+	logMode = true #是否打开gorm debug输出
+	sTable = true  #SingularTable  如果设置为true,`User`的默认表名为`user`,使用`TableName`设置的表名不受影响
+	tablePrefix="mc_"
+
+[redis]
+	proto = "tcp"
+	addr = "192.168.136.109:6379"
+	db = 1
+	passwd = ""
+	idle = 10
+	active = 500
+	idleTimeout = "30" # second
+	lifetime = 4 # hour
+
+[elastic]
+    urls = ["http://192.168.136.109:9200"]
+    userName=""
+    passWd=""
+    sniff = false
+
+
+
+
+[jupiter.server.http]
+    port = 20105
+[jupiter.server.grpc]
+    port = 20102
+
+[jupiter.etcdv3.default]
+    endpoints=["192.168.33.10:2379"]
+    secure = false
+
+[jupiter.registry.bj01]
+    configKey="jupiter.etcdv3.default"
+    timeout = "1s"
+[jupiter.registry.bj02]
+    configKey="jupiter.etcdv3.default"
+    timeout = "1s"
+[jupiter.cron.demo]
+    immediatelyRun = true
+    concurrentDelay = 5
+[jupiter.mysql.test]
+    connMaxLifetime = "300s"
+    debug = true
+    dsn = "root:123456@tcp(192.168.33.10:3306)/test?charset=utf8&parseTime=True&loc=Local"
+    level = "panic"
+    maxIdleConns = 50
+    maxOpenConns = 100
+    disableTrace = true
+    disableMetric = true
+[jupiter.trace.jaeger]
+    enableRPCMetrics = false
+    [jupiter.trace.jaeger.sampler]
+        type = "const"
+        param = 0.001
+
+

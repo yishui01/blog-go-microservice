@@ -1,13 +1,14 @@
 package main
 
 import (
-	pb "blog-go-microservice/app/service/article/api"
+	pb "blog-go-microservice/app/service/article/pb"
 	"context"
 	"flag"
 	"fmt"
 	"github.com/zuiqiangqishao/framework/pkg/setting"
 	"google.golang.org/grpc"
 	"log"
+	"strings"
 )
 
 func main() {
@@ -22,5 +23,6 @@ func main() {
 		log.Println("连接成功，调用失败", err.Error())
 	}
 	fmt.Printf("调用成功：结果为: %v", resp)
+	strings.Builder{}.String()
 
 }

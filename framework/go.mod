@@ -30,7 +30,6 @@ require (
 	github.com/uber/jaeger-client-go v2.22.1+incompatible
 	github.com/uber/jaeger-lib v2.2.0+incompatible // indirect
 	github.com/uniplaces/carbon v0.1.6 // indirect
-	go.etcd.io/etcd v0.0.0-20200320040136-0eee733220fc
 	go.uber.org/zap v1.14.1
 	golang.org/x/crypto v0.0.0-20191205180655-e7c4368fe9dd
 	golang.org/x/sys v0.0.0-20200202164722-d101bd2416d5
