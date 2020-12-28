@@ -7,7 +7,7 @@ blog-go-microservice 是一个微服务架构的个人博客。
 
 
 ## 架构图
- ![image](https://github.com/zuiqiangqishao/blog-go-microservice/raw/master/image/jiagou.png)
+ ![image](https://github.com/yishui01/blog-go-microservice/raw/master/image/jiagou.png)
 
 ## 仓库目录
 | 目录 | 描述 |
