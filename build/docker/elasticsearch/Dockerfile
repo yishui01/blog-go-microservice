@@ -6,6 +6,9 @@ ARG ELASTICSEARCH_PLUGINS
 
 ENV PLUGINS=",${ELASTICSEARCH_PLUGINS},"
 
+COPY ./plugin/ /usr/share/elasticsearch/
+
+#
 RUN if [[ -z "${PLUGINS##*,amazon-ec2,*}" ]]; then \
         printf "y\n" | elasticsearch-plugin install amazon-ec2; \
     fi \
@@ -108,7 +111,7 @@ RUN if [[ -z "${PLUGINS##*,amazon-ec2,*}" ]]; then \
     && \
     if [[ -z "${PLUGINS##*,analysis-ik,*}" ]]; then \
         if [ ${ELASTICSEARCH_VERSION} == "7.2.1" ]; then \
-        	printf "y\n" | elasticsearch-plugin install https://file.wuxxin.com/plugin/es/elasticsearch-analysis-ik-7.2.1.zip; \
+        	printf "y\n" | elasticsearch-plugin install file:/usr/share/elasticsearch/elasticsearch-analysis-ik-7.2.1.zip; \
     	else \
     		printf "y\n" | elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v${ELASTICSEARCH_VERSION}/elasticsearch-analysis-ik-${ELASTICSEARCH_VERSION}.zip; \
     	fi \
@@ -116,7 +119,7 @@ RUN if [[ -z "${PLUGINS##*,amazon-ec2,*}" ]]; then \
     && \
     if [[ -z "${PLUGINS##*,analysis-pinyin,*}" ]]; then \
     	if [ ${ELASTICSEARCH_VERSION} == "7.2.1" ]; then \
-        	printf "y\n" | elasticsearch-plugin install https://file.wuxxin.com/plugin/es/elasticsearch-analysis-pinyin-7.2.1.zip; \
+        	printf "y\n" | elasticsearch-plugin install file:/usr/share/elasticsearch/elasticsearch-analysis-pinyin-7.2.1.zip; \
     	else  \
     		printf "y\n" | elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-pinyin/releases/download/v${ELASTICSEARCH_VERSION}/elasticsearch-analysis-pinyin-${ELASTICSEARCH_VERSION}.zip; \
     	fi \
